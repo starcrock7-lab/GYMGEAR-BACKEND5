@@ -1,21 +1,70 @@
 import express from 'express';
 import cors from 'cors';
 import fetch from 'node-fetch';
+import rateLimit from 'express-rate-limit';
+import crypto from 'crypto';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://gymgear-frontend5.vercel.app';
 
-app.use(cors());
+// Generate a secure API key for frontend to use
+// In production, set this in Render environment: BACKEND_SECRET_KEY
+const BACKEND_SECRET_KEY = process.env.BACKEND_SECRET_KEY || crypto.randomBytes(32).toString('hex');
+
+// ============================================
+// SECURITY MIDDLEWARE
+// ============================================
+
+// CORS - Only allow your frontend
+app.use(cors({
+  origin: FRONTEND_URL,
+  credentials: true
+}));
+
+// Rate limiting - Max 10 requests per 15 minutes per IP
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: 'Too many requests from this IP, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api/', limiter);
 app.use(express.json());
 
-// Health check
+// ============================================
+// API KEY VERIFICATION MIDDLEWARE
+// ============================================
+
+const verifyApiKey = (req, res, next) => {
+  const apiKey = req.headers['x-api-key'] || req.body.apiKey;
+  
+  if (!apiKey) {
+    return res.status(401).json({ error: 'Missing API key' });
+  }
+  
+  if (apiKey !== BACKEND_SECRET_KEY) {
+    console.warn(`⚠️ Invalid API key attempt from ${req.ip}`);
+    return res.status(403).json({ error: 'Invalid API key' });
+  }
+  
+  next();
+};
+
+// ============================================
+// ROUTES
+// ============================================
+
+// Health check (no auth needed)
 app.get('/health', (req, res) => {
   res.json({ status: 'Backend running!', time: new Date().toISOString() });
 });
 
-// Search products
-app.post('/api/search-products', async (req, res) => {
+// Search products (requires API key)
+app.post('/api/search-products', verifyApiKey, async (req, res) => {
   try {
     const { category } = req.body;
 
@@ -130,8 +179,8 @@ Requirements:
   }
 });
 
-// Recommendations
-app.post('/api/recommendations', (req, res) => {
+// Recommendations (requires API key)
+app.post('/api/recommendations', verifyApiKey, (req, res) => {
   try {
     const { products } = req.body;
     if (!Array.isArray(products) || products.length === 0) {
@@ -188,6 +237,10 @@ app.use((req, res) => res.status(404).json({ error: 'Endpoint not found' }));
 
 app.listen(PORT, () => {
   console.log(`✅ Backend running on port ${PORT}`);
+  console.log(`🔒 Security: CORS restricted to ${FRONTEND_URL}`);
+  console.log(`🔒 Security: Rate limiting enabled (10 requests per 15 min)`);
+  console.log(`🔒 Security: API key authentication required`);
   console.log(`Health: http://localhost:${PORT}/health`);
   if (!ANTHROPIC_API_KEY) console.warn('⚠️ No ANTHROPIC_API_KEY set!');
+  if (!process.env.BACKEND_SECRET_KEY) console.warn('⚠️ No BACKEND_SECRET_KEY set - using random key!');
 });
