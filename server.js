@@ -8,13 +8,11 @@ const PORT = process.env.PORT || 3001;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://gymgear-frontend5.vercel.app';
 
-// CORS - Only allow your frontend
 app.use(cors({
   origin: FRONTEND_URL,
   credentials: true
 }));
 
-// Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -26,12 +24,10 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 app.use(express.json());
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'Backend running!', time: new Date().toISOString() });
 });
 
-// Search products
 app.post('/api/search-products', async (req, res) => {
   try {
     const { category } = req.body;
@@ -47,9 +43,6 @@ app.post('/api/search-products', async (req, res) => {
     console.log(`Searching for ${category}...`);
 
     const categoryName = category === 'benches' ? 'weight benches' : 'weight plates';
-    const query = category === 'benches'
-      ? 'best weight benches 2025 price amazon rogue titan rep'
-      : 'best weight plates 2025 price amazon rogue titan';
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -60,7 +53,7 @@ app.post('/api/search-products', async (req, res) => {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
+        max_tokens: 2000,
         tools: [
           {
             type: 'web_search_20250305',
@@ -70,36 +63,7 @@ app.post('/api/search-products', async (req, res) => {
         messages: [
           {
             role: 'user',
-            content: `Search the web RIGHT NOW for top 15 ${categoryName} currently for sale with real prices.
-
-Search: ${query}
-
-Return ONLY valid JSON array (no markdown, no explanation):
-[
-  {
-    "id": "unique_id",
-    "name": "Product name",
-    "brand": "Brand",
-    "regularPrice": 299.99,
-    "salePrice": 249.99,
-    "discount": "17%",
-    "retailer": "Amazon/Rogue/Titan/etc",
-    "url": "Full product URL",
-    "quality": 8.5,
-    "rating": 4.5,
-    "inStock": true,
-    "specs": {"spec": "value"},
-    "keyAspects": ["aspect1", "aspect2"]
-  }
-]
-
-Requirements:
-1. REAL current prices from web search
-2. REAL products only
-3. Full working URLs
-4. Current sales/discounts
-5. Real ratings
-6. Stock status`,
+            content: `Find 10 ${categoryName} with current prices. Return JSON only: [{"name":"product","brand":"brand","regularPrice":100,"salePrice":80,"discount":"20%","retailer":"Amazon","url":"https://...","quality":8,"rating":4.5}]`,
           },
         ],
       }),
@@ -147,7 +111,6 @@ Requirements:
   }
 });
 
-// Recommendations
 app.post('/api/recommendations', (req, res) => {
   try {
     const { products } = req.body;
@@ -202,7 +165,5 @@ app.use((req, res) => res.status(404).json({ error: 'Endpoint not found' }));
 
 app.listen(PORT, () => {
   console.log(`✅ Backend running on port ${PORT}`);
-  console.log(`🔒 Security: CORS restricted to ${FRONTEND_URL}`);
-  console.log(`🔒 Security: Rate limiting enabled`);
   if (!ANTHROPIC_API_KEY) console.warn('⚠️ No ANTHROPIC_API_KEY set!');
 });
