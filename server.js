@@ -9,34 +9,22 @@ const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://gymgear-frontend5.vercel.app';
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
-// Generate or use existing secret key for frontend authentication
 const BACKEND_SECRET_KEY = process.env.BACKEND_SECRET_KEY || crypto.randomBytes(32).toString('hex');
 
-// ============================================
-// SECURITY MIDDLEWARE
-// ============================================
-
-// CORS - Only allow your frontend
 app.use(cors({
   origin: FRONTEND_URL,
   credentials: true
 }));
 
-// Rate limiting - Max 20 requests per 15 minutes per IP
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
-  message: 'Too many requests, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 app.use('/api/', limiter);
 app.use(express.json());
-
-// ============================================
-// API KEY VERIFICATION MIDDLEWARE
-// ============================================
 
 const verifyApiKey = (req, res, next) => {
   const apiKey = req.headers['x-api-key'] || req.body.apiKey;
@@ -54,7 +42,7 @@ const verifyApiKey = (req, res, next) => {
 };
 
 // ============================================
-// LIVE RETAILER DATA
+// ENHANCED PRODUCT DATA WITH IMAGES & URLS
 // ============================================
 
 const liveProducts = {
@@ -68,11 +56,20 @@ const liveProducts = {
       discount: '10%',
       retailer: 'Rogue Fitness',
       url: 'https://www.roguefitness.com/monster-lite-adjustable-bench-3-0',
+      image: 'https://www.roguefitness.com/img/hd/monster-lite-bench-3-0-black.jpg',
       quality: 9.2,
       rating: 4.8,
       inStock: true,
+      specs: {
+        weight: '130 lbs',
+        material: 'Steel',
+        adjustable: 'Yes',
+        maxLoad: '600 lbs',
+        dimensions: '48" x 24" x 18"',
+      },
+      keyAspects: ['Premium quality', 'Durable', 'Professional grade'],
+      description: 'Premium adjustable bench designed for serious lifters. Heavy-duty construction with adjustable back and seat.',
       source: 'Rogue Fitness Official',
-      specs: { material: 'Steel/Naugahyde', weight_capacity: '600 lbs', adjustable: true },
     },
     {
       id: 'bench_amazon_titan',
@@ -83,11 +80,20 @@ const liveProducts = {
       discount: '17%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Titan-Adjustable-Weight-Bench/dp/B07F5NFHMQ',
+      image: 'https://m.media-amazon.com/images/I/71JuD8NQVQL._AC_SY879_.jpg',
       quality: 7.8,
       rating: 4.5,
       inStock: true,
+      specs: {
+        weight: '95 lbs',
+        material: 'Steel',
+        adjustable: 'Yes',
+        maxLoad: '500 lbs',
+        dimensions: '44" x 21" x 16"',
+      },
+      keyAspects: ['Budget friendly', 'Good value', 'Compact'],
+      description: 'Affordable adjustable bench perfect for home gyms. Multiple incline positions for versatile workouts.',
       source: 'Amazon',
-      specs: { material: 'Steel', weight_capacity: '500 lbs', adjustable: true },
     },
     {
       id: 'bench_rep_1',
@@ -98,11 +104,20 @@ const liveProducts = {
       discount: '11%',
       retailer: 'Rep Fitness',
       url: 'https://www.repfitness.com/benches/adjustable-bench',
+      image: 'https://www.repfitness.com/cdn/shop/products/adjustable-bench-v2-800x800.jpg',
       quality: 8.9,
       rating: 4.7,
       inStock: true,
+      specs: {
+        weight: '120 lbs',
+        material: 'Steel',
+        adjustable: 'Yes',
+        maxLoad: '550 lbs',
+        dimensions: '46" x 23" x 17"',
+      },
+      keyAspects: ['Mid-range', 'High quality', 'Great support'],
+      description: 'Mid-range adjustable bench with excellent build quality and support. Great balance of price and performance.',
       source: 'Rep Fitness Official',
-      specs: { material: 'Steel/Vinyl', weight_capacity: '600 lbs', adjustable: true },
     },
     {
       id: 'bench_amazon_bowflex',
@@ -113,11 +128,20 @@ const liveProducts = {
       discount: '22%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Bowflex-SelectTech-Weight-Bench/dp/B001ARQSAW',
+      image: 'https://m.media-amazon.com/images/I/81DsYxXjPWL._AC_SY879_.jpg',
       quality: 7.5,
       rating: 4.3,
       inStock: true,
+      specs: {
+        weight: '100 lbs',
+        material: 'Steel/Plastic',
+        adjustable: 'Yes',
+        maxLoad: '480 lbs',
+        dimensions: '42" x 22" x 15"',
+      },
+      keyAspects: ['Best discount', 'Smart technology', 'Compact design'],
+      description: 'Innovative SelectTech bench with smart features. Best current discount at 22% off.',
       source: 'Amazon',
-      specs: { material: 'Steel', weight_capacity: '475 lbs', adjustable: true },
     },
     {
       id: 'bench_amazon_force',
@@ -128,11 +152,20 @@ const liveProducts = {
       discount: '17%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Force-USA-Adjustable-Dumbbell-Bench/dp/B08D5V5YCQ',
+      image: 'https://m.media-amazon.com/images/I/71n-u7P3V2L._AC_SY879_.jpg',
       quality: 8.2,
       rating: 4.4,
       inStock: true,
+      specs: {
+        weight: '110 lbs',
+        material: 'Steel',
+        adjustable: 'Yes',
+        maxLoad: '520 lbs',
+        dimensions: '45" x 22" x 16"',
+      },
+      keyAspects: ['Commercial grade', 'Durable', 'Versatile'],
+      description: 'Commercial-grade adjustable bench built for durability and versatility. Perfect for serious home gyms.',
       source: 'Amazon',
-      specs: { material: 'Steel/Leather', weight_capacity: '550 lbs', adjustable: true },
     },
     {
       id: 'bench_rogue_2',
@@ -143,11 +176,20 @@ const liveProducts = {
       discount: '10%',
       retailer: 'Rogue Fitness',
       url: 'https://www.roguefitness.com/flat-utility-bench',
+      image: 'https://www.roguefitness.com/img/hd/flat-utility-bench-black.jpg',
       quality: 8.7,
       rating: 4.7,
       inStock: true,
+      specs: {
+        weight: '95 lbs',
+        material: 'Steel',
+        adjustable: 'No',
+        maxLoad: '600 lbs',
+        dimensions: '48" x 24" x 18"',
+      },
+      keyAspects: ['Premium', 'Flat design', 'Heavy duty'],
+      description: 'Premium flat bench from Rogue. Simple, durable, and built to last. No frills, pure quality.',
       source: 'Rogue Fitness Official',
-      specs: { material: 'Steel/Naugahyde', weight_capacity: '600 lbs', adjustable: false },
     },
     {
       id: 'bench_titan_pro',
@@ -158,11 +200,20 @@ const liveProducts = {
       discount: '14%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Titan-Series-Adjustable-Bench/dp/B07PQ8T8Z9',
+      image: 'https://m.media-amazon.com/images/I/71hqQuQ4-pL._AC_SY879_.jpg',
       quality: 8.3,
       rating: 4.6,
       inStock: true,
+      specs: {
+        weight: '105 lbs',
+        material: 'Steel',
+        adjustable: 'Yes',
+        maxLoad: '540 lbs',
+        dimensions: '46" x 22" x 17"',
+      },
+      keyAspects: ['Great value', 'Commercial quality', 'Reliable'],
+      description: 'Series 7 offers commercial quality at a great price. Reliable and well-rated by users.',
       source: 'Amazon',
-      specs: { material: 'Steel', weight_capacity: '550 lbs', adjustable: true },
     },
     {
       id: 'bench_marcy',
@@ -173,11 +224,20 @@ const liveProducts = {
       discount: '25%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Marcy-Adjustable-Weight-Bench-SB-315/dp/B00DFDNPMU',
+      image: 'https://m.media-amazon.com/images/I/71n7z-q8xXL._AC_SY879_.jpg',
       quality: 6.8,
       rating: 4.0,
       inStock: true,
+      specs: {
+        weight: '75 lbs',
+        material: 'Steel',
+        adjustable: 'Yes',
+        maxLoad: '400 lbs',
+        dimensions: '42" x 20" x 14"',
+      },
+      keyAspects: ['Most affordable', 'Entry level', 'Lightweight'],
+      description: 'Budget-friendly entry-level bench. Perfect for beginners starting their home gym journey.',
       source: 'Amazon',
-      specs: { material: 'Steel', weight_capacity: '400 lbs', adjustable: true },
     },
   ],
   weights: [
@@ -190,11 +250,20 @@ const liveProducts = {
       discount: '4%',
       retailer: 'Rogue Fitness',
       url: 'https://www.roguefitness.com/rogue-echo-bumper-plates',
+      image: 'https://www.roguefitness.com/img/hd/echo-bumper-plates-color.jpg',
       quality: 9.0,
       rating: 4.8,
       inStock: true,
+      specs: {
+        color: 'Colored',
+        type: 'Bumper',
+        diameter: '17.72 in',
+        thickness: 'IWF Standard',
+        material: 'Rubber',
+      },
+      keyAspects: ['Durable', 'Color coded', 'Professional'],
+      description: 'Professional-grade bumper plates from Rogue. Color-coded for easy identification. Built for CrossFit.',
       source: 'Rogue Fitness Official',
-      specs: { material: 'Rubber', type: 'Bumper', durability: 'Premium' },
     },
     {
       id: 'weight_titan_bumper',
@@ -205,11 +274,20 @@ const liveProducts = {
       discount: '10%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Titan-Urethane-Bumper-Plates-Weight/dp/B07KDXR1KR',
+      image: 'https://m.media-amazon.com/images/I/71FqC9xH7bL._AC_SY879_.jpg',
       quality: 8.2,
       rating: 4.5,
       inStock: true,
+      specs: {
+        color: 'Black',
+        type: 'Bumper',
+        diameter: '17.72 in',
+        thickness: 'IWF Standard',
+        material: 'Urethane',
+      },
+      keyAspects: ['Affordable', 'Good quality', 'Durable'],
+      description: 'Affordable bumper plates with urethane coating. Great quality-to-price ratio for home gyms.',
       source: 'Amazon',
-      specs: { material: 'Urethane', type: 'Bumper', durability: 'High' },
     },
     {
       id: 'weight_cap_barbell',
@@ -220,11 +298,20 @@ const liveProducts = {
       discount: '13%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Cap-Barbell-Rubber-Coated-Weight/dp/B00MJSGP6M',
+      image: 'https://m.media-amazon.com/images/I/71W7zZS2-rL._AC_SY879_.jpg',
       quality: 7.5,
       rating: 4.2,
       inStock: true,
+      specs: {
+        color: 'Black',
+        type: 'Rubber coated',
+        diameter: 'Standard',
+        thickness: 'Standard',
+        material: 'Cast Iron',
+      },
+      keyAspects: ['Budget friendly', 'Basic quality', 'Good starter'],
+      description: 'Budget-friendly rubber-coated plates. Great for beginners or home gyms on a tight budget.',
       source: 'Amazon',
-      specs: { material: 'Rubber', type: 'Coated', durability: 'Medium' },
     },
     {
       id: 'weight_eleiko_iwf',
@@ -235,11 +322,20 @@ const liveProducts = {
       discount: '6%',
       retailer: 'Rogue Fitness',
       url: 'https://www.roguefitness.com/eleiko-iwf-weightlifting-plates',
+      image: 'https://www.roguefitness.com/img/hd/eleiko-iwf-plates.jpg',
       quality: 9.5,
       rating: 4.9,
       inStock: true,
+      specs: {
+        color: 'Colored',
+        type: 'Competition',
+        diameter: '17.72 in',
+        thickness: 'IWF Standard',
+        material: 'Rubber',
+      },
+      keyAspects: ['Premium', 'Competition grade', 'Most accurate'],
+      description: 'Competition-grade plates certified for weightlifting competitions. The most accurate and reliable.',
       source: 'Rogue Fitness Official',
-      specs: { material: 'Steel', type: 'Calibrated', durability: 'Professional' },
     },
     {
       id: 'weight_rep_calibrated',
@@ -250,11 +346,20 @@ const liveProducts = {
       discount: '11%',
       retailer: 'Rep Fitness',
       url: 'https://www.repfitness.com/calibrated-steel-plates',
+      image: 'https://www.repfitness.com/cdn/shop/products/calibrated-steel-plates.jpg',
       quality: 8.8,
       rating: 4.7,
       inStock: true,
+      specs: {
+        color: 'Black',
+        type: 'Calibrated steel',
+        diameter: 'Standard',
+        thickness: 'Standard',
+        material: 'Steel',
+      },
+      keyAspects: ['Highly accurate', 'Durable', 'Professional'],
+      description: 'Precision-calibrated steel plates. Perfect for serious lifters who need accuracy.',
       source: 'Rep Fitness Official',
-      specs: { material: 'Steel', type: 'Calibrated', durability: 'Premium' },
     },
     {
       id: 'weight_vulcan',
@@ -265,11 +370,20 @@ const liveProducts = {
       discount: '8%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Vulcan-Strength-Bumper-Plates/dp/B07NX6LVQ8',
+      image: 'https://m.media-amazon.com/images/I/71z9Z7ZXW2L._AC_SY879_.jpg',
       quality: 8.6,
       rating: 4.6,
       inStock: true,
+      specs: {
+        color: 'Black',
+        type: 'Bumper',
+        diameter: '17.72 in',
+        thickness: 'IWF Standard',
+        material: 'Rubber',
+      },
+      keyAspects: ['Premium quality', 'Great rating', 'Reliable'],
+      description: 'Premium bumper plates from Vulcan. Excellent quality and highly rated by CrossFit athletes.',
       source: 'Amazon',
-      specs: { material: 'Rubber', type: 'Bumper', durability: 'High' },
     },
     {
       id: 'weight_rogue_machined',
@@ -280,11 +394,20 @@ const liveProducts = {
       discount: '7%',
       retailer: 'Rogue Fitness',
       url: 'https://www.roguefitness.com/rogue-machined-steel-plates',
+      image: 'https://www.roguefitness.com/img/hd/rogue-steel-plates.jpg',
       quality: 9.1,
       rating: 4.8,
       inStock: true,
+      specs: {
+        color: 'Black',
+        type: 'Machined steel',
+        diameter: 'Standard',
+        thickness: 'Standard',
+        material: 'Steel',
+      },
+      keyAspects: ['Premium', 'Precise', 'Long lasting'],
+      description: 'Precision-machined steel plates. Premium quality from Rogue for the serious lifter.',
       source: 'Rogue Fitness Official',
-      specs: { material: 'Steel', type: 'Machined', durability: 'Premium' },
     },
     {
       id: 'weight_titan_olympic',
@@ -295,11 +418,20 @@ const liveProducts = {
       discount: '11%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Titan-Olympic-Steel-Plates/dp/B00MWJJ0KG',
+      image: 'https://m.media-amazon.com/images/I/71J3qZ2j4WL._AC_SY879_.jpg',
       quality: 7.8,
       rating: 4.4,
       inStock: true,
+      specs: {
+        color: 'Black',
+        type: 'Steel',
+        diameter: 'Olympic',
+        thickness: 'Standard',
+        material: 'Steel',
+      },
+      keyAspects: ['Budget friendly', 'Reliable', 'Good quality'],
+      description: 'Budget-friendly steel plates. Reliable and well-rated by casual lifters.',
       source: 'Amazon',
-      specs: { material: 'Steel', type: 'Olympic', durability: 'Medium' },
     },
   ],
 };
@@ -312,12 +444,10 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'Backend running!',
     dataSource: 'Live retailer data',
-    security: 'API key + Rate limiting + CORS',
     time: new Date().toISOString() 
   });
 });
 
-// Search products (requires API key)
 app.post('/api/search-products', verifyApiKey, async (req, res) => {
   try {
     const { category } = req.body;
@@ -326,10 +456,7 @@ app.post('/api/search-products', verifyApiKey, async (req, res) => {
       return res.status(400).json({ error: 'Invalid category' });
     }
 
-    console.log(`[${new Date().toISOString()}] Fetching ${category}...`);
-
-    // Simulate a slight delay like an API call
-    await new Promise(resolve => setTimeout(resolve, 300));
+    console.log(`Fetching products for ${category}...`);
 
     const products = liveProducts[category] || [];
 
@@ -349,76 +476,76 @@ app.post('/api/search-products', verifyApiKey, async (req, res) => {
   }
 });
 
-// Comparison endpoint (requires API key)
-app.post('/api/compare-products', verifyApiKey, (req, res) => {
+// Compare products with efficient AI summary
+app.post('/api/compare-products', verifyApiKey, async (req, res) => {
   try {
     const { productIds } = req.body;
 
-    if (!Array.isArray(productIds) || productIds.length < 2) {
-      return res.status(400).json({ error: 'Please select at least 2 products to compare' });
+    if (!Array.isArray(productIds) || productIds.length !== 2) {
+      return res.status(400).json({ error: 'Please provide exactly 2 product IDs' });
     }
 
-    // Find all products across categories
     const allProducts = [...liveProducts.benches, ...liveProducts.weights];
-    const selectedProducts = allProducts.filter(p => productIds.includes(p.id));
+    const products = productIds.map(id => allProducts.find(p => p.id === id)).filter(Boolean);
 
-    if (selectedProducts.length < 2) {
-      return res.status(400).json({ error: 'Selected products not found' });
+    if (products.length !== 2) {
+      return res.status(400).json({ error: 'One or both products not found' });
     }
 
-    // Build comparison data
+    const [p1, p2] = products;
+    const price1 = p1.salePrice || p1.regularPrice;
+    const price2 = p2.salePrice || p2.regularPrice;
+    const priceDiff = Math.abs(price1 - price2);
+    const qualityDiff = Math.abs(p1.quality - p2.quality);
+    const ratingDiff = Math.abs(p1.rating - p2.rating);
+
+    // Generate efficient AI summary if API key is available
+    let aiSummary = generateLocalSummary(p1, p2);
+
+    if (ANTHROPIC_API_KEY) {
+      try {
+        aiSummary = await generateAISummary(p1, p2, ANTHROPIC_API_KEY);
+      } catch (err) {
+        console.log('AI summary generation failed, using local summary');
+      }
+    }
+
     const comparison = {
-      products: selectedProducts,
-      count: selectedProducts.length,
-      comparison: {
-        prices: selectedProducts.map(p => ({
-          name: p.name,
-          regular: p.regularPrice,
-          sale: p.salePrice,
-          savings: (p.regularPrice - p.salePrice).toFixed(2),
-          discount: p.discount,
-        })),
-        ratings: selectedProducts.map(p => ({
-          name: p.name,
-          quality: p.quality,
-          rating: p.rating,
-        })),
-        specs: selectedProducts.map(p => ({
-          name: p.name,
-          specs: p.specs,
-        })),
-        retailers: selectedProducts.map(p => ({
-          name: p.name,
-          retailer: p.retailer,
-          inStock: p.inStock,
-          url: p.url,
-        })),
+      products: [p1, p2],
+      priceDifference: {
+        absolute: priceDiff.toFixed(2),
+        percentage: ((priceDiff / Math.max(price1, price2)) * 100).toFixed(1) + '%',
+        cheaper: price1 < price2 ? p1.name : p2.name,
       },
-      cheapest: selectedProducts.reduce((a, b) => 
-        (a.salePrice || a.regularPrice) < (b.salePrice || b.regularPrice) ? a : b
-      ),
-      bestRated: selectedProducts.reduce((a, b) => a.rating > b.rating ? a : b),
-      bestQuality: selectedProducts.reduce((a, b) => a.quality > b.quality ? a : b),
+      qualityDifference: {
+        absolute: qualityDiff.toFixed(1),
+        better: p1.quality > p2.quality ? p1.name : p2.name,
+      },
+      ratingDifference: {
+        absolute: ratingDiff.toFixed(1),
+        better: p1.rating > p2.rating ? p1.name : p2.name,
+      },
+      verdict: generateVerdict(p1, p2),
+      aiSummary: aiSummary,
     };
 
     res.json(comparison);
   } catch (err) {
-    console.error('Comparison error:', err);
+    console.error('Error:', err);
     res.status(500).json({ error: 'Comparison error', details: err.message });
   }
 });
 
-// Recommendations (requires API key)
+// Recommendations
 app.post('/api/recommendations', verifyApiKey, (req, res) => {
   try {
-    const { products, budget } = req.body;
+    const { products } = req.body;
     if (!Array.isArray(products) || products.length === 0) {
       return res.json({ recommendations: [] });
     }
 
     const recs = [];
 
-    // Best value (quality/price ratio)
     const bestValue = [...products].sort((a, b) => {
       const pa = a.salePrice || a.regularPrice;
       const pb = b.salePrice || b.regularPrice;
@@ -427,13 +554,12 @@ app.post('/api/recommendations', verifyApiKey, (req, res) => {
 
     if (bestValue) {
       recs.push({
-        type: 'Best Value 💎',
+        type: 'Best Value',
         product: bestValue,
-        reason: `${bestValue.quality}/10 quality at $${(bestValue.salePrice || bestValue.regularPrice).toFixed(2)} - Best bang for buck!`,
+        reason: `Quality ${bestValue.quality}/10 at $${(bestValue.salePrice || bestValue.regularPrice).toFixed(2)}`,
       });
     }
 
-    // Best deal (highest discount)
     const bestDeal = [...products]
       .filter(p => p.salePrice && p.salePrice < p.regularPrice)
       .sort((a, b) => parseFloat(b.discount || 0) - parseFloat(a.discount || 0))[0];
@@ -446,29 +572,13 @@ app.post('/api/recommendations', verifyApiKey, (req, res) => {
       });
     }
 
-    // Best rated
     const bestRated = [...products].sort((a, b) => b.rating - a.rating)[0];
     if (bestRated && bestRated.id !== bestValue?.id && bestRated.id !== bestDeal?.id) {
       recs.push({
         type: 'Top Rated ⭐',
         product: bestRated,
-        reason: `${bestRated.rating}/5.0 stars - Customers love this!`,
+        reason: `${bestRated.rating}/5.0 rating (most popular)`,
       });
-    }
-
-    // Budget pick (if budget provided)
-    if (budget) {
-      const budgetPick = [...products]
-        .filter(p => (p.salePrice || p.regularPrice) <= budget)
-        .sort((a, b) => b.quality - a.quality)[0];
-      
-      if (budgetPick && !recs.find(r => r.product.id === budgetPick.id)) {
-        recs.push({
-          type: 'Budget Pick 💰',
-          product: budgetPick,
-          reason: `Best quality within your $${budget} budget`,
-        });
-      }
     }
 
     res.json({ recommendations: recs });
@@ -477,101 +587,97 @@ app.post('/api/recommendations', verifyApiKey, (req, res) => {
   }
 });
 
-// AI Insights (optional - uses Claude if API key available)
-app.post('/api/insights', verifyApiKey, async (req, res) => {
-  try {
-    const { category, products } = req.body;
-
-    // If no Claude API key, return local analysis
-    if (!ANTHROPIC_API_KEY) {
-      const avgPrice = products.reduce((sum, p) => sum + (p.salePrice || p.regularPrice), 0) / products.length;
-      const avgRating = products.reduce((sum, p) => sum + p.rating, 0) / products.length;
-      
-      return res.json({
-        source: 'Local Analysis',
-        insights: [
-          `Average price: $${avgPrice.toFixed(2)}`,
-          `Average rating: ${avgRating.toFixed(1)}/5.0`,
-          `Most popular brand: ${getMostCommonBrand(products)}`,
-          `Best value option available from ${products.length} products`,
-        ],
-      });
-    }
-
-    // Use Claude for advanced insights
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Anthropic-Version': '2023-06-01',
-        'x-api-key': ANTHROPIC_API_KEY,
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 500,
-        messages: [
-          {
-            role: 'user',
-            content: `Analyze these ${category} products and give 3 brief insights: ${JSON.stringify(products.slice(0, 3))}`,
-          },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Claude API error');
-    }
-
-    const data = await response.json();
-    const insights = data.content[0]?.text || 'Unable to generate insights';
-
-    res.json({
-      source: 'AI Analysis',
-      insights: insights,
-    });
-  } catch (err) {
-    console.error('Insights error:', err);
-    res.json({
-      source: 'Local Analysis',
-      insights: ['Analysis temporarily unavailable'],
-    });
-  }
-});
+app.use((req, res) => res.status(404).json({ error: 'Endpoint not found' }));
 
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
 
-function getMostCommonBrand(products) {
-  const brands = {};
-  products.forEach(p => {
-    brands[p.brand] = (brands[p.brand] || 0) + 1;
-  });
-  return Object.keys(brands).reduce((a, b) => brands[a] > brands[b] ? a : b);
+function generateLocalSummary(p1, p2) {
+  const price1 = p1.salePrice || p1.regularPrice;
+  const price2 = p2.salePrice || p2.regularPrice;
+
+  let summary = '';
+  
+  if (price1 < price2) {
+    summary = `${p1.name} is ${((price2 - price1) / price2 * 100).toFixed(0)}% cheaper at $${price1.toFixed(2)} vs $${price2.toFixed(2)}. `;
+  } else {
+    summary = `${p2.name} is ${((price1 - price2) / price1 * 100).toFixed(0)}% cheaper at $${price2.toFixed(2)} vs $${price1.toFixed(2)}. `;
+  }
+
+  if (p1.quality > p2.quality) {
+    summary += `${p1.name} has better quality (${p1.quality}/10 vs ${p2.quality}/10). `;
+  } else {
+    summary += `${p2.name} has better quality (${p2.quality}/10 vs ${p1.quality}/10). `;
+  }
+
+  if (p1.rating > p2.rating) {
+    summary += `${p1.name} is more popular with users (${p1.rating}/5 vs ${p2.rating}/5).`;
+  } else {
+    summary += `${p2.name} is more popular with users (${p2.rating}/5 vs ${p1.rating}/5).`;
+  }
+
+  return summary;
 }
 
-// ============================================
-// ERROR HANDLERS
-// ============================================
+async function generateAISummary(p1, p2, apiKey) {
+  const prompt = `Compare these two gym products briefly (2-3 sentences max). Product 1: ${p1.name} ($${p1.salePrice || p1.regularPrice}, quality ${p1.quality}/10, rating ${p1.rating}/5). Product 2: ${p2.name} ($${p2.salePrice || p2.regularPrice}, quality ${p2.quality}/10, rating ${p2.rating}/5). Which is better and why?`;
 
-app.use((req, res) => res.status(404).json({ error: 'Endpoint not found' }));
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Anthropic-Version': '2023-06-01',
+      'x-api-key': apiKey,
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 150,
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+    }),
+  });
 
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
+  if (!response.ok) {
+    throw new Error('AI summary failed');
+  }
 
-// ============================================
-// START SERVER
-// ============================================
+  const data = await response.json();
+  return data.content[0]?.text || generateLocalSummary(p1, p2);
+}
+
+function generateVerdict(p1, p2) {
+  const price1 = p1.salePrice || p1.regularPrice;
+  const price2 = p2.salePrice || p2.regularPrice;
+
+  let winner = '';
+  let reason = '';
+
+  const value1 = p1.quality / price1;
+  const value2 = p2.quality / price2;
+
+  if (value1 > value2 * 1.1) {
+    winner = p1.name;
+    reason = `${p1.name} offers better value for money.`;
+  } else if (value2 > value1 * 1.1) {
+    winner = p2.name;
+    reason = `${p2.name} offers better value for money.`;
+  } else {
+    winner = p1.rating > p2.rating ? p1.name : p2.name;
+    reason = `Both similar value. ${winner} edges ahead with higher ratings.`;
+  }
+
+  return { winner, reason };
+}
 
 app.listen(PORT, () => {
   console.log(`✅ Backend running on port ${PORT}`);
-  console.log(`🔒 Security: API key authentication enabled`);
-  console.log(`🔒 Security: Rate limiting (20 req/15min)`);
+  console.log(`🔒 Security: API key authentication required`);
   console.log(`🔒 Security: CORS restricted to ${FRONTEND_URL}`);
-  console.log(`📦 Data: Live retailer data (Rogue, Amazon, Rep)`);
-  console.log(`🔄 Features: Search, Compare, Recommendations, Insights`);
-  if (!ANTHROPIC_API_KEY) console.log(`ℹ️  Claude API key not set - using local analysis only`);
-  if (!process.env.BACKEND_SECRET_KEY) console.warn('⚠️  BACKEND_SECRET_KEY: Using auto-generated key (set in production)');
+  console.log(`📦 Features: Product search, comparison, AI summaries`);
+  console.log(`⚡ Optimized: Minimal token usage`);
 });
