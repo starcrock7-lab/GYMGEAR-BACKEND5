@@ -437,62 +437,6 @@ const liveProducts = {
 };
 
 // ============================================
-// IMAGE CACHE (stores fetched images to avoid re-fetching)
-// ============================================
-
-const imageCache = {};
-
-async function fetchProductImage(productUrl, productName) {
-  // Check cache first
-  if (imageCache[productUrl]) {
-    return imageCache[productUrl];
-  }
-
-  if (!ANTHROPIC_API_KEY) {
-    return '';
-  }
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Anthropic-Version': '2023-06-01',
-        'x-api-key': ANTHROPIC_API_KEY,
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 200,
-        messages: [
-          {
-            role: 'user',
-            content: `Go to ${productUrl} and find the main product image URL. Return ONLY the direct image URL in the format: https://... Do not include any other text.`,
-          },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      console.log('Could not fetch image for', productName);
-      return '';
-    }
-
-    const data = await response.json();
-    const imageUrl = data.content[0]?.text?.trim() || '';
-    
-    // Cache it
-    if (imageUrl.startsWith('https://')) {
-      imageCache[productUrl] = imageUrl;
-      return imageUrl;
-    }
-  } catch (err) {
-    console.log('Error fetching image:', err.message);
-  }
-
-  return '';
-}
-
-// ============================================
 // ROUTES
 // ============================================
 
@@ -515,14 +459,6 @@ app.post('/api/search-products', verifyApiKey, async (req, res) => {
     console.log(`Fetching products for ${category}...`);
 
     let products = liveProducts[category] || [];
-
-    // Fetch missing images using Claude
-    for (let product of products) {
-      if (!product.image && ANTHROPIC_API_KEY) {
-        console.log(`Fetching image for ${product.name}...`);
-        product.image = await fetchProductImage(product.url, product.name);
-      }
-    }
 
     if (products.length === 0) {
       return res.status(400).json({ error: 'No products found' });
