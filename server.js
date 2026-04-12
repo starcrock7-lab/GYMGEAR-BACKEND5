@@ -42,7 +42,7 @@ const verifyApiKey = (req, res, next) => {
 };
 
 // ============================================
-// ENHANCED PRODUCT DATA WITH IMAGES & URLS
+// PRODUCT DATA WITH RETAILER LINKS
 // ============================================
 
 const liveProducts = {
@@ -56,7 +56,7 @@ const liveProducts = {
       discount: '10%',
       retailer: 'Rogue Fitness',
       url: 'https://www.roguefitness.com/monster-lite-adjustable-bench-3-0',
-      image: 'https://via.placeholder.com/280x200?text=Rogue+Bench',
+      image: '',
       quality: 9.2,
       rating: 4.8,
       inStock: true,
@@ -80,7 +80,7 @@ const liveProducts = {
       discount: '17%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Titan-Adjustable-Weight-Bench/dp/B07F5NFHMQ',
-      image: 'https://via.placeholder.com/280x200?text=Titan+Bench',
+      image: '',
       quality: 7.8,
       rating: 4.5,
       inStock: true,
@@ -104,7 +104,7 @@ const liveProducts = {
       discount: '11%',
       retailer: 'Rep Fitness',
       url: 'https://www.repfitness.com/benches/adjustable-bench',
-      image: 'https://via.placeholder.com/280x200?text=Rep+Bench',
+      image: '',
       quality: 8.9,
       rating: 4.7,
       inStock: true,
@@ -128,7 +128,7 @@ const liveProducts = {
       discount: '22%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Bowflex-SelectTech-Weight-Bench/dp/B001ARQSAW',
-      image: 'https://via.placeholder.com/280x200?text=Bowflex+Bench',
+      image: '',
       quality: 7.5,
       rating: 4.3,
       inStock: true,
@@ -152,7 +152,7 @@ const liveProducts = {
       discount: '17%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Force-USA-Adjustable-Dumbbell-Bench/dp/B08D5V5YCQ',
-      image: 'https://via.placeholder.com/280x200?text=Force+USA+Bench',
+      image: '',
       quality: 8.2,
       rating: 4.4,
       inStock: true,
@@ -176,7 +176,7 @@ const liveProducts = {
       discount: '10%',
       retailer: 'Rogue Fitness',
       url: 'https://www.roguefitness.com/flat-utility-bench',
-      image: 'https://via.placeholder.com/280x200?text=Rogue+Flat+Bench',
+      image: '',
       quality: 8.7,
       rating: 4.7,
       inStock: true,
@@ -200,7 +200,7 @@ const liveProducts = {
       discount: '14%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Titan-Series-Adjustable-Bench/dp/B07PQ8T8Z9',
-      image: 'https://via.placeholder.com/280x200?text=Titan+Series+7',
+      image: '',
       quality: 8.3,
       rating: 4.6,
       inStock: true,
@@ -224,7 +224,7 @@ const liveProducts = {
       discount: '25%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Marcy-Adjustable-Weight-Bench-SB-315/dp/B00DFDNPMU',
-      image: 'https://via.placeholder.com/280x200?text=Marcy+Bench',
+      image: '',
       quality: 6.8,
       rating: 4.0,
       inStock: true,
@@ -250,7 +250,7 @@ const liveProducts = {
       discount: '4%',
       retailer: 'Rogue Fitness',
       url: 'https://www.roguefitness.com/rogue-echo-bumper-plates',
-      image: 'https://via.placeholder.com/280x200?text=Rogue+Echo+Plates',
+      image: '',
       quality: 9.0,
       rating: 4.8,
       inStock: true,
@@ -274,7 +274,7 @@ const liveProducts = {
       discount: '10%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Titan-Urethane-Bumper-Plates-Weight/dp/B07KDXR1KR',
-      image: 'https://via.placeholder.com/280x200?text=Titan+Bumper+Plates',
+      image: '',
       quality: 8.2,
       rating: 4.5,
       inStock: true,
@@ -298,7 +298,7 @@ const liveProducts = {
       discount: '13%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Cap-Barbell-Rubber-Coated-Weight/dp/B00MJSGP6M',
-      image: 'https://via.placeholder.com/280x200?text=Cap+Barbell+Plates',
+      image: '',
       quality: 7.5,
       rating: 4.2,
       inStock: true,
@@ -322,7 +322,7 @@ const liveProducts = {
       discount: '6%',
       retailer: 'Rogue Fitness',
       url: 'https://www.roguefitness.com/eleiko-iwf-weightlifting-plates',
-      image: 'https://via.placeholder.com/280x200?text=Eleiko+IWF+Plates',
+      image: '',
       quality: 9.5,
       rating: 4.9,
       inStock: true,
@@ -346,7 +346,7 @@ const liveProducts = {
       discount: '11%',
       retailer: 'Rep Fitness',
       url: 'https://www.repfitness.com/calibrated-steel-plates',
-      image: 'https://via.placeholder.com/280x200?text=Rep+Calibrated+Plates',
+      image: '',
       quality: 8.8,
       rating: 4.7,
       inStock: true,
@@ -370,7 +370,7 @@ const liveProducts = {
       discount: '8%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Vulcan-Strength-Bumper-Plates/dp/B07NX6LVQ8',
-      image: 'https://via.placeholder.com/280x200?text=Vulcan+Bumper+Plates',
+      image: '',
       quality: 8.6,
       rating: 4.6,
       inStock: true,
@@ -394,7 +394,7 @@ const liveProducts = {
       discount: '7%',
       retailer: 'Rogue Fitness',
       url: 'https://www.roguefitness.com/rogue-machined-steel-plates',
-      image: 'https://via.placeholder.com/280x200?text=Rogue+Machined+Plates',
+      image: '',
       quality: 9.1,
       rating: 4.8,
       inStock: true,
@@ -418,7 +418,7 @@ const liveProducts = {
       discount: '11%',
       retailer: 'Amazon',
       url: 'https://www.amazon.com/Titan-Olympic-Steel-Plates/dp/B00MWJJ0KG',
-      image: 'https://via.placeholder.com/280x200?text=Titan+Olympic+Plates',
+      image: '',
       quality: 7.8,
       rating: 4.4,
       inStock: true,
@@ -435,6 +435,62 @@ const liveProducts = {
     },
   ],
 };
+
+// ============================================
+// IMAGE CACHE (stores fetched images to avoid re-fetching)
+// ============================================
+
+const imageCache = {};
+
+async function fetchProductImage(productUrl, productName) {
+  // Check cache first
+  if (imageCache[productUrl]) {
+    return imageCache[productUrl];
+  }
+
+  if (!ANTHROPIC_API_KEY) {
+    return '';
+  }
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Anthropic-Version': '2023-06-01',
+        'x-api-key': ANTHROPIC_API_KEY,
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        messages: [
+          {
+            role: 'user',
+            content: `Go to ${productUrl} and find the main product image URL. Return ONLY the direct image URL in the format: https://... Do not include any other text.`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      console.log('Could not fetch image for', productName);
+      return '';
+    }
+
+    const data = await response.json();
+    const imageUrl = data.content[0]?.text?.trim() || '';
+    
+    // Cache it
+    if (imageUrl.startsWith('https://')) {
+      imageCache[productUrl] = imageUrl;
+      return imageUrl;
+    }
+  } catch (err) {
+    console.log('Error fetching image:', err.message);
+  }
+
+  return '';
+}
 
 // ============================================
 // ROUTES
@@ -458,7 +514,15 @@ app.post('/api/search-products', verifyApiKey, async (req, res) => {
 
     console.log(`Fetching products for ${category}...`);
 
-    const products = liveProducts[category] || [];
+    let products = liveProducts[category] || [];
+
+    // Fetch missing images using Claude
+    for (let product of products) {
+      if (!product.image && ANTHROPIC_API_KEY) {
+        console.log(`Fetching image for ${product.name}...`);
+        product.image = await fetchProductImage(product.url, product.name);
+      }
+    }
 
     if (products.length === 0) {
       return res.status(400).json({ error: 'No products found' });
@@ -499,7 +563,6 @@ app.post('/api/compare-products', verifyApiKey, async (req, res) => {
     const qualityDiff = Math.abs(p1.quality - p2.quality);
     const ratingDiff = Math.abs(p1.rating - p2.rating);
 
-    // Generate efficient AI summary if API key is available
     let aiSummary = generateLocalSummary(p1, p2);
 
     if (ANTHROPIC_API_KEY) {
@@ -678,6 +741,6 @@ app.listen(PORT, () => {
   console.log(`✅ Backend running on port ${PORT}`);
   console.log(`🔒 Security: API key authentication required`);
   console.log(`🔒 Security: CORS restricted to ${FRONTEND_URL}`);
-  console.log(`📦 Features: Product search, comparison, AI summaries`);
+  console.log(`📦 Features: Product search, comparison, AI image fetching`);
   console.log(`⚡ Optimized: Minimal token usage`);
 });
