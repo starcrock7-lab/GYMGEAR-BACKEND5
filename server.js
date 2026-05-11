@@ -1,682 +1,380 @@
-import express from 'express';
-import cors from 'cors';
-import fetch from 'node-fetch';
-import rateLimit from 'express-rate-limit';
-import crypto from 'crypto';
+// GymGear Compare Pro — Secure Backend
+// Daily AI refresh with file cache. No secret key in frontend.
+// Security: Origin-based allowlist + rate limiting + helmet headers.
 
+import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3001;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://gymgear-frontend5.vercel.app';
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const CACHE_FILE = '/tmp/gymgear_cache.json';
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-const BACKEND_SECRET_KEY = process.env.BACKEND_SECRET_KEY || crypto.randomBytes(32).toString('hex');
+// ── ALLOWED ORIGINS ───────────────────────────────────────────
+// Only requests from your Vercel frontend are accepted.
+// Add localhost for local testing. No secret key needed in HTML.
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean)
+  .concat([
+    'https://gymgear-frontend5.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500',
+  ]);
 
-app.use(cors({
-  origin: FRONTEND_URL,
-  credentials: true
-}));
+// ── CATEGORIES TO SEARCH ──────────────────────────────────────
+const SEARCH_TASKS = [
+  // Equipment
+  { key: 'benches',    label: 'weight benches and flat utility benches',         group: 'equipment' },
+  { key: 'barbells',   label: 'barbells including Olympic, deadlift, EZ curl',   group: 'equipment' },
+  { key: 'dumbbells',  label: 'dumbbells including hex, adjustable, urethane',   group: 'equipment' },
+  { key: 'plates',     label: 'weight plates including bumper, cast iron, comp', group: 'equipment' },
+  { key: 'racks',      label: 'squat racks, power racks, and half racks',        group: 'equipment' },
+  { key: 'cardio',     label: 'cardio equipment: rowers, assault bikes, treadmills, ski ergs', group: 'equipment' },
+  // Clothing
+  { key: 'shorts',     label: 'gym shorts and athletic shorts for men and women', group: 'clothing' },
+  { key: 'compression',label: 'compression leggings and tights for gym training', group: 'clothing' },
+  { key: 'hoodies',    label: 'gym hoodies and athletic sweatshirts',             group: 'clothing' },
+  { key: 'footwear',   label: 'gym shoes including lifting shoes, cross trainers, and training shoes', group: 'clothing' },
+  // Supplements
+  { key: 'preworkout', label: 'pre-workout supplements',                          group: 'supplements' },
+  { key: 'protein',    label: 'protein powder including whey, casein, plant-based', group: 'supplements' },
+  { key: 'creatine',   label: 'creatine supplements',                             group: 'supplements' },
+  { key: 'recovery',   label: 'recovery supplements including BCAAs, glutamine, sleep aids', group: 'supplements' },
+];
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// Preferred brands per group — Claude will try to include these
+const PREFERRED_BRANDS = {
+  equipment:    ['Rogue Fitness', 'Rep Fitness', 'Titan Fitness', 'Eleiko', 'Bells of Steel', 'Vulcan Strength', 'American Barbell', 'Fringe Sport', 'Concept2', 'Assault Fitness'],
+  clothing:     ['Young LA', 'Gymshark', 'NOBULL', 'Alphalete', 'Lululemon', 'Nike', 'Adidas', 'Gasp', 'Better Bodies', 'Under Armour'],
+  supplements:  ['Ghost', 'Transparent Labs', 'Optimum Nutrition', 'Gorilla Mind', 'Jym', 'Legion', 'Thorne', 'Nutricost', 'Cellucor', 'Dymatize'],
+};
 
-app.use('/api/', limiter);
+// ── MIDDLEWARE ─────────────────────────────────────────────────
 app.use(express.json());
 
-const verifyApiKey = (req, res, next) => {
-  const apiKey = req.headers['x-api-key'] || req.body.apiKey;
-  
-  if (!apiKey) {
-    return res.status(401).json({ error: 'Missing API key' });
-  }
-  
-  if (apiKey !== BACKEND_SECRET_KEY) {
-    console.warn(`⚠️ Invalid API key attempt from ${req.ip}`);
-    return res.status(403).json({ error: 'Invalid API key' });
-  }
-  
+// Security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   next();
-};
-
-// ============================================
-// PRODUCT DATA WITH RETAILER LINKS
-// ============================================
-
-const liveProducts = {
-  benches: [
-    {
-      id: 'bench_rogue_1',
-      name: 'Rogue Monster Lite Adjustable Bench 3.0',
-      brand: 'Rogue',
-      regularPrice: 995,
-      salePrice: 895,
-      discount: '10%',
-      retailer: 'Rogue Fitness',
-      url: 'https://www.roguefitness.com/monster-lite-adjustable-bench-3-0',
-      image: '',
-      quality: 9.2,
-      rating: 4.8,
-      inStock: true,
-      specs: {
-        weight: '130 lbs',
-        material: 'Steel',
-        adjustable: 'Yes',
-        maxLoad: '600 lbs',
-        dimensions: '48" x 24" x 18"',
-      },
-      keyAspects: ['Premium quality', 'Durable', 'Professional grade'],
-      description: 'Premium adjustable bench designed for serious lifters. Heavy-duty construction with adjustable back and seat.',
-      source: 'Rogue Fitness Official',
-    },
-    {
-      id: 'bench_amazon_titan',
-      name: 'Titan Adjustable Weight Bench',
-      brand: 'Titan',
-      regularPrice: 299,
-      salePrice: 249,
-      discount: '17%',
-      retailer: 'Amazon',
-      url: 'https://www.amazon.com/Titan-Adjustable-Weight-Bench/dp/B07F5NFHMQ',
-      image: '',
-      quality: 7.8,
-      rating: 4.5,
-      inStock: true,
-      specs: {
-        weight: '95 lbs',
-        material: 'Steel',
-        adjustable: 'Yes',
-        maxLoad: '500 lbs',
-        dimensions: '44" x 21" x 16"',
-      },
-      keyAspects: ['Budget friendly', 'Good value', 'Compact'],
-      description: 'Affordable adjustable bench perfect for home gyms. Multiple incline positions for versatile workouts.',
-      source: 'Amazon',
-    },
-    {
-      id: 'bench_rep_1',
-      name: 'Rep Fitness Adjustable Bench',
-      brand: 'Rep',
-      regularPrice: 449,
-      salePrice: 399,
-      discount: '11%',
-      retailer: 'Rep Fitness',
-      url: 'https://www.repfitness.com/benches/adjustable-bench',
-      image: '',
-      quality: 8.9,
-      rating: 4.7,
-      inStock: true,
-      specs: {
-        weight: '120 lbs',
-        material: 'Steel',
-        adjustable: 'Yes',
-        maxLoad: '550 lbs',
-        dimensions: '46" x 23" x 17"',
-      },
-      keyAspects: ['Mid-range', 'High quality', 'Great support'],
-      description: 'Mid-range adjustable bench with excellent build quality and support. Great balance of price and performance.',
-      source: 'Rep Fitness Official',
-    },
-    {
-      id: 'bench_amazon_bowflex',
-      name: 'Bowflex SelectTech Weight Bench',
-      brand: 'Bowflex',
-      regularPrice: 449,
-      salePrice: 349,
-      discount: '22%',
-      retailer: 'Amazon',
-      url: 'https://www.amazon.com/Bowflex-SelectTech-Weight-Bench/dp/B001ARQSAW',
-      image: '',
-      quality: 7.5,
-      rating: 4.3,
-      inStock: true,
-      specs: {
-        weight: '100 lbs',
-        material: 'Steel/Plastic',
-        adjustable: 'Yes',
-        maxLoad: '480 lbs',
-        dimensions: '42" x 22" x 15"',
-      },
-      keyAspects: ['Best discount', 'Smart technology', 'Compact design'],
-      description: 'Innovative SelectTech bench with smart features. Best current discount at 22% off.',
-      source: 'Amazon',
-    },
-    {
-      id: 'bench_amazon_force',
-      name: 'Force USA Adjustable Dumbbell Bench',
-      brand: 'Force USA',
-      regularPrice: 599,
-      salePrice: 499,
-      discount: '17%',
-      retailer: 'Amazon',
-      url: 'https://www.amazon.com/Force-USA-Adjustable-Dumbbell-Bench/dp/B08D5V5YCQ',
-      image: '',
-      quality: 8.2,
-      rating: 4.4,
-      inStock: true,
-      specs: {
-        weight: '110 lbs',
-        material: 'Steel',
-        adjustable: 'Yes',
-        maxLoad: '520 lbs',
-        dimensions: '45" x 22" x 16"',
-      },
-      keyAspects: ['Commercial grade', 'Durable', 'Versatile'],
-      description: 'Commercial-grade adjustable bench built for durability and versatility. Perfect for serious home gyms.',
-      source: 'Amazon',
-    },
-    {
-      id: 'bench_rogue_2',
-      name: 'Rogue Flat Utility Bench',
-      brand: 'Rogue',
-      regularPrice: 495,
-      salePrice: 445,
-      discount: '10%',
-      retailer: 'Rogue Fitness',
-      url: 'https://www.roguefitness.com/flat-utility-bench',
-      image: '',
-      quality: 8.7,
-      rating: 4.7,
-      inStock: true,
-      specs: {
-        weight: '95 lbs',
-        material: 'Steel',
-        adjustable: 'No',
-        maxLoad: '600 lbs',
-        dimensions: '48" x 24" x 18"',
-      },
-      keyAspects: ['Premium', 'Flat design', 'Heavy duty'],
-      description: 'Premium flat bench from Rogue. Simple, durable, and built to last. No frills, pure quality.',
-      source: 'Rogue Fitness Official',
-    },
-    {
-      id: 'bench_titan_pro',
-      name: 'Titan Series 7 Adjustable Bench',
-      brand: 'Titan',
-      regularPrice: 499,
-      salePrice: 429,
-      discount: '14%',
-      retailer: 'Amazon',
-      url: 'https://www.amazon.com/Titan-Series-Adjustable-Bench/dp/B07PQ8T8Z9',
-      image: '',
-      quality: 8.3,
-      rating: 4.6,
-      inStock: true,
-      specs: {
-        weight: '105 lbs',
-        material: 'Steel',
-        adjustable: 'Yes',
-        maxLoad: '540 lbs',
-        dimensions: '46" x 22" x 17"',
-      },
-      keyAspects: ['Great value', 'Commercial quality', 'Reliable'],
-      description: 'Series 7 offers commercial quality at a great price. Reliable and well-rated by users.',
-      source: 'Amazon',
-    },
-    {
-      id: 'bench_marcy',
-      name: 'Marcy Adjustable Weight Bench',
-      brand: 'Marcy',
-      regularPrice: 199,
-      salePrice: 149,
-      discount: '25%',
-      retailer: 'Amazon',
-      url: 'https://www.amazon.com/Marcy-Adjustable-Weight-Bench-SB-315/dp/B00DFDNPMU',
-      image: '',
-      quality: 6.8,
-      rating: 4.0,
-      inStock: true,
-      specs: {
-        weight: '75 lbs',
-        material: 'Steel',
-        adjustable: 'Yes',
-        maxLoad: '400 lbs',
-        dimensions: '42" x 20" x 14"',
-      },
-      keyAspects: ['Most affordable', 'Entry level', 'Lightweight'],
-      description: 'Budget-friendly entry-level bench. Perfect for beginners starting their home gym journey.',
-      source: 'Amazon',
-    },
-  ],
-  weights: [
-    {
-      id: 'weight_rogue_echo',
-      name: 'Rogue Echo Bumper Plates',
-      brand: 'Rogue',
-      regularPrice: 2.50,
-      salePrice: 2.40,
-      discount: '4%',
-      retailer: 'Rogue Fitness',
-      url: 'https://www.roguefitness.com/rogue-echo-bumper-plates',
-      image: '',
-      quality: 9.0,
-      rating: 4.8,
-      inStock: true,
-      specs: {
-        color: 'Colored',
-        type: 'Bumper',
-        diameter: '17.72 in',
-        thickness: 'IWF Standard',
-        material: 'Rubber',
-      },
-      keyAspects: ['Durable', 'Color coded', 'Professional'],
-      description: 'Professional-grade bumper plates from Rogue. Color-coded for easy identification. Built for CrossFit.',
-      source: 'Rogue Fitness Official',
-    },
-    {
-      id: 'weight_titan_bumper',
-      name: 'Titan Urethane Bumper Plates',
-      brand: 'Titan',
-      regularPrice: 2.00,
-      salePrice: 1.80,
-      discount: '10%',
-      retailer: 'Amazon',
-      url: 'https://www.amazon.com/Titan-Urethane-Bumper-Plates-Weight/dp/B07KDXR1KR',
-      image: '',
-      quality: 8.2,
-      rating: 4.5,
-      inStock: true,
-      specs: {
-        color: 'Black',
-        type: 'Bumper',
-        diameter: '17.72 in',
-        thickness: 'IWF Standard',
-        material: 'Urethane',
-      },
-      keyAspects: ['Affordable', 'Good quality', 'Durable'],
-      description: 'Affordable bumper plates with urethane coating. Great quality-to-price ratio for home gyms.',
-      source: 'Amazon',
-    },
-    {
-      id: 'weight_cap_barbell',
-      name: 'Cap Barbell Rubber Coated Plates',
-      brand: 'Cap Barbell',
-      regularPrice: 1.50,
-      salePrice: 1.30,
-      discount: '13%',
-      retailer: 'Amazon',
-      url: 'https://www.amazon.com/Cap-Barbell-Rubber-Coated-Weight/dp/B00MJSGP6M',
-      image: '',
-      quality: 7.5,
-      rating: 4.2,
-      inStock: true,
-      specs: {
-        color: 'Black',
-        type: 'Rubber coated',
-        diameter: 'Standard',
-        thickness: 'Standard',
-        material: 'Cast Iron',
-      },
-      keyAspects: ['Budget friendly', 'Basic quality', 'Good starter'],
-      description: 'Budget-friendly rubber-coated plates. Great for beginners or home gyms on a tight budget.',
-      source: 'Amazon',
-    },
-    {
-      id: 'weight_eleiko_iwf',
-      name: 'Eleiko IWF Weightlifting Plates',
-      brand: 'Eleiko',
-      regularPrice: 3.50,
-      salePrice: 3.30,
-      discount: '6%',
-      retailer: 'Rogue Fitness',
-      url: 'https://www.roguefitness.com/eleiko-iwf-weightlifting-plates',
-      image: '',
-      quality: 9.5,
-      rating: 4.9,
-      inStock: true,
-      specs: {
-        color: 'Colored',
-        type: 'Competition',
-        diameter: '17.72 in',
-        thickness: 'IWF Standard',
-        material: 'Rubber',
-      },
-      keyAspects: ['Premium', 'Competition grade', 'Most accurate'],
-      description: 'Competition-grade plates certified for weightlifting competitions. The most accurate and reliable.',
-      source: 'Rogue Fitness Official',
-    },
-    {
-      id: 'weight_rep_calibrated',
-      name: 'Rep Calibrated Steel Plates',
-      brand: 'Rep',
-      regularPrice: 2.80,
-      salePrice: 2.50,
-      discount: '11%',
-      retailer: 'Rep Fitness',
-      url: 'https://www.repfitness.com/calibrated-steel-plates',
-      image: '',
-      quality: 8.8,
-      rating: 4.7,
-      inStock: true,
-      specs: {
-        color: 'Black',
-        type: 'Calibrated steel',
-        diameter: 'Standard',
-        thickness: 'Standard',
-        material: 'Steel',
-      },
-      keyAspects: ['Highly accurate', 'Durable', 'Professional'],
-      description: 'Precision-calibrated steel plates. Perfect for serious lifters who need accuracy.',
-      source: 'Rep Fitness Official',
-    },
-    {
-      id: 'weight_vulcan',
-      name: 'Vulcan Strength Bumper Plates',
-      brand: 'Vulcan',
-      regularPrice: 2.60,
-      salePrice: 2.40,
-      discount: '8%',
-      retailer: 'Amazon',
-      url: 'https://www.amazon.com/Vulcan-Strength-Bumper-Plates/dp/B07NX6LVQ8',
-      image: '',
-      quality: 8.6,
-      rating: 4.6,
-      inStock: true,
-      specs: {
-        color: 'Black',
-        type: 'Bumper',
-        diameter: '17.72 in',
-        thickness: 'IWF Standard',
-        material: 'Rubber',
-      },
-      keyAspects: ['Premium quality', 'Great rating', 'Reliable'],
-      description: 'Premium bumper plates from Vulcan. Excellent quality and highly rated by CrossFit athletes.',
-      source: 'Amazon',
-    },
-    {
-      id: 'weight_rogue_machined',
-      name: 'Rogue Machined Steel Plates',
-      brand: 'Rogue',
-      regularPrice: 2.70,
-      salePrice: 2.50,
-      discount: '7%',
-      retailer: 'Rogue Fitness',
-      url: 'https://www.roguefitness.com/rogue-machined-steel-plates',
-      image: '',
-      quality: 9.1,
-      rating: 4.8,
-      inStock: true,
-      specs: {
-        color: 'Black',
-        type: 'Machined steel',
-        diameter: 'Standard',
-        thickness: 'Standard',
-        material: 'Steel',
-      },
-      keyAspects: ['Premium', 'Precise', 'Long lasting'],
-      description: 'Precision-machined steel plates. Premium quality from Rogue for the serious lifter.',
-      source: 'Rogue Fitness Official',
-    },
-    {
-      id: 'weight_titan_olympic',
-      name: 'Titan Olympic Steel Plates',
-      brand: 'Titan',
-      regularPrice: 1.90,
-      salePrice: 1.70,
-      discount: '11%',
-      retailer: 'Amazon',
-      url: 'https://www.amazon.com/Titan-Olympic-Steel-Plates/dp/B00MWJJ0KG',
-      image: '',
-      quality: 7.8,
-      rating: 4.4,
-      inStock: true,
-      specs: {
-        color: 'Black',
-        type: 'Steel',
-        diameter: 'Olympic',
-        thickness: 'Standard',
-        material: 'Steel',
-      },
-      keyAspects: ['Budget friendly', 'Reliable', 'Good quality'],
-      description: 'Budget-friendly steel plates. Reliable and well-rated by casual lifters.',
-      source: 'Amazon',
-    },
-  ],
-};
-
-// ============================================
-// ROUTES
-// ============================================
-
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'Backend running!',
-    dataSource: 'Live retailer data',
-    time: new Date().toISOString() 
-  });
 });
 
-app.post('/api/search-products', verifyApiKey, async (req, res) => {
+// CORS — origin allowlist only, no wildcard, no key in frontend
+app.use((req, res, next) => {
+  const origin = req.headers.origin || '';
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+// Rate limiting — simple in-memory per IP
+const ratemap = new Map();
+app.use((req, res, next) => {
+  if (req.path === '/health') return next();
+  const ip = req.ip || 'unknown';
+  const now = Date.now();
+  const window = 60_000; // 1 minute
+  const max = 30;
+  const hits = (ratemap.get(ip) || []).filter(t => now - t < window);
+  if (hits.length >= max) {
+    return res.status(429).json({ error: 'Too many requests. Please slow down.' });
+  }
+  hits.push(now);
+  ratemap.set(ip, hits);
+  next();
+});
+
+// Block requests not from allowed origins on API routes
+app.use('/api', (req, res, next) => {
+  const origin = req.headers.origin || '';
+  const referer = req.headers.referer || '';
+  const isAllowedOrigin = ALLOWED_ORIGINS.includes(origin);
+  const isAllowedReferer = ALLOWED_ORIGINS.some(o => referer.startsWith(o));
+  if (!isAllowedOrigin && !isAllowedReferer) {
+    console.warn(`Blocked request from origin: ${origin || 'none'} referer: ${referer || 'none'}`);
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  next();
+});
+
+// ── CACHE ─────────────────────────────────────────────────────
+let memoryCache = null;  // in-memory fallback for Render's ephemeral filesystem
+
+function readCache() {
+  if (memoryCache && Date.now() - memoryCache.timestamp < CACHE_TTL) {
+    return memoryCache;
+  }
   try {
-    const { category } = req.body;
-
-    if (!category || !['benches', 'weights'].includes(category)) {
-      return res.status(400).json({ error: 'Invalid category' });
-    }
-
-    console.log(`Fetching products for ${category}...`);
-
-    let products = liveProducts[category] || [];
-
-    if (products.length === 0) {
-      return res.status(400).json({ error: 'No products found' });
-    }
-
-    return res.json({
-      success: true,
-      products: products,
-      count: products.length,
-      sources: ['Rogue Fitness', 'Amazon', 'Rep Fitness'],
-    });
-  } catch (err) {
-    console.error('Error:', err);
-    res.status(500).json({ error: 'Server error', details: err.message });
-  }
-});
-
-// Compare products with efficient AI summary
-app.post('/api/compare-products', verifyApiKey, async (req, res) => {
-  try {
-    const { productIds } = req.body;
-
-    if (!Array.isArray(productIds) || productIds.length !== 2) {
-      return res.status(400).json({ error: 'Please provide exactly 2 product IDs' });
-    }
-
-    const allProducts = [...liveProducts.benches, ...liveProducts.weights];
-    const products = productIds.map(id => allProducts.find(p => p.id === id)).filter(Boolean);
-
-    if (products.length !== 2) {
-      return res.status(400).json({ error: 'One or both products not found' });
-    }
-
-    const [p1, p2] = products;
-    const price1 = p1.salePrice || p1.regularPrice;
-    const price2 = p2.salePrice || p2.regularPrice;
-    const priceDiff = Math.abs(price1 - price2);
-    const qualityDiff = Math.abs(p1.quality - p2.quality);
-    const ratingDiff = Math.abs(p1.rating - p2.rating);
-
-    let aiSummary = generateLocalSummary(p1, p2);
-
-    if (ANTHROPIC_API_KEY) {
-      try {
-        aiSummary = await generateAISummary(p1, p2, ANTHROPIC_API_KEY);
-      } catch (err) {
-        console.log('AI summary generation failed, using local summary');
-      }
-    }
-
-    const comparison = {
-      products: [p1, p2],
-      priceDifference: {
-        absolute: priceDiff.toFixed(2),
-        percentage: ((priceDiff / Math.max(price1, price2)) * 100).toFixed(1) + '%',
-        cheaper: price1 < price2 ? p1.name : p2.name,
-      },
-      qualityDifference: {
-        absolute: qualityDiff.toFixed(1),
-        better: p1.quality > p2.quality ? p1.name : p2.name,
-      },
-      ratingDifference: {
-        absolute: ratingDiff.toFixed(1),
-        better: p1.rating > p2.rating ? p1.name : p2.name,
-      },
-      verdict: generateVerdict(p1, p2),
-      aiSummary: aiSummary,
-    };
-
-    res.json(comparison);
-  } catch (err) {
-    console.error('Error:', err);
-    res.status(500).json({ error: 'Comparison error', details: err.message });
-  }
-});
-
-// Recommendations
-app.post('/api/recommendations', verifyApiKey, (req, res) => {
-  try {
-    const { products } = req.body;
-    if (!Array.isArray(products) || products.length === 0) {
-      return res.json({ recommendations: [] });
-    }
-
-    const recs = [];
-
-    const bestValue = [...products].sort((a, b) => {
-      const pa = a.salePrice || a.regularPrice;
-      const pb = b.salePrice || b.regularPrice;
-      return (b.quality / pb) - (a.quality / pa);
-    })[0];
-
-    if (bestValue) {
-      recs.push({
-        type: 'Best Value',
-        product: bestValue,
-        reason: `Quality ${bestValue.quality}/10 at $${(bestValue.salePrice || bestValue.regularPrice).toFixed(2)}`,
-      });
-    }
-
-    const bestDeal = [...products]
-      .filter(p => p.salePrice && p.salePrice < p.regularPrice)
-      .sort((a, b) => parseFloat(b.discount || 0) - parseFloat(a.discount || 0))[0];
-
-    if (bestDeal && bestDeal.id !== bestValue?.id) {
-      recs.push({
-        type: 'Hot Deal 🔥',
-        product: bestDeal,
-        reason: `${bestDeal.discount} off! Save $${(bestDeal.regularPrice - bestDeal.salePrice).toFixed(2)}`,
-      });
-    }
-
-    const bestRated = [...products].sort((a, b) => b.rating - a.rating)[0];
-    if (bestRated && bestRated.id !== bestValue?.id && bestRated.id !== bestDeal?.id) {
-      recs.push({
-        type: 'Top Rated ⭐',
-        product: bestRated,
-        reason: `${bestRated.rating}/5.0 rating (most popular)`,
-      });
-    }
-
-    res.json({ recommendations: recs });
-  } catch (err) {
-    res.status(500).json({ error: 'Recommendation error' });
-  }
-});
-
-app.use((req, res) => res.status(404).json({ error: 'Endpoint not found' }));
-
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-
-function generateLocalSummary(p1, p2) {
-  const price1 = p1.salePrice || p1.regularPrice;
-  const price2 = p2.salePrice || p2.regularPrice;
-
-  let summary = '';
-  
-  if (price1 < price2) {
-    summary = `${p1.name} is ${((price2 - price1) / price2 * 100).toFixed(0)}% cheaper at $${price1.toFixed(2)} vs $${price2.toFixed(2)}. `;
-  } else {
-    summary = `${p2.name} is ${((price1 - price2) / price1 * 100).toFixed(0)}% cheaper at $${price2.toFixed(2)} vs $${price1.toFixed(2)}. `;
-  }
-
-  if (p1.quality > p2.quality) {
-    summary += `${p1.name} has better quality (${p1.quality}/10 vs ${p2.quality}/10). `;
-  } else {
-    summary += `${p2.name} has better quality (${p2.quality}/10 vs ${p1.quality}/10). `;
-  }
-
-  if (p1.rating > p2.rating) {
-    summary += `${p1.name} is more popular with users (${p1.rating}/5 vs ${p2.rating}/5).`;
-  } else {
-    summary += `${p2.name} is more popular with users (${p2.rating}/5 vs ${p1.rating}/5).`;
-  }
-
-  return summary;
+    if (!fs.existsSync(CACHE_FILE)) return null;
+    const raw = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8'));
+    if (Date.now() - raw.timestamp > CACHE_TTL) return null;
+    memoryCache = raw;
+    return raw;
+  } catch { return null; }
 }
 
-async function generateAISummary(p1, p2, apiKey) {
-  const prompt = `Compare these two gym products briefly (2-3 sentences max). Product 1: ${p1.name} ($${p1.salePrice || p1.regularPrice}, quality ${p1.quality}/10, rating ${p1.rating}/5). Product 2: ${p2.name} ($${p2.salePrice || p2.regularPrice}, quality ${p2.quality}/10, rating ${p2.rating}/5). Which is better and why?`;
+function writeCache(data) {
+  memoryCache = data;
+  try { fs.writeFileSync(CACHE_FILE, JSON.stringify(data)); } catch { }
+}
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+// ── CLAUDE SEARCH ──────────────────────────────────────────────
+async function searchCategory(task) {
+  const brands = PREFERRED_BRANDS[task.group].join(', ');
+  const prompt = `Search the web for the top 10 best ${task.label} available to buy right now in 2025-2026.
+
+Preferred brands to include where possible: ${brands}.
+
+Return ONLY a valid JSON array with no markdown or explanation:
+[
+  {
+    "id": "brand-product-slug",
+    "name": "Exact product name",
+    "brand": "Brand name",
+    "emoji": "one relevant emoji",
+    "price": 99.99,
+    "retailer": "Store name",
+    "url": "Full working product URL",
+    "affiliateUrl": "",
+    "quality": 8.5,
+    "rating": 4.7,
+    "reviewCount": 1200,
+    "reviewSource": "Amazon or brand site",
+    "expertVerdict": "One sentence expert verdict under 20 words",
+    "expertSource": "Source name",
+    "reviews": [
+      {"author": "Reviewer or publication name", "text": "Review quote under 80 words"},
+      {"author": "Verified Buyer", "text": "Short buyer quote"},
+      {"author": "Verified Buyer", "text": "Short buyer quote"}
+    ],
+    "specs": {"Key": "Value"},
+    "aspects": ["Tag1", "Tag2", "Tag3"]
+  }
+]
+
+Rules:
+- Exactly 10 products
+- quality: 0-10 based on materials, brand reputation, construction
+- rating: real customer star rating out of 5
+- url: real direct product page URL (not homepage)
+- affiliateUrl: leave as empty string ""
+- specs: 4-6 key-value pairs relevant to the category
+- aspects: 2-4 short tags`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Anthropic-Version': '2023-06-01',
-      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'x-api-key': ANTHROPIC_API_KEY,
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 150,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
+      max_tokens: 4000,
+      tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+      messages: [{ role: 'user', content: prompt }],
     }),
   });
 
-  if (!response.ok) {
-    throw new Error('AI summary failed');
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(`Claude API ${res.status}: ${err.error?.message || 'unknown'}`);
   }
 
-  const data = await response.json();
-  return data.content[0]?.text || generateLocalSummary(p1, p2);
+  const data = await res.json();
+  let text = '';
+  for (const block of data.content) {
+    if (block.type === 'text') text += block.text;
+  }
+
+  const match = text.match(/\[[\s\S]*\]/);
+  if (!match) throw new Error('No JSON array in response');
+
+  const products = JSON.parse(match[0]);
+  return products
+    .filter(p => p.name && p.brand && p.price && p.url)
+    .slice(0, 10)
+    .map((p, i) => ({
+      ...p,
+      id: p.id || `${p.brand}-${i}`.toLowerCase().replace(/\s+/g, '-'),
+      affiliateUrl: p.affiliateUrl || '',
+    }));
 }
 
-function generateVerdict(p1, p2) {
-  const price1 = p1.salePrice || p1.regularPrice;
-  const price2 = p2.salePrice || p2.regularPrice;
+// ── REFRESH ALL CATEGORIES ─────────────────────────────────────
+let refreshing = false;
 
-  let winner = '';
-  let reason = '';
+async function refreshAll() {
+  if (refreshing) {
+    console.log('Refresh already in progress, skipping.');
+    return;
+  }
+  if (!ANTHROPIC_API_KEY) {
+    console.error('ANTHROPIC_API_KEY not set — skipping refresh.');
+    return;
+  }
 
-  const value1 = p1.quality / price1;
-  const value2 = p2.quality / price2;
+  refreshing = true;
+  console.log(`[${new Date().toISOString()}] Starting daily product refresh…`);
 
-  if (value1 > value2 * 1.1) {
-    winner = p1.name;
-    reason = `${p1.name} offers better value for money.`;
-  } else if (value2 > value1 * 1.1) {
-    winner = p2.name;
-    reason = `${p2.name} offers better value for money.`;
+  const products = {};
+  const errors = [];
+
+  for (const task of SEARCH_TASKS) {
+    try {
+      console.log(`  Searching: ${task.key}…`);
+      products[task.key] = await searchCategory(task);
+      console.log(`  ✓ ${task.key}: ${products[task.key].length} products`);
+      // Small delay between calls to avoid rate limiting
+      await new Promise(r => setTimeout(r, 2000));
+    } catch (err) {
+      console.error(`  ✗ ${task.key}: ${err.message}`);
+      errors.push({ key: task.key, error: err.message });
+    }
+  }
+
+  const cache = {
+    timestamp: Date.now(),
+    refreshedAt: new Date().toISOString(),
+    products,
+    errors,
+    categories: SEARCH_TASKS.map(t => ({
+      key: t.key,
+      label: t.label,
+      group: t.group,
+    })),
+  };
+
+  writeCache(cache);
+  refreshing = false;
+  console.log(`[${new Date().toISOString()}] Refresh complete. ${Object.keys(products).length}/${SEARCH_TASKS.length} categories loaded.`);
+  if (errors.length) console.log('  Errors:', errors);
+}
+
+// Schedule daily refresh
+function scheduleDailyRefresh() {
+  setInterval(() => {
+    console.log('24h timer fired — starting refresh.');
+    refreshAll().catch(console.error);
+  }, CACHE_TTL);
+}
+
+// ── ROUTES ─────────────────────────────────────────────────────
+app.get('/health', (req, res) => {
+  const cache = readCache();
+  res.json({
+    status: 'ok',
+    cacheAge: cache ? Math.round((Date.now() - cache.timestamp) / 60000) + ' min' : 'no cache',
+    refreshedAt: cache?.refreshedAt || null,
+    categoriesLoaded: cache ? Object.keys(cache.products).length : 0,
+    refreshing,
+  });
+});
+
+// Get all products for a category
+app.get('/api/products/:category', (req, res) => {
+  const cache = readCache();
+  if (!cache) {
+    return res.status(503).json({
+      error: 'Products are still loading. Please try again in a few minutes.',
+      loading: true,
+    });
+  }
+  const cat = req.params.category;
+  const products = cache.products[cat];
+  if (!products) {
+    return res.status(404).json({ error: `Category "${cat}" not found.` });
+  }
+  res.json({
+    products,
+    category: cat,
+    refreshedAt: cache.refreshedAt,
+    count: products.length,
+  });
+});
+
+// Get category index
+app.get('/api/categories', (req, res) => {
+  const cache = readCache();
+  res.json({
+    categories: SEARCH_TASKS.map(t => ({
+      key: t.key,
+      label: t.label,
+      group: t.group,
+      count: cache?.products[t.key]?.length || 0,
+    })),
+    refreshedAt: cache?.refreshedAt || null,
+    loading: !cache,
+  });
+});
+
+// AI comparison summary — uses very few tokens (no web search)
+app.post('/api/compare', (req, res) => {
+  const { p1, p2 } = req.body;
+  if (!p1 || !p2) return res.status(400).json({ error: 'Send p1 and p2 product objects.' });
+
+  // Local algorithm — zero tokens
+  const val1 = p1.quality / p1.price;
+  const val2 = p2.quality / p2.price;
+  const diff = Math.abs(p1.price - p2.price);
+  const qualWinner = p1.quality >= p2.quality ? p1 : p2;
+  const valWinner = val1 >= val2 ? p1 : p2;
+  const cheaper = p1.price <= p2.price ? p1 : p2;
+  const pricier = p1.price <= p2.price ? p2 : p1;
+
+  let summary;
+  if (diff === 0) {
+    summary = `Both are identically priced at $${p1.price}. The <strong>${qualWinner.name}</strong> wins on quality score (${qualWinner.quality}/10) — go with that one.`;
+  } else if (diff < 40) {
+    summary = `Only $${diff} apart. The <strong>${qualWinner.name}</strong> scores ${qualWinner.quality}/10 vs ${(qualWinner === p1 ? p2 : p1).quality}/10 — for that small a difference, the higher quality pick is worth it.`;
+  } else if (valWinner === cheaper) {
+    summary = `The <strong>${cheaper.name}</strong> is $${diff} cheaper AND delivers better value per dollar. Unless you have a specific need the <strong>${pricier.name}</strong> solves, the <strong>${cheaper.name}</strong> is the smarter buy.`;
   } else {
-    winner = p1.rating > p2.rating ? p1.name : p2.name;
-    reason = `Both similar value. ${winner} edges ahead with higher ratings.`;
+    summary = `The <strong>${pricier.name}</strong> costs $${diff} more but earns it with a ${pricier.quality}/10 quality score vs ${cheaper.quality}/10. If budget allows, the <strong>${pricier.name}</strong> will perform better and last longer.`;
   }
 
-  return { winner, reason };
-}
+  res.json({ summary, winner: qualWinner.id });
+});
 
-app.listen(PORT, () => {
-  console.log(`✅ Backend running on port ${PORT}`);
-  console.log(`🔒 Security: API key authentication required`);
-  console.log(`🔒 Security: CORS restricted to ${FRONTEND_URL}`);
-  console.log(`📦 Features: Product search, comparison, AI image fetching`);
-  console.log(`⚡ Optimized: Minimal token usage`);
+// Manual refresh trigger (for admin use — no auth needed since origin-blocked)
+app.post('/api/admin/refresh', async (req, res) => {
+  if (refreshing) {
+    return res.json({ message: 'Refresh already in progress.' });
+  }
+  res.json({ message: 'Refresh started in background.' });
+  refreshAll().catch(console.error);
+});
+
+app.use((req, res) => res.status(404).json({ error: 'Not found' }));
+
+// ── START ──────────────────────────────────────────────────────
+app.listen(PORT, async () => {
+  console.log(`✅ GymGear backend running on port ${PORT}`);
+  console.log(`🔒 Allowed origins: ${ALLOWED_ORIGINS.join(', ')}`);
+
+  // Load from cache if fresh, otherwise start a refresh
+  const existing = readCache();
+  if (existing) {
+    const ageH = (Date.now() - existing.timestamp) / 3600000;
+    console.log(`📦 Loaded cache from ${existing.refreshedAt} (${ageH.toFixed(1)}h ago)`);
+  } else {
+    console.log('🔄 No fresh cache — starting initial product refresh…');
+    refreshAll().catch(console.error);
+  }
+
+  scheduleDailyRefresh();
 });
