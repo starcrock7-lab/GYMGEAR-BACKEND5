@@ -197,8 +197,8 @@ Return exactly 8 products. Prioritize the listed brands.`,
   cache_control: { type: 'ephemeral' },
 };
 
-// ── SEARCH ONE CATEGORY ───────────────────────────────────────
-async function searchCategory(catKey) {
+// ── SEARCH ONE CATEGORY (with retry on rate limit) ───────────
+async function searchCategory(catKey, attempt = 1) {
   const cat = CATEGORIES[catKey];
   if (!cat) throw new Error(`Unknown: ${catKey}`);
 
@@ -220,6 +220,15 @@ async function searchCategory(catKey) {
       }],
     }),
   });
+
+  // Rate limit — wait and retry up to 4 times with increasing delays
+  if (res.status === 429) {
+    if (attempt >= 4) throw new Error('Rate limit: max retries exceeded');
+    const wait = attempt * 30000; // 30s, 60s, 90s
+    console.log(`  [${catKey}] Rate limited — waiting ${wait/1000}s before retry ${attempt+1}/4…`);
+    await new Promise(r => setTimeout(r, wait));
+    return searchCategory(catKey, attempt + 1);
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -257,27 +266,46 @@ async function refreshAll() {
   if (refreshing || !ANTHROPIC_API_KEY) return;
   refreshing = true;
 
-  console.log(`\n[${new Date().toISOString()}] Starting weekly refresh of all ${Object.keys(CATEGORIES).length} categories…`);
+  const catKeys = Object.keys(CATEGORIES);
+  console.log(`\n[${new Date().toISOString()}] Starting refresh of ${catKeys.length} categories…`);
 
-  // Start from existing cache so partial failures don't wipe good data
+  // Start from existing cache so failures never wipe good data
   const existing = getCache() || { products: {} };
   const products = { ...existing.products };
   const errors = [];
 
-  for (const catKey of Object.keys(CATEGORIES)) {
+  for (const catKey of catKeys) {
     try {
       console.log(`  Searching: ${catKey}…`);
       products[catKey] = await searchCategory(catKey);
       console.log(`  ✓ ${catKey}: ${products[catKey].length} products`);
-      await new Promise(r => setTimeout(r, 2500)); // pause between calls
+
+      // Save to cache after every successful category so a crash mid-run doesn't lose progress
+      const partial = {
+        timestamp: existing.timestamp || Date.now(),
+        refreshedAt: new Date().toISOString(),
+        nextRefresh: new Date(Date.now() + CACHE_TTL).toISOString(),
+        products,
+        errors,
+        _githubSha: existing._githubSha,
+      };
+      setCache(partial);
+      // Write to GitHub every 3 categories to avoid too many commits
+      if (Object.keys(products).length % 3 === 0) {
+        await writeToGitHub(partial).catch(() => {});
+      }
+
+      // 5s pause between calls — Haiku Tier 1 has strict rate limits
+      await new Promise(r => setTimeout(r, 5000));
+
     } catch (err) {
       console.error(`  ✗ ${catKey}: ${err.message}`);
       errors.push({ cat: catKey, error: err.message });
-      // Keep existing data for failed categories
       if (existing.products[catKey]) {
         products[catKey] = existing.products[catKey];
         console.log(`  → Kept existing data for ${catKey}`);
       }
+      await new Promise(r => setTimeout(r, 5000));
     }
   }
 
@@ -287,15 +315,16 @@ async function refreshAll() {
     nextRefresh: new Date(Date.now() + CACHE_TTL).toISOString(),
     products,
     errors,
-    _githubSha: existing._githubSha, // preserve sha for GitHub update
+    _githubSha: existing._githubSha,
   };
 
   setCache(newCache);
   await writeToGitHub(newCache);
 
   refreshing = false;
-  const good = Object.keys(CATEGORIES).length - errors.length;
-  console.log(`[${new Date().toISOString()}] Refresh complete: ${good}/${Object.keys(CATEGORIES).length} categories. Next refresh: ${newCache.nextRefresh}\n`);
+  const good = catKeys.length - errors.length;
+  console.log(`[${new Date().toISOString()}] Refresh done: ${good}/${catKeys.length} categories. Next: ${newCache.nextRefresh}`);
+  if (errors.length) console.log('  Failed:', errors.map(e => e.cat).join(', '));
 }
 
 // ── ON-DEMAND REVIEW FETCH ────────────────────────────────────
