@@ -5,7 +5,7 @@
 import fs from 'fs';
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const CACHE_PATH = './cache-repo/cache.json';
+const CACHE_PATH = './cache.json';
 const MODEL = 'claude-haiku-4-5-20251001';
 const DELAY_MS = 8000; // 8s between calls — safe for Tier 1
 
