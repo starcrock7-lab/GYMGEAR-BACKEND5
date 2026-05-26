@@ -1,22 +1,12 @@
-// GymGear Compare Pro — Backend v4
-// Persistent cache via GitHub — survives server restarts and sleep.
-// Weekly refresh (not daily) — products don't change that fast.
-// Cost: ~$0.10-0.15/week total.
+// GymGear Compare Pro — Sample Data Server
+// No API calls. No GitHub. Instant load.
+// Replace PRODUCTS with real data when ready to go live.
 
 import express from 'express';
-import fs from 'fs';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;         // Personal Access Token
-const GITHUB_REPO  = process.env.GITHUB_CACHE_REPO;   // e.g. "starcrock7-lab/gymgear-cache"
-const GITHUB_FILE  = 'cache.json';
-const CACHE_TTL    = 7 * 24 * 60 * 60 * 1000;         // 7 days
-const LOCAL_BACKUP = '/tmp/gymgear_cache.json';        // fallback if GitHub is slow
-const SEARCH_MODEL = 'claude-haiku-4-5-20251001';
 
-// ── ALLOWED ORIGINS ───────────────────────────────────────────
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
   .split(',').map(o => o.trim()).filter(Boolean)
   .concat([
@@ -26,35 +16,13 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
     'http://127.0.0.1:5500',
   ]);
 
-// ── CATEGORIES ────────────────────────────────────────────────
-const CATEGORIES = {
-  benches:     { label:'weight benches',              group:'equipment',    brands:'Rogue Fitness,Rep Fitness,Titan Fitness,Bells of Steel,Archon Fitness,American Barbell' },
-  barbells:    { label:'barbells',                    group:'equipment',    brands:'Rogue Fitness,Rep Fitness,Titan Fitness,Eleiko,American Barbell,Fringe Sport,Vulcan Strength' },
-  dumbbells:   { label:'dumbbells',                   group:'equipment',    brands:'Rogue Fitness,Rep Fitness,Titan Fitness,Ironmaster,Fringe Sport,Bowflex,Vulcan Strength' },
-  plates:      { label:'weight plates',               group:'equipment',    brands:'Rogue Fitness,Rep Fitness,Titan Fitness,Eleiko,Vulcan Strength,CAP Barbell' },
-  racks:       { label:'squat racks and power racks', group:'equipment',    brands:'Rogue Fitness,Rep Fitness,Titan Fitness,Bells of Steel,Archon Fitness' },
-  cardio:      { label:'cardio machines',             group:'equipment',    brands:'Concept2,Assault Fitness,Rogue Fitness,NordicTrack,Peloton,SkiErg' },
-  shorts:      { label:'gym shorts',                  group:'clothing',     brands:'Young LA,Gymshark,NOBULL,Alphalete,Nike,Adidas,Lululemon,Under Armour' },
-  compression: { label:'compression leggings',        group:'clothing',     brands:'Young LA,Gymshark,Alphalete,Lululemon,Nike,Under Armour,Better Bodies' },
-  hoodies:     { label:'gym hoodies',                 group:'clothing',     brands:'Young LA,Gymshark,Alphalete,GASP,Better Bodies,Nike,Adidas' },
-  footwear:    { label:'gym and lifting shoes',        group:'clothing',     brands:'NOBULL,Nike,Adidas,Reebok,New Balance,Converse,Inov-8' },
-  preworkout:  { label:'pre-workout supplements',     group:'supplements',  brands:'Ghost,Transparent Labs,Gorilla Mind,C4,Legion,Jym,Bucked Up,Alani Nu' },
-  protein:     { label:'protein powder',              group:'supplements',  brands:'Optimum Nutrition,Ghost,Transparent Labs,Dymatize,Jym,Legion,Thorne,Nutricost' },
-  creatine:    { label:'creatine supplements',        group:'supplements',  brands:'Transparent Labs,Optimum Nutrition,Thorne,Legion,Nutricost,Klean Athlete,Momentous' },
-  recovery:    { label:'recovery supplements',        group:'supplements',  brands:'Transparent Labs,Legion,Thorne,Klean Athlete,Momentous,Optimum Nutrition,Ghost' },
-};
-
-// ── MIDDLEWARE ─────────────────────────────────────────────────
+// ── MIDDLEWARE ────────────────────────────────────────────────
 app.use(express.json());
-
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   next();
 });
-
 app.use((req, res, next) => {
   const origin = req.headers.origin || '';
   if (ALLOWED_ORIGINS.includes(origin)) {
@@ -71,358 +39,239 @@ app.use((req, res, next) => {
 const ratemap = new Map();
 app.use((req, res, next) => {
   if (req.path === '/health') return next();
-  const ip = req.ip || 'unknown';
+  const ip = req.ip || 'x';
   const now = Date.now();
   const hits = (ratemap.get(ip) || []).filter(t => now - t < 60000);
-  if (hits.length >= 40) return res.status(429).json({ error: 'Too many requests.' });
-  hits.push(now);
-  ratemap.set(ip, hits);
+  if (hits.length >= 60) return res.status(429).json({ error: 'Too many requests.' });
+  hits.push(now); ratemap.set(ip, hits);
   next();
 });
-
-// Block non-allowed origins on /api
 app.use('/api', (req, res, next) => {
   const origin = req.headers.origin || '';
   const referer = req.headers.referer || '';
-  const ok = ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.some(o => referer.startsWith(o));
-  if (!ok) return res.status(403).json({ error: 'Forbidden' });
+  if (!ALLOWED_ORIGINS.includes(origin) && !ALLOWED_ORIGINS.some(o => referer.startsWith(o))) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
   next();
 });
 
-// ── IN-MEMORY CACHE ───────────────────────────────────────────
-let mem = null;  // Always check this first — fastest
+// ── SAMPLE DATA ───────────────────────────────────────────────
+const REFRESHED_AT = new Date().toISOString();
 
-function getCache() { return mem; }
+const PRODUCTS = {
 
-function setCache(data) {
-  mem = data;
-  // Also write local backup
-  try { fs.writeFileSync(LOCAL_BACKUP, JSON.stringify(data)); } catch {}
-}
+  // ── EQUIPMENT ───────────────────────────────────────────────
+  benches: [
+    { id:'rogue-mb2', name:'Monster Utility Bench 2.0', brand:'Rogue Fitness', emoji:'🏋️', price:335, retailer:'Rogue Fitness', url:'https://www.roguefitness.com/monster-utility-bench-2-0-mg-black', affiliateUrl:'', quality:9.4, rating:4.8, reviewCount:104, reviewSource:'Rogue Fitness', expertVerdict:'The last flat bench you will ever need to buy.', expertSource:'Garage Gym Reviews', specs:{'Capacity':'1,000 lbs','Pad':'Polyurethane','Type':'Flat','Frame':'3×3" 11ga','Made In':'USA'}, aspects:['American Made','Wheels + Handle','Overbuilt'] },
+    { id:'rogue-flat2', name:'Flat Utility Bench 2.0', brand:'Rogue Fitness', emoji:'🏋️', price:195, retailer:'Rogue Fitness', url:'https://www.roguefitness.com/rogue-flat-utility-bench-2-0', affiliateUrl:'', quality:8.8, rating:4.8, reviewCount:635, reviewSource:'Rogue Fitness', expertVerdict:'Best flat bench for the money, ships fully assembled.', expertSource:'YourWorkoutBook', specs:{'Capacity':'1,000 lbs','Pad':'Polyurethane','Type':'Flat','Weight':'49 lbs','Made In':'USA'}, aspects:['Ships Assembled','Best Value','American Made'] },
+    { id:'rep-fb5000', name:'FB-5000 Competition Bench', brand:'Rep Fitness', emoji:'💪', price:275, retailer:'Rep Fitness', url:'https://repfitness.com/products/fb-5000-competition-flat-bench', affiliateUrl:'', quality:9.2, rating:4.9, reviewCount:312, reviewSource:'Rep Fitness', expertVerdict:'Best flat bench on the market for the money.', expertSource:'Garage Gym Lab', specs:{'Capacity':'1,000 lbs','Pad':'CleanGrip Vinyl','Type':'Flat','IPF Spec':'Yes','Warranty':'10 Years'}, aspects:['IPF Certified','Tripod Design','Best Value'] },
+    { id:'rep-ab5200', name:'AB-5200 Adjustable Bench', brand:'Rep Fitness', emoji:'💪', price:375, retailer:'Rep Fitness', url:'https://repfitness.com/products/ab-5200-adjustable-bench', affiliateUrl:'', quality:8.9, rating:4.7, reviewCount:189, reviewSource:'Rep Fitness', expertVerdict:'Best adjustable bench with 7 positions and decline.', expertSource:'Rep Fitness', specs:{'Capacity':'1,000 lbs','Positions':'7 + Decline','Pad':'CleanGrip Vinyl','Weight':'70 lbs','Colors':'12'}, aspects:['Decline Option','7 Positions','Vertical Storage'] },
+    { id:'titan-ab', name:'Adjustable Bench V2', brand:'Titan Fitness', emoji:'⚡', price:219, retailer:'Titan Fitness', url:'https://www.titanfitness.com/products/adjustable-bench-v2', affiliateUrl:'', quality:7.8, rating:4.5, reviewCount:520, reviewSource:'Titan Fitness', expertVerdict:'Best budget adjustable bench for home gyms.', expertSource:'Garage Gym Reviews', specs:{'Capacity':'600 lbs','Positions':'5','Pad':'Vinyl','Weight':'55 lbs','Made In':'China'}, aspects:['Budget Pick','5 Positions','Lightweight'] },
+    { id:'bells-bench', name:'Utility Bench 2.0', brand:'Bells of Steel', emoji:'🔔', price:329, retailer:'Bells of Steel', url:'https://www.bellsofsteel.com/all-products/benches-and-racks/utility-bench/', affiliateUrl:'', quality:9.0, rating:4.8, reviewCount:201, reviewSource:'Bells of Steel', expertVerdict:'Lifetime warranty and grippy pad that rivals Rogue.', expertSource:'Garage Gym Lab', specs:{'Capacity':'1,000 lbs','Pad':'Grippy Vinyl','Type':'Flat','Warranty':'Lifetime','Tripod':'Yes'}, aspects:['Lifetime Warranty','Tripod Design','Grippy Pad'] },
+    { id:'archon-bench', name:'Competition Flat Bench', brand:'Archon Fitness', emoji:'🏆', price:249, retailer:'Archon Fitness', url:'https://archonfitness.com/products/flat-bench', affiliateUrl:'', quality:8.6, rating:4.7, reviewCount:143, reviewSource:'Archon Fitness', expertVerdict:'IPF-spec height and solid build under $250.', expertSource:'Barbend', specs:{'Capacity':'1,000 lbs','Pad':'Vinyl','Height':'17"','IPF Spec':'Yes','Type':'Flat'}, aspects:['IPF Height','Under $250','Tripod'] },
+    { id:'rogue-fold', name:'Fold Up Utility Bench', brand:'Rogue Fitness', emoji:'🔄', price:335, retailer:'Rogue Fitness', url:'https://www.roguefitness.com/rogue-fold-up-utility-benches', affiliateUrl:'', quality:8.5, rating:4.6, reviewCount:78, reviewSource:'Rogue Fitness', expertVerdict:'Foldable Rogue durability — wall-mountable between sessions.', expertSource:'YourWorkoutBook', specs:{'Capacity':'1,000 lbs','Type':'Foldable','Pad':'Polyurethane','Weight':'48 lbs','Made In':'USA'}, aspects:['Wall-Mountable','Space Saving','American Made'] },
+  ],
 
-function isCacheFresh() {
-  return mem && (Date.now() - mem.timestamp < CACHE_TTL);
-}
+  barbells: [
+    { id:'rogue-ohio', name:'Ohio Bar', brand:'Rogue Fitness', emoji:'🥇', price:345, retailer:'Rogue Fitness', url:'https://www.roguefitness.com/rogue-ohio-bar', affiliateUrl:'', quality:9.5, rating:4.9, reviewCount:2100, reviewSource:'Rogue Fitness', expertVerdict:'The best all-around barbell ever made.', expertSource:'Garage Gym Reviews', specs:{'Weight':'20 kg','Shaft':'28.5mm','PSI':'190,000','Finish':'Options','Made In':'USA'}, aspects:['American Made','All-Purpose','Gold Standard'] },
+    { id:'rogue-deadlift', name:'Ohio Deadlift Bar', brand:'Rogue Fitness', emoji:'💀', price:395, retailer:'Rogue Fitness', url:'https://www.roguefitness.com/rogue-ohio-deadlift-bar', affiliateUrl:'', quality:9.6, rating:4.9, reviewCount:870, reviewSource:'Rogue Fitness', expertVerdict:'Best deadlift bar — extra whip, aggressive knurl.', expertSource:'Barbend', specs:{'Weight':'20 kg','Shaft':'27mm','PSI':'190,000','Knurl':'Aggressive','Made In':'USA'}, aspects:['Deadlift Specific','Extra Whip','Aggressive Knurl'] },
+    { id:'eleiko-iwf', name:'IWF Weightlifting Bar', brand:'Eleiko', emoji:'🇸🇪', price:999, retailer:'Eleiko', url:'https://eleiko.com/products/eleiko-iwf-weightlifting-training-bar', affiliateUrl:'', quality:10, rating:5.0, reviewCount:188, reviewSource:'Eleiko', expertVerdict:'Used at every Olympic Games — the absolute best.', expertSource:'Barbend', specs:{'Weight':'20 kg','Shaft':'28mm','Origin':'Sweden','IWF':'Certified','PSI':'215,000'}, aspects:['Olympic Standard','IWF Certified','Swedish Made'] },
+    { id:'american-ss', name:'Stainless Steel Bar', brand:'American Barbell', emoji:'🏆', price:535, retailer:'American Barbell', url:'https://www.americanbarbell.com/products/stainless-steel-olympic-bar', affiliateUrl:'', quality:9.7, rating:4.9, reviewCount:342, reviewSource:'American Barbell', expertVerdict:'Finest stainless steel barbell — rust-proof and heirloom quality.', expertSource:'Garage Gym Lab', specs:{'Weight':'20 kg','Shaft':'Stainless','Diameter':'28.5mm','PSI':'205,000','Made In':'USA'}, aspects:['Stainless Steel','Rust Proof','Heirloom Quality'] },
+    { id:'titan-olympic', name:'Olympic Barbell', brand:'Titan Fitness', emoji:'⚡', price:199, retailer:'Titan Fitness', url:'https://www.titanfitness.com/products/olympic-barbell', affiliateUrl:'', quality:7.8, rating:4.5, reviewCount:410, reviewSource:'Titan Fitness', expertVerdict:'Best budget Olympic bar under $200.', expertSource:'Garage Gym Reviews', specs:{'Weight':'20 kg','Shaft':'28mm','PSI':'150,000','Finish':'Black Oxide','Warranty':'1 Year'}, aspects:['Budget Pick','Good Whip','Entry Level'] },
+    { id:'fringe-wonder', name:'Wonder Bar V2', brand:'Fringe Sport', emoji:'🔶', price:249, retailer:'Fringe Sport', url:'https://www.fringesport.com/products/wonder-bar-v2', affiliateUrl:'', quality:8.4, rating:4.6, reviewCount:520, reviewSource:'Fringe Sport', expertVerdict:'Best mid-range bar with 10-year warranty.', expertSource:'Barbend', specs:{'Weight':'20 kg','Diameter':'28.5mm','PSI':'190,000','Finish':'Cerakote','Warranty':'10 Years'}, aspects:['10 Year Warranty','Cerakote Finish','Mid-Range'] },
+    { id:'vulcan-pro', name:'Pro Olympic Bar', brand:'Vulcan Strength', emoji:'⚔️', price:295, retailer:'Vulcan Strength', url:'https://www.vulcanstrength.com/products/vulcan-pro-olympic-training-bar', affiliateUrl:'', quality:9.0, rating:4.8, reviewCount:275, reviewSource:'Vulcan Strength', expertVerdict:'Underrated — 195k PSI, lifetime warranty, great spin.', expertSource:'Garage Gym Reviews', specs:{'Weight':'20 kg','Diameter':'28mm','PSI':'195,000','Finish':'Black Oxide','Warranty':'Lifetime'}, aspects:['Lifetime Warranty','Underrated','195k PSI'] },
+    { id:'rep-equalizer', name:'EZ Curl Bar', brand:'Rep Fitness', emoji:'💪', price:119, retailer:'Rep Fitness', url:'https://repfitness.com/products/equalizer-ez-curl-bar', affiliateUrl:'', quality:8.2, rating:4.6, reviewCount:284, reviewSource:'Rep Fitness', expertVerdict:'Best-value EZ curl bar for home gyms.', expertSource:'Garage Gym Reviews', specs:{'Weight':'18 lbs','Length':'47"','Sleeve':'2" Olympic','Knurl':'Medium','PSI':'150,000'}, aspects:['EZ Curl','Wrist Friendly','Best Value'] },
+  ],
 
-// ── GITHUB CACHE ──────────────────────────────────────────────
-// Reads and writes cache.json in a GitHub repo.
-// This means the data survives server restarts, sleep, and redeployments.
+  dumbbells: [
+    { id:'rogue-hex', name:'Rubber Hex Dumbbells', brand:'Rogue Fitness', emoji:'💪', price:475, retailer:'Rogue Fitness', url:'https://www.roguefitness.com/rogue-rubber-hex-dumbbells', affiliateUrl:'', quality:9.2, rating:4.9, reviewCount:890, reviewSource:'Rogue Fitness', expertVerdict:'Best rubber hex dumbbells — will last decades.', expertSource:'Garage Gym Reviews', specs:{'Handle':'Chrome','Head':'Rubber Hex','Range':'5–100 lbs','Floor Safe':'Yes','Made In':'USA'}, aspects:['American Made','Chrome Handles','Floor Safe'] },
+    { id:'rep-hex', name:'Rubber Hex Dumbbells', brand:'Rep Fitness', emoji:'💪', price:295, retailer:'Rep Fitness', url:'https://repfitness.com/products/rubber-hex-dumbbells', affiliateUrl:'', quality:8.7, rating:4.7, reviewCount:620, reviewSource:'Rep Fitness', expertVerdict:'Best value rubber hex — hard to tell apart from Rogue.', expertSource:'Garage Gym Lab', specs:{'Handle':'Chrome','Head':'Rubber Hex','Range':'5–100 lbs','Floor Safe':'Yes','Warranty':'2 Years'}, aspects:['Best Value','Chrome Handles','Floor Safe'] },
+    { id:'bowflex-552', name:'SelectTech 552 Adjustable', brand:'Bowflex', emoji:'🎛️', price:429, retailer:'Amazon', url:'https://www.amazon.com/s?k=Bowflex+SelectTech+552', affiliateUrl:'', quality:8.0, rating:4.7, reviewCount:22500, reviewSource:'Amazon', expertVerdict:'Best adjustable dumbbell — replaces 15 sets.', expertSource:'Wirecutter', specs:{'Range':'5–52.5 lbs','Increments':'2.5 lbs','System':'Dial Select','Replaces':'15 pairs','Warranty':'2 Years'}, aspects:['Space Saving','15-in-1','Dial System'] },
+    { id:'ironmaster-ql', name:'Quick-Lock Adjustable DB', brand:'Ironmaster', emoji:'🔐', price:649, retailer:'Ironmaster', url:'https://www.ironmaster.com/products/quick-lock-adjustable-dumbbells/', affiliateUrl:'', quality:9.0, rating:4.8, reviewCount:340, reviewSource:'Ironmaster', expertVerdict:'Most durable adjustable dumbbell — solid steel, never wobbles.', expertSource:'Barbend', specs:{'Range':'5–75 lbs','System':'Screw Lock','Material':'Steel','Expandable':'Yes','Warranty':'Lifetime'}, aspects:['Solid Steel','Lifetime Warranty','Heavy Duty'] },
+    { id:'fringe-urethane', name:'Urethane Dumbbells', brand:'Fringe Sport', emoji:'🔶', price:380, retailer:'Fringe Sport', url:'https://www.fringesport.com/products/urethane-round-dumbbells', affiliateUrl:'', quality:8.9, rating:4.8, reviewCount:180, reviewSource:'Fringe Sport', expertVerdict:'Best urethane dumbbell — odorless and floor-safe.', expertSource:'Garage Gym Lab', specs:{'Handle':'Chrome','Head':'Urethane Round','Floor Safe':'Yes','Odor':'None','Grade':'Commercial'}, aspects:['Urethane','Odorless','Commercial Grade'] },
+    { id:'vulcan-db', name:'Urethane Hex Dumbbells', brand:'Vulcan Strength', emoji:'⚔️', price:320, retailer:'Vulcan Strength', url:'https://www.vulcanstrength.com/products/vulcan-urethane-dumbbells', affiliateUrl:'', quality:9.0, rating:4.8, reviewCount:142, reviewSource:'Vulcan Strength', expertVerdict:'Commercial quality urethane at competitive home gym price.', expertSource:'Barbend', specs:{'Handle':'Chrome','Head':'Urethane Hex','Floor Safe':'Yes','Warranty':'2 Years','Grade':'Commercial'}, aspects:['Commercial Grade','Urethane','Precise Weight'] },
+    { id:'titan-adj', name:'Adjustable Dumbbell Set', brand:'Titan Fitness', emoji:'⚡', price:349, retailer:'Titan Fitness', url:'https://www.titanfitness.com/products/adjustable-dumbbell-set', affiliateUrl:'', quality:7.6, rating:4.4, reviewCount:265, reviewSource:'Titan Fitness', expertVerdict:'Best budget adjustable dumbbell set.', expertSource:'Garage Gym Reviews', specs:{'Range':'5–50 lbs','System':'Pin Select','Material':'Steel + Rubber','Increments':'5 lbs','Warranty':'1 Year'}, aspects:['Budget Pick','Pin System','Good Value'] },
+    { id:'cap-hex', name:'Rubber Coated Hex DB', brand:'CAP Barbell', emoji:'🔧', price:89, retailer:'Amazon', url:'https://www.amazon.com/s?k=CAP+Barbell+rubber+hex+dumbbells', affiliateUrl:'', quality:6.0, rating:4.3, reviewCount:14200, reviewSource:'Amazon', expertVerdict:'Cheapest entry-level option — fine for casual use.', expertSource:'Barbend', specs:{'Handle':'Knurled Steel','Head':'Rubber Hex','Range':'3–50 lbs','Ships':'Prime','Smell':'Initially'}, aspects:['Lowest Price','Amazon Prime','Entry Level'] },
+  ],
 
-async function readFromGitHub() {
-  if (!GITHUB_TOKEN || !GITHUB_REPO) {
-    console.log('GitHub cache not configured — using local only.');
-    return null;
-  }
-  try {
-    console.log(`Reading cache from GitHub: ${GITHUB_REPO}/${GITHUB_FILE}`);
-    const res = await fetch(
-      `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`,
-      { headers: { Authorization: `token ${GITHUB_TOKEN}`, Accept: 'application/vnd.github.v3+json' } }
-    );
-    if (res.status === 404) { console.log('No cache file in GitHub yet.'); return null; }
-    if (!res.ok) throw new Error(`GitHub read ${res.status}`);
-    const meta = await res.json();
-    // Content is base64 encoded
-    const content = JSON.parse(Buffer.from(meta.content, 'base64').toString('utf8'));
-    console.log(`GitHub cache loaded — ${Object.keys(content.products||{}).length} categories, written ${content.refreshedAt}`);
-    // Store the sha so we can update the file (not create a new one)
-    content._githubSha = meta.sha;
-    return content;
-  } catch (err) {
-    console.error('GitHub read error:', err.message);
-    return null;
-  }
-}
+  plates: [
+    { id:'rogue-hg2', name:'HG 2.0 Bumper Plates', brand:'Rogue Fitness', emoji:'🏋️', price:295, retailer:'Rogue Fitness', url:'https://www.roguefitness.com/rogue-hg-2-0-bumper-plates', affiliateUrl:'', quality:9.1, rating:4.8, reviewCount:220, reviewSource:'Rogue Fitness', expertVerdict:'Top-tier IWF-spec bumper with dead bounce and color coding.', expertSource:'Garage Gym Reviews', specs:{'Material':'Virgin Rubber','Set':'160 lbs','Diameter':'17.7"','Color Coded':'Yes','IWF Spec':'Yes'}, aspects:['IWF Certified','Low Bounce','Color Coded'] },
+    { id:'rep-black', name:'Black Bumper Plates', brand:'Rep Fitness', emoji:'💪', price:215, retailer:'Rep Fitness', url:'https://repfitness.com/products/black-bumper-plates', affiliateUrl:'', quality:8.5, rating:4.7, reviewCount:410, reviewSource:'Rep Fitness', expertVerdict:'Best-in-class value — dead bounce rivals Eleiko.', expertSource:'GarageGymProducts', specs:{'Material':'Virgin Rubber','Set':'160 lbs','Diameter':'17.7"','Hardness':'90A','Bounce':'Dead'}, aspects:['Best Value','Dead Bounce','Virgin Rubber'] },
+    { id:'rep-comp', name:'Competition Bumper Plates', brand:'Rep Fitness', emoji:'🥇', price:385, retailer:'Rep Fitness', url:'https://repfitness.com/products/competition-bumper-plates', affiliateUrl:'', quality:9.3, rating:4.8, reviewCount:178, reviewSource:'Rep Fitness', expertVerdict:'Best value competition bumpers, tested to 30,000 drops.', expertSource:'As Many Reviews As Possible', specs:{'Material':'Virgin Rubber','Set':'160 lbs','Diameter':'17.7"','IWF Spec':'Yes','Drop Tested':'30,000+'}, aspects:['Competition Grade','30k Drop Test','IWF Certified'] },
+    { id:'rogue-echo', name:'Echo Bumper Plates', brand:'Rogue Fitness', emoji:'🔩', price:195, retailer:'Rogue Fitness', url:'https://www.roguefitness.com/rogue-echo-bumper-plates', affiliateUrl:'', quality:8.0, rating:4.6, reviewCount:380, reviewSource:'Rogue Fitness', expertVerdict:'Rogue entry-level bumper — recycled rubber, still quality.', expertSource:'Barbend', specs:{'Material':'Recycled Rubber','Set':'160 lbs','Diameter':'17.7"','Color Coded':'No','Bounce':'Low'}, aspects:['Budget Rogue','Recycled Rubber','Durable'] },
+    { id:'vulcan-alpha', name:'Alpha Bumper Plates', brand:'Vulcan Strength', emoji:'⚔️', price:249, retailer:'Vulcan Strength', url:'https://www.vulcanstrength.com/products/vulcan-alpha-bumper-plates', affiliateUrl:'', quality:8.7, rating:4.7, reviewCount:165, reviewSource:'Vulcan Strength', expertVerdict:'High durometer rubber — deadest bounce on the market.', expertSource:'Garage Gym Reviews', specs:{'Material':'High Durometer Rubber','Diameter':'17.7"','Tolerance':'±1%','Bounce':'Very Low','Color Coded':'No'}, aspects:['Deadest Bounce','±1% Tolerance','Premium Rubber'] },
+    { id:'rep-color', name:'Color Bumper Plates', brand:'Rep Fitness', emoji:'🌈', price:335, retailer:'Rep Fitness', url:'https://repfitness.com/products/color-bumper-plates', affiliateUrl:'', quality:8.8, rating:4.7, reviewCount:203, reviewSource:'Rep Fitness', expertVerdict:'Same rubber as Black Bumpers with IWF color coding.', expertSource:'Fit at Midlife', specs:{'Material':'Virgin Rubber','Set':'160 lbs','IWF Spec':'Yes','Color Coded':'Yes','Bounce':'Low'}, aspects:['Color Coded','IWF Compliant','Virgin Rubber'] },
+    { id:'titan-bumper', name:'Bumper Plates V3', brand:'Titan Fitness', emoji:'⚡', price:159, retailer:'Titan Fitness', url:'https://www.titanfitness.com/products/bumper-plates', affiliateUrl:'', quality:7.5, rating:4.4, reviewCount:290, reviewSource:'Titan Fitness', expertVerdict:'Cheapest reputable bumper plate — good for beginners.', expertSource:'Garage Gym Reviews', specs:{'Material':'Recycled Rubber','Set':'160 lbs','Diameter':'17.7"','Color Coded':'No','Warranty':'1 Year'}, aspects:['Lowest Price','Beginner Friendly','Ships Fast'] },
+    { id:'cap-iron', name:'Cast Iron Olympic Plates', brand:'CAP Barbell', emoji:'🔧', price:89, retailer:'Amazon', url:'https://www.amazon.com/s?k=CAP+Barbell+cast+iron+weight+plates+2+inch', affiliateUrl:'', quality:6.0, rating:4.2, reviewCount:8400, reviewSource:'Amazon', expertVerdict:'Budget cast iron — fine for casual lifting, expect variance.', expertSource:'Barbend', specs:{'Material':'Cast Iron','Standard':'2" Olympic','Color Coded':'No','Ships':'Prime','Warranty':'1 Year'}, aspects:['Lowest Price','Amazon Prime','Ships Fast'] },
+  ],
 
-async function writeToGitHub(data) {
-  if (!GITHUB_TOKEN || !GITHUB_REPO) return;
-  try {
-    // Don't store internal sha field in the actual file
-    const { _githubSha, ...cleanData } = data;
-    const content = Buffer.from(JSON.stringify(cleanData, null, 2)).toString('base64');
-    const body = {
-      message: `Cache update ${new Date().toISOString()}`,
-      content,
-      ...(data._githubSha ? { sha: data._githubSha } : {}),
-    };
-    const res = await fetch(
-      `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`,
-      {
-        method: 'PUT',
-        headers: {
-          Authorization: `token ${GITHUB_TOKEN}`,
-          Accept: 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      }
-    );
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(`GitHub write ${res.status}: ${err.message}`);
-    }
-    const result = await res.json();
-    // Update sha for next write
-    if (result.content?.sha) mem._githubSha = result.content.sha;
-    console.log('Cache written to GitHub successfully.');
-  } catch (err) {
-    console.error('GitHub write error:', err.message);
-  }
-}
+  racks: [
+    { id:'rogue-rm6', name:'RM-6 Monster Rack', brand:'Rogue Fitness', emoji:'🏗️', price:1595, retailer:'Rogue Fitness', url:'https://www.roguefitness.com/rogue-rm-6-monster-rack', affiliateUrl:'', quality:9.8, rating:4.9, reviewCount:310, reviewSource:'Rogue Fitness', expertVerdict:'The gold standard power rack — built for life.', expertSource:'Garage Gym Reviews', specs:{'Frame':'3×3" 11ga','Uprights':'90"','Weight':'375 lbs','Hole Spacing':'1"','Made In':'USA'}, aspects:['American Made','Monster Series','Lifetime Warranty'] },
+    { id:'rogue-r3', name:'R-3 Power Rack', brand:'Rogue Fitness', emoji:'🏗️', price:795, retailer:'Rogue Fitness', url:'https://www.roguefitness.com/rogue-r-3-power-rack', affiliateUrl:'', quality:9.2, rating:4.9, reviewCount:870, reviewSource:'Rogue Fitness', expertVerdict:'Best mid-range power rack — strong, customizable, American-made.', expertSource:'Garage Gym Lab', specs:{'Frame':'2×3" 11ga','Uprights':'90"','Weight':'183 lbs','Hole Spacing':'1"','Made In':'USA'}, aspects:['American Made','Best Mid-Range','Customizable'] },
+    { id:'rep-pr5000', name:'PR-5000 Power Rack', brand:'Rep Fitness', emoji:'💪', price:695, retailer:'Rep Fitness', url:'https://repfitness.com/products/pr-5000-power-rack', affiliateUrl:'', quality:9.1, rating:4.8, reviewCount:445, reviewSource:'Rep Fitness', expertVerdict:'Best value full power rack — 1" hole spacing and huge accessory ecosystem.', expertSource:'Garage Gym Lab', specs:{'Frame':'3×3" 11ga','Uprights':'90"','Hole Spacing':'1"','Weight':'270 lbs','Warranty':'Lifetime'}, aspects:['Best Value','1" Spacing','Huge Ecosystem'] },
+    { id:'titan-x3', name:'X-3 Power Rack', brand:'Titan Fitness', emoji:'⚡', price:549, retailer:'Titan Fitness', url:'https://www.titanfitness.com/products/x-3-flat-foot-power-rack', affiliateUrl:'', quality:8.2, rating:4.6, reviewCount:920, reviewSource:'Titan Fitness', expertVerdict:'Best budget power rack — incredibly popular for home gyms.', expertSource:'Garage Gym Reviews', specs:{'Frame':'3×3" 11ga','Uprights':'82"','Hole Spacing':'5/8"','Weight':'215 lbs','Warranty':'10 Year'}, aspects:['Budget Pick','Most Popular','3×3 Frame'] },
+    { id:'rep-hr100', name:'HR-100 Half Rack', brand:'Rep Fitness', emoji:'💪', price:395, retailer:'Rep Fitness', url:'https://repfitness.com/products/hr-100-half-rack', affiliateUrl:'', quality:8.5, rating:4.7, reviewCount:280, reviewSource:'Rep Fitness', expertVerdict:'Best half rack for space-limited gyms.', expertSource:'Barbend', specs:{'Frame':'2×3" 11ga','Height':'83"','Hole Spacing':'2"','Weight':'155 lbs','Warranty':'Lifetime'}, aspects:['Space Saving','Half Rack','Best Value'] },
+    { id:'bells-squat', name:'Squat Stand 2.0', brand:'Bells of Steel', emoji:'🔔', price:449, retailer:'Bells of Steel', url:'https://www.bellsofsteel.com/all-products/benches-and-racks/squat-stands/', affiliateUrl:'', quality:8.8, rating:4.8, reviewCount:195, reviewSource:'Bells of Steel', expertVerdict:'Premium squat stands with unmatched stability and lifetime warranty.', expertSource:'Garage Gym Lab', specs:{'Frame':'3×3" 11ga','Height':'84"','Hole Spacing':'1"','Weight':'130 lbs','Warranty':'Lifetime'}, aspects:['Lifetime Warranty','1" Spacing','Premium Build'] },
+    { id:'rogue-squat', name:'SQ-1 Squat Stand', brand:'Rogue Fitness', emoji:'🏋️', price:345, retailer:'Rogue Fitness', url:'https://www.roguefitness.com/rogue-sq-1-squat-stand', affiliateUrl:'', quality:8.6, rating:4.8, reviewCount:340, reviewSource:'Rogue Fitness', expertVerdict:'Compact Rogue quality squat stand — American made.', expertSource:'Garage Gym Reviews', specs:{'Frame':'2×3" 11ga','Height':'78"','Footprint':'Small','Weight':'80 lbs','Made In':'USA'}, aspects:['American Made','Compact','Rogue Quality'] },
+    { id:'titan-t2', name:'T-2 Short Power Rack', brand:'Titan Fitness', emoji:'⚡', price:349, retailer:'Titan Fitness', url:'https://www.titanfitness.com/products/t-2-series-short-power-rack', affiliateUrl:'', quality:7.5, rating:4.5, reviewCount:650, reviewSource:'Titan Fitness', expertVerdict:'Best entry-level power rack under $350.', expertSource:'Garage Gym Reviews', specs:{'Frame':'2×2" 12ga','Height':'70"','Hole Spacing':'2"','Weight':'115 lbs','Warranty':'1 Year'}, aspects:['Entry Level','Low Ceiling','Budget Pick'] },
+  ],
 
-// ── CACHED SYSTEM PROMPT (token caching) ─────────────────────
-const SYSTEM_PROMPT = {
-  type: 'text',
-  text: `You are a product research assistant. Search the web and return ONLY a valid JSON array — no markdown, no explanation, just raw JSON starting with [ and ending with ].
+  cardio: [
+    { id:'concept2-rower', name:'RowErg Rowing Machine', brand:'Concept2', emoji:'🚣', price:1000, retailer:'Concept2', url:'https://www.concept2.com/ergs/rowerg', affiliateUrl:'', quality:9.8, rating:4.9, reviewCount:5200, reviewSource:'Concept2', expertVerdict:'The only rowing machine — used in every serious gym on earth.', expertSource:'Garage Gym Reviews', specs:{'Resistance':'Air','Monitor':'PM5','Folds':'Yes','Weight':'57 lbs','Warranty':'5 Year'}, aspects:['Industry Standard','PM5 Monitor','Foldable'] },
+    { id:'assault-bike', name:'AssaultBike Classic', brand:'Assault Fitness', emoji:'🚴', price:699, retailer:'Assault Fitness', url:'https://www.assaultfitness.com/assaultbike-classic', affiliateUrl:'', quality:9.2, rating:4.7, reviewCount:1800, reviewSource:'Assault Fitness', expertVerdict:'The original fan bike — brutally effective, built to last.', expertSource:'Barbend', specs:{'Resistance':'Air','Display':'LCD','Weight':'95 lbs','Drive':'Chain','Warranty':'Lifetime Frame'}, aspects:['Air Resistance','Fan Bike','Lifetime Frame'] },
+    { id:'concept2-ski', name:'SkiErg', brand:'Concept2', emoji:'⛷️', price:900, retailer:'Concept2', url:'https://www.concept2.com/ergs/skierg', affiliateUrl:'', quality:9.5, rating:4.9, reviewCount:890, reviewSource:'Concept2', expertVerdict:'Best upper body cardio machine ever made.', expertSource:'Garage Gym Reviews', specs:{'Resistance':'Air','Monitor':'PM5','Wall Mount':'Included','Weight':'53 lbs','Warranty':'5 Year'}, aspects:['Upper Body','PM5 Monitor','Compact'] },
+    { id:'rogue-echo-bike', name:'Echo Bike', brand:'Rogue Fitness', emoji:'🏋️', price:795, retailer:'Rogue Fitness', url:'https://www.roguefitness.com/rogue-echo-bike', affiliateUrl:'', quality:9.0, rating:4.8, reviewCount:2100, reviewSource:'Rogue Fitness', expertVerdict:'Best built fan bike — smoother than Assault with Rogue quality.', expertSource:'Garage Gym Reviews', specs:{'Resistance':'Air','Display':'LCD','Weight':'127 lbs','Drive':'Belt','Made In':'USA'}, aspects:['Belt Drive','American Made','Smooth Ride'] },
+    { id:'nordictrack-treadmill', name:'Commercial 1750 Treadmill', brand:'NordicTrack', emoji:'🏃', price:1999, retailer:'NordicTrack', url:'https://www.nordictrack.com/treadmills/nordictrack-commercial-1750-treadmill', affiliateUrl:'', quality:8.5, rating:4.6, reviewCount:4200, reviewSource:'NordicTrack', expertVerdict:'Best home treadmill with incline, iFit, and 10" screen.', expertSource:'Wirecutter', specs:{'Speed':'0–12 mph','Incline':'-3% to 15%','Screen':'10"','Motor':'3.5 CHP','Warranty':'10 Year Frame'}, aspects:['iFit Compatible','Auto Incline','10" Screen'] },
+    { id:'peloton-bike', name:'Peloton Bike+', brand:'Peloton', emoji:'🎯', price:2495, retailer:'Peloton', url:'https://www.onepeloton.com/bike-plus', affiliateUrl:'', quality:8.8, rating:4.7, reviewCount:12000, reviewSource:'Peloton', expertVerdict:'Best connected cycling experience — premium but worth it.', expertSource:'Wirecutter', specs:{'Screen':'24"','Resistance':'Magnetic','Auto Follow':'Yes','Subscription':'$44/mo','Weight':'140 lbs'}, aspects:['24" Screen','Auto Resistance','Live Classes'] },
+    { id:'assault-runner', name:'AssaultRunner Pro', brand:'Assault Fitness', emoji:'🏃', price:2999, retailer:'Assault Fitness', url:'https://www.assaultfitness.com/assaultrunner-pro', affiliateUrl:'', quality:9.3, rating:4.8, reviewCount:620, reviewSource:'Assault Fitness', expertVerdict:'Best curved treadmill — no motor, self-powered, elite cardio.', expertSource:'Barbend', specs:{'Type':'Curved Manual','Motor':'None','Weight':'287 lbs','Warranty':'10 Year Frame','Belt':'Slat'}, aspects:['Self-Powered','Curved Belt','No Electricity'] },
+    { id:'concept2-bikeerg', name:'BikeErg', brand:'Concept2', emoji:'🚴', price:990, retailer:'Concept2', url:'https://www.concept2.com/bikes/bikeerg', affiliateUrl:'', quality:9.3, rating:4.8, reviewCount:760, reviewSource:'Concept2', expertVerdict:'Air-resistance bike from the makers of the best rower.', expertSource:'Garage Gym Reviews', specs:{'Resistance':'Air','Monitor':'PM5','Seat':'Adjustable','Weight':'68 lbs','Warranty':'5 Year'}, aspects:['PM5 Monitor','Air Resistance','Concept2 Quality'] },
+  ],
 
-Each object must have exactly:
-- id: string (brand-name-slug, lowercase hyphens)
-- name: string (exact product name)
-- brand: string
-- emoji: string (one emoji)
-- price: number (USD)
-- retailer: string
-- url: string (direct product page, not homepage)
-- affiliateUrl: string (empty string "")
-- quality: number 0-10
-- rating: number 0-5 (real customer rating)
-- reviewCount: number
-- reviewSource: string
-- expertVerdict: string (under 15 words)
-- expertSource: string
-- specs: object (4-5 relevant key-value pairs)
-- aspects: array of 2-3 short tags
+  // ── CLOTHING ─────────────────────────────────────────────────
+  shorts: [
+    { id:'youngla-shorts', name:'215 Gotta Go Shorts', brand:'Young LA', emoji:'👟', price:42, retailer:'Young LA', url:'https://youngla.com/products/215-gotta-go-shorts', affiliateUrl:'', quality:8.8, rating:4.8, reviewCount:3200, reviewSource:'Young LA', expertVerdict:'Best-fitting gym shorts from the fastest growing brand.', expertSource:'Fitness Influencer Reviews', specs:{'Material':'88% Poly 12% Spandex','Length':'5"','Pockets':'2','Liner':'Yes','Fit':'Athletic'}, aspects:['Athletic Fit','Lined','Best Seller'] },
+    { id:'gymshark-arrival', name:'Arrival 5" Shorts', brand:'Gymshark', emoji:'🦈', price:45, retailer:'Gymshark', url:'https://www.gymshark.com/collections/shorts/products/arrival-5-shorts', affiliateUrl:'', quality:8.6, rating:4.7, reviewCount:8900, reviewSource:'Gymshark', expertVerdict:'Most popular gym shorts globally — flexible and comfortable.', expertSource:'GQ', specs:{'Material':'86% Poly 14% Elastane','Length':'5"','Pockets':'2','Liner':'No','Fit':'Regular'}, aspects:['Most Popular','Lightweight','Great Fit'] },
+    { id:'nobull-shorts', name:'Training Shorts', brand:'NOBULL', emoji:'🐂', price:68, retailer:'NOBULL', url:'https://www.nobullproject.com/products/mens-training-short', affiliateUrl:'', quality:9.0, rating:4.7, reviewCount:1200, reviewSource:'NOBULL', expertVerdict:'Premium training shorts with stretch and durability for CrossFit.', expertSource:'Barbend', specs:{'Material':'92% Poly 8% Spandex','Length':'7"','Pockets':'3','Liner':'Yes','Fit':'Athletic'}, aspects:['Premium Build','CrossFit Ready','7" Inseam'] },
+    { id:'alphalete-shorts', name:'Amplify Shorts', brand:'Alphalete', emoji:'🅰️', price:55, retailer:'Alphalete', url:'https://alphalete.com/collections/mens-shorts', affiliateUrl:'', quality:8.7, rating:4.8, reviewCount:2100, reviewSource:'Alphalete', expertVerdict:'Buttery soft fabric with a flattering athletic cut.', expertSource:'Fitness Apparel Reviews', specs:{'Material':'Buttery Soft Blend','Length':'5"','Pockets':'2','Liner':'Yes','Fit':'Athletic'}, aspects:['Buttery Soft','Athletic Cut','Premium Feel'] },
+    { id:'lululemon-shorts', name:'Pace Breaker 5" Shorts', brand:'Lululemon', emoji:'🌸', price:78, retailer:'Lululemon', url:'https://www.lululemon.com/en-us/p/pace-breaker-linerless-short-5/prod9920053.html', affiliateUrl:'', quality:9.1, rating:4.8, reviewCount:5400, reviewSource:'Lululemon', expertVerdict:'Premium shorts with Swift fabric — worth the price for serious athletes.', expertSource:'Wirecutter', specs:{'Material':'Swift Fabric','Length':'5"','Pockets':'3','Liner':'No','Fit':'Relaxed'}, aspects:['Swift Fabric','Premium Quality','Trusted Brand'] },
+    { id:'nike-dri-fit', name:'Dri-FIT Training Shorts', brand:'Nike', emoji:'✔️', price:35, retailer:'Nike', url:'https://www.nike.com/w/mens-training-shorts', affiliateUrl:'', quality:8.2, rating:4.6, reviewCount:18000, reviewSource:'Nike', expertVerdict:'Most trusted gym shorts brand — moisture wicking and affordable.', expertSource:'Runner\'s World', specs:{'Material':'Dri-FIT Polyester','Length':'7"','Pockets':'2','Liner':'No','Fit':'Regular'}, aspects:['Dri-FIT Tech','Most Trusted','Affordable'] },
+    { id:'adidas-shorts', name:'Techfit Shorts', brand:'Adidas', emoji:'🦓', price:38, retailer:'Adidas', url:'https://www.adidas.com/us/training-shorts', affiliateUrl:'', quality:8.0, rating:4.5, reviewCount:9800, reviewSource:'Adidas', expertVerdict:'Compression-style shorts with iconic three-stripe design.', expertSource:'GQ', specs:{'Material':'Techfit Poly-Spandex','Length':'5"','Pockets':'1','Liner':'Yes','Fit':'Compression'}, aspects:['Compression Fit','Iconic Design','Performance Tech'] },
+    { id:'better-bodies-shorts', name:'Mesh Training Shorts', brand:'Better Bodies', emoji:'💪', price:52, retailer:'Better Bodies', url:'https://www.better-bodies.com/collections/mens-shorts', affiliateUrl:'', quality:8.4, rating:4.7, reviewCount:870, reviewSource:'Better Bodies', expertVerdict:'Bodybuilding-focused shorts built for high-rep training.', expertSource:'Generation Iron', specs:{'Material':'Mesh Poly Blend','Length':'5"','Pockets':'2','Liner':'No','Fit':'Relaxed'}, aspects:['Bodybuilder Brand','Mesh Panels','Relaxed Fit'] },
+  ],
 
-Return exactly 8 products. Prioritize the listed brands.`,
-  cache_control: { type: 'ephemeral' },
+  compression: [
+    { id:'youngla-joggers', name:'Tapered Joggers 101', brand:'Young LA', emoji:'👟', price:58, retailer:'Young LA', url:'https://youngla.com/collections/bottoms', affiliateUrl:'', quality:8.9, rating:4.8, reviewCount:4100, reviewSource:'Young LA', expertVerdict:'Most popular gym bottoms from the hottest rising brand.', expertSource:'Fitness Reviews', specs:{'Material':'Poly-Spandex Blend','Fit':'Tapered','Pockets':'2','Waistband':'Elastic','Compression':'Light'}, aspects:['Best Seller','Tapered Fit','Young LA'] },
+    { id:'gymshark-vital', name:'Vital Seamless Leggings', brand:'Gymshark', emoji:'🦈', price:55, retailer:'Gymshark', url:'https://www.gymshark.com/collections/leggings/products/vital-seamless-2-0-leggings', affiliateUrl:'', quality:8.8, rating:4.8, reviewCount:12400, reviewSource:'Gymshark', expertVerdict:'Best-selling compression leggings globally — soft and sculpting.', expertSource:'Women\'s Health', specs:{'Material':'Seamless Knit','Fit':'Compressive','Pockets':'1','Waistband':'High','Squat Proof':'Yes'}, aspects:['Seamless','Squat Proof','Best Seller'] },
+    { id:'alphalete-surge', name:'Surge Leggings', brand:'Alphalete', emoji:'🅰️', price:75, retailer:'Alphalete', url:'https://alphalete.com/collections/womens-leggings', affiliateUrl:'', quality:9.1, rating:4.9, reviewCount:3200, reviewSource:'Alphalete', expertVerdict:'Cult-favorite leggings — flattering cut with premium compression.', expertSource:'Shape Magazine', specs:{'Material':'Nylon-Spandex','Fit':'Compressive','Pockets':'2','Waistband':'High','Squat Proof':'Yes'}, aspects:['Cult Favorite','High Waist','Premium Compression'] },
+    { id:'lululemon-align', name:'Align Pant 25"', brand:'Lululemon', emoji:'🌸', price:128, retailer:'Lululemon', url:'https://www.lululemon.com/en-us/p/align-pant-25/prod8560273.html', affiliateUrl:'', quality:9.5, rating:4.9, reviewCount:28000, reviewSource:'Lululemon', expertVerdict:'The legging every other brand tries to replicate.', expertSource:'Vogue', specs:{'Material':'Nulu Fabric','Fit':'Naked Sensation','Pockets':'1','Waistband':'High','Length':'25"'}, aspects:['Gold Standard','Nulu Fabric','Most Copied'] },
+    { id:'nike-pro', name:'Pro Mid-Rise Leggings', brand:'Nike', emoji:'✔️', price:55, retailer:'Nike', url:'https://www.nike.com/w/womens-nike-pro-leggings', affiliateUrl:'', quality:8.5, rating:4.7, reviewCount:22000, reviewSource:'Nike', expertVerdict:'Most trusted compression legging — Dri-FIT and durable.', expertSource:'Runner\'s World', specs:{'Material':'Dri-FIT Nylon','Fit':'Compression','Pockets':'1','Waistband':'Mid-Rise','Squat Proof':'Yes'}, aspects:['Dri-FIT','Most Trusted','Squat Proof'] },
+    { id:'under-armour-leggings', name:'HeatGear Leggings', brand:'Under Armour', emoji:'🛡️', price:45, retailer:'Under Armour', url:'https://www.underarmour.com/en-us/c/womens-leggings/', affiliateUrl:'', quality:8.3, rating:4.6, reviewCount:15000, reviewSource:'Under Armour', expertVerdict:'HeatGear tech keeps you cool during intense training.', expertSource:'Shape Magazine', specs:{'Material':'HeatGear Fabric','Fit':'Compression','Pockets':'1','Waistband':'High','Cooling':'Yes'}, aspects:['HeatGear','Cooling Tech','Great Value'] },
+    { id:'better-bodies-tights', name:'Pro Tights', brand:'Better Bodies', emoji:'💪', price:62, retailer:'Better Bodies', url:'https://www.better-bodies.com/collections/womens-tights', affiliateUrl:'', quality:8.5, rating:4.7, reviewCount:940, reviewSource:'Better Bodies', expertVerdict:'Bodybuilding-grade compression built for heavy lifting sessions.', expertSource:'Generation Iron', specs:{'Material':'Nylon-Spandex','Fit':'Compression','Pockets':'1','Waistband':'High','Squat Proof':'Yes'}, aspects:['Lifting Focused','Squat Proof','Bodybuilder Brand'] },
+    { id:'gasp-tights', name:'Pro Tight', brand:'GASP', emoji:'💥', price:70, retailer:'GASP', url:'https://www.gaspofficial.com/collections/tights', affiliateUrl:'', quality:8.6, rating:4.7, reviewCount:560, reviewSource:'GASP', expertVerdict:'Old-school bodybuilding brand with serious compression.', expertSource:'Generation Iron', specs:{'Material':'Poly-Spandex','Fit':'Compression','Pockets':'0','Waistband':'High','Style':'Bodybuilder'}, aspects:['Bodybuilder Brand','Hardcore Style','Strong Compression'] },
+  ],
+
+  hoodies: [
+    { id:'youngla-hoodie', name:'Oversized Hoodie 549', brand:'Young LA', emoji:'👟', price:65, retailer:'Young LA', url:'https://youngla.com/collections/hoodies', affiliateUrl:'', quality:9.0, rating:4.9, reviewCount:5600, reviewSource:'Young LA', expertVerdict:'Best gym hoodie of the year — oversized, soft, iconic.', expertSource:'Fitness Reviews', specs:{'Material':'80% Cotton 20% Poly','Fit':'Oversized','Hood':'Drawstring','Pockets':'Kangaroo','Weight':'Heavyweight'}, aspects:['Oversized Fit','Best Seller','Heavyweight Cotton'] },
+    { id:'gymshark-critical', name:'Critical Hoodie', brand:'Gymshark', emoji:'🦈', price:70, retailer:'Gymshark', url:'https://www.gymshark.com/collections/hoodies/products/critical-hoodie', affiliateUrl:'', quality:8.7, rating:4.7, reviewCount:7200, reviewSource:'Gymshark', expertVerdict:'Globally popular slim-fit hoodie with clean aesthetic.', expertSource:'GQ', specs:{'Material':'72% Cotton 28% Poly','Fit':'Slim','Hood':'Drawstring','Pockets':'Kangaroo','Weight':'Medium'}, aspects:['Slim Fit','Clean Look','Most Popular'] },
+    { id:'alphalete-hoodie', name:'Premium Hoodie', brand:'Alphalete', emoji:'🅰️', price:80, retailer:'Alphalete', url:'https://alphalete.com/collections/mens-hoodies', affiliateUrl:'', quality:8.9, rating:4.8, reviewCount:2800, reviewSource:'Alphalete', expertVerdict:'Ultra-soft premium hoodie with athletic silhouette.', expertSource:'Fitness Apparel Reviews', specs:{'Material':'French Terry Cotton','Fit':'Athletic','Hood':'Double-lined','Pockets':'Kangaroo','Weight':'Heavyweight'}, aspects:['Ultra Soft','Athletic Cut','Premium Feel'] },
+    { id:'nike-club-hoodie', name:'Club Fleece Hoodie', brand:'Nike', emoji:'✔️', price:65, retailer:'Nike', url:'https://www.nike.com/w/mens-nike-club-hoodies', affiliateUrl:'', quality:8.5, rating:4.8, reviewCount:35000, reviewSource:'Nike', expertVerdict:'The most iconic gym hoodie — trusted by athletes everywhere.', expertSource:'GQ', specs:{'Material':'80% Cotton 20% Poly','Fit':'Standard','Hood':'Drawstring','Pockets':'Kangaroo','Weight':'Medium'}, aspects:['Most Iconic','Trusted Brand','Everyday Wear'] },
+    { id:'adidas-essentials', name:'Essentials Fleece Hoodie', brand:'Adidas', emoji:'🦓', price:60, retailer:'Adidas', url:'https://www.adidas.com/us/hoodies', affiliateUrl:'', quality:8.3, rating:4.7, reviewCount:24000, reviewSource:'Adidas', expertVerdict:'Classic three-stripe hoodie — comfortable and timeless.', expertSource:'GQ', specs:{'Material':'70% Cotton 30% Poly','Fit':'Regular','Hood':'Drawstring','Pockets':'Kangaroo','Weight':'Medium'}, aspects:['Classic Design','Three Stripes','Timeless'] },
+    { id:'better-bodies-hoodie', name:'Athlete Hoodie', brand:'Better Bodies', emoji:'💪', price:68, retailer:'Better Bodies', url:'https://www.better-bodies.com/collections/mens-hoodies', affiliateUrl:'', quality:8.4, rating:4.7, reviewCount:780, reviewSource:'Better Bodies', expertVerdict:'Bodybuilding cut hoodie with dropped shoulders for physique display.', expertSource:'Generation Iron', specs:{'Material':'Cotton-Poly Blend','Fit':'Athletic','Hood':'Drawstring','Pockets':'Kangaroo','Shoulders':'Dropped'}, aspects:['Bodybuilder Cut','Dropped Shoulders','Athletic Fit'] },
+    { id:'gasp-hoodie', name:'Thermal Hood', brand:'GASP', emoji:'💥', price:75, retailer:'GASP', url:'https://www.gaspofficial.com/collections/hoodies', affiliateUrl:'', quality:8.5, rating:4.7, reviewCount:490, reviewSource:'GASP', expertVerdict:'Old-school bodybuilder hoodie — heavy, warm, and hardcore.', expertSource:'Generation Iron', specs:{'Material':'Heavy Cotton Blend','Fit':'Relaxed','Hood':'Drawstring','Pockets':'Kangaroo','Weight':'Heavyweight'}, aspects:['Hardcore Style','Heavyweight','Bodybuilder Brand'] },
+    { id:'lululemon-scuba', name:'Scuba Oversized Hoodie', brand:'Lululemon', emoji:'🌸', price:138, retailer:'Lululemon', url:'https://www.lululemon.com/en-us/p/scuba-oversized-half-zip-hoodie/prod11120082.html', affiliateUrl:'', quality:9.3, rating:4.9, reviewCount:11000, reviewSource:'Lululemon', expertVerdict:'Cult-status hoodie — every gym has 10 of these.', expertSource:'Vogue', specs:{'Material':'Terry Fabric','Fit':'Oversized','Hood':'No Drawstring','Pockets':'2','Style':'Half-Zip'}, aspects:['Cult Status','Terry Fabric','Half Zip'] },
+  ],
+
+  footwear: [
+    { id:'nobull-trainer', name:'Trainer+', brand:'NOBULL', emoji:'🐂', price:139, retailer:'NOBULL', url:'https://www.nobullproject.com/products/mens-trainer-plus', affiliateUrl:'', quality:9.2, rating:4.8, reviewCount:6700, reviewSource:'NOBULL', expertVerdict:'Best all-around training shoe — CrossFit and lifting in one.', expertSource:'Barbend', specs:{'Upper':'SuperFabric','Sole':'Flat Rubber','Drop':'4mm','Weight':'11.5 oz','Use':'Cross-Training'}, aspects:['CrossFit Ready','SuperFabric','All-Purpose'] },
+    { id:'nike-metcon-9', name:'Metcon 9', brand:'Nike', emoji:'✔️', price:150, retailer:'Nike', url:'https://www.nike.com/t/metcon-9-training-shoes', affiliateUrl:'', quality:9.0, rating:4.7, reviewCount:9200, reviewSource:'Nike', expertVerdict:'The trainer Nike athletes trust for WODs and lifting.', expertSource:'Barbend', specs:{'Upper':'Mesh','Sole':'Flat Rubber','Drop':'4mm','Weight':'10.8 oz','Use':'Cross-Training'}, aspects:['Trusted Brand','Stable Heel','CrossFit Icon'] },
+    { id:'adidas-adipower', name:'Adipower Weightlifting Shoe', brand:'Adidas', emoji:'🦓', price:175, retailer:'Adidas', url:'https://www.adidas.com/us/adipower-weightlifting-shoes', affiliateUrl:'', quality:9.1, rating:4.8, reviewCount:3400, reviewSource:'Adidas', expertVerdict:'Best weightlifting shoe — elevated heel for Olympic lifts.', expertSource:'Barbend', specs:{'Upper':'Synthetic','Heel Raise':'0.75"','Sole':'TPU','Strap':'Double Strap','Use':'Olympic Lifting'}, aspects:['Lifting Specific','Elevated Heel','Double Strap'] },
+    { id:'reebok-nano', name:'Nano X4', brand:'Reebok', emoji:'💪', price:130, retailer:'Reebok', url:'https://www.reebok.com/us/nano-x4-training-shoes', affiliateUrl:'', quality:8.8, rating:4.7, reviewCount:7800, reviewSource:'Reebok', expertVerdict:'Classic CrossFit trainer — versatile and trusted since 2011.', expertSource:'Barbend', specs:{'Upper':'Engineered Mesh','Sole':'Rubber','Drop':'4mm','Weight':'10.2 oz','Use':'Cross-Training'}, aspects:['CrossFit Classic','Versatile','Trusted Since 2011'] },
+    { id:'converse-chuck', name:'Chuck Taylor All Star', brand:'Converse', emoji:'⭐', price:65, retailer:'Converse', url:'https://www.converse.com/us/en/p/chuck-taylor-all-star', affiliateUrl:'', quality:7.5, rating:4.6, reviewCount:45000, reviewSource:'Amazon', expertVerdict:'Powerlifters love these — dead flat sole, zero drop.', expertSource:'Starting Strength', specs:{'Upper':'Canvas','Sole':'Flat Rubber','Drop':'0mm','Weight':'11 oz','Use':'Powerlifting'}, aspects:['Zero Drop','Powerlifter Favorite','Flat Sole'] },
+    { id:'inov8-bare', name:'Bare-XF V3', brand:'Inov-8', emoji:'🦶', price:125, retailer:'Inov-8', url:'https://www.inov-8.com/us/bare-xf-v3', affiliateUrl:'', quality:8.9, rating:4.7, reviewCount:1200, reviewSource:'Inov-8', expertVerdict:'Best minimalist training shoe for barefoot-style lifting.', expertSource:'Barbend', specs:{'Upper':'Mesh','Sole':'Bare-XF','Drop':'0mm','Weight':'7.6 oz','Use':'Lifting + WOD'}, aspects:['Zero Drop','Minimalist','Barefoot Feel'] },
+    { id:'new-balance-minimus', name:'Minimus TR V1', brand:'New Balance', emoji:'🔵', price:100, retailer:'New Balance', url:'https://www.newbalance.com/pd/minimus-tr-v1-training-shoe', affiliateUrl:'', quality:8.4, rating:4.6, reviewCount:2100, reviewSource:'New Balance', expertVerdict:'Lightweight trainer great for lifting and agility work.', expertSource:'Runner\'s World', specs:{'Upper':'Mesh','Sole':'REVlite','Drop':'4mm','Weight':'8.1 oz','Use':'Training'}, aspects:['Lightweight','REVlite Sole','Versatile'] },
+    { id:'nobull-lifter', name:'Lifters', brand:'NOBULL', emoji:'🐂', price:179, retailer:'NOBULL', url:'https://www.nobullproject.com/products/mens-lifter', affiliateUrl:'', quality:9.0, rating:4.8, reviewCount:1800, reviewSource:'NOBULL', expertVerdict:'Best modern weightlifting shoe — stiff, stable, sleek.', expertSource:'Barbend', specs:{'Upper':'SuperFabric','Heel Raise':'0.75"','Sole':'TPU','Strap':'Single Strap','Use':'Olympic Lifting'}, aspects:['Lifting Specific','SuperFabric','Sleek Design'] },
+  ],
+
+  // ── SUPPLEMENTS ──────────────────────────────────────────────
+  preworkout: [
+    { id:'ghost-legend', name:'Ghost Legend Pre-Workout', brand:'Ghost', emoji:'👻', price:49, retailer:'Ghost', url:'https://ghostlifestyle.com/products/ghost-legend', affiliateUrl:'', quality:9.0, rating:4.8, reviewCount:14200, reviewSource:'Ghost', expertVerdict:'Most popular pre-workout of the decade — transparent label, great flavor.', expertSource:'Barbend', specs:{'Caffeine':'250mg','L-Citrulline':'4g','Beta-Alanine':'3.2g','Servings':'40','Collab':'Yes'}, aspects:['Transparent Label','40 Servings','Collab Flavors'] },
+    { id:'transparent-stim', name:'Bulk Pre-Workout', brand:'Transparent Labs', emoji:'🔬', price:49, retailer:'Transparent Labs', url:'https://www.transparentlabs.com/products/bulk-black-pre-workout', affiliateUrl:'', quality:9.5, rating:4.9, reviewCount:8900, reviewSource:'Transparent Labs', expertVerdict:'Cleanest formula on the market — fully disclosed, no fillers.', expertSource:'Examine.com', specs:{'Caffeine':'275mg','L-Citrulline':'8g','Beta-Alanine':'4g','Servings':'30','Third Party':'Yes'}, aspects:['Cleanest Formula','8g Citrulline','Third Party Tested'] },
+    { id:'gorilla-mind', name:'Gorilla Mode Pre-Workout', brand:'Gorilla Mind', emoji:'🦍', price:49, retailer:'Gorilla Mind', url:'https://gorillamind.com/products/gorilla-mode', affiliateUrl:'', quality:9.2, rating:4.8, reviewCount:11000, reviewSource:'Gorilla Mind', expertVerdict:'Highest dosed pre-workout on the market — not for beginners.', expertSource:'More Plates More Dates', specs:{'Caffeine':'350mg','L-Citrulline':'9g','Creatine':'5g','Servings':'40','Stim':'Very High'}, aspects:['Highest Dose','9g Citrulline','Includes Creatine'] },
+    { id:'c4-original', name:'C4 Original Pre-Workout', brand:'Cellucor', emoji:'💥', price:35, retailer:'Amazon', url:'https://www.amazon.com/s?k=C4+original+pre+workout', affiliateUrl:'', quality:7.8, rating:4.6, reviewCount:89000, reviewSource:'Amazon', expertVerdict:'Most sold pre-workout ever — beginner-friendly and affordable.', expertSource:'Barbend', specs:{'Caffeine':'150mg','Beta-Alanine':'1.6g','Arginine':'1g','Servings':'30','Flavor':'Many'}, aspects:['Beginner Friendly','Best Seller','Affordable'] },
+    { id:'legion-pulse', name:'Pulse Pre-Workout', brand:'Legion', emoji:'⚡', price:49, retailer:'Legion', url:'https://www.legionathletics.com/products/supplements/pulse/', affiliateUrl:'', quality:9.1, rating:4.8, reviewCount:9800, reviewSource:'Legion', expertVerdict:'Science-based formula with natural caffeine from green tea.', expertSource:'Examine.com', specs:{'Caffeine':'350mg Natural','L-Citrulline':'8g','Beta-Alanine':'4.8g','Servings':'21','Synthetic':'None'}, aspects:['Natural Caffeine','Science Based','No Synthetics'] },
+    { id:'alani-pre', name:'Pre-Workout', brand:'Alani Nu', emoji:'🌸', price:44, retailer:'Alani Nu', url:'https://alaninu.com/collections/pre-workout', affiliateUrl:'', quality:8.2, rating:4.7, reviewCount:21000, reviewSource:'Alani Nu', expertVerdict:'Best women-focused pre-workout — great taste and smooth energy.', expertSource:'Shape Magazine', specs:{'Caffeine':'200mg','L-Citrulline':'6g','Beta-Alanine':'1.6g','Servings':'30','Focus':'Women'}, aspects:['Women Focused','Great Taste','Smooth Energy'] },
+    { id:'bucked-up', name:'Bucked Up Pre-Workout', brand:'Bucked Up', emoji:'🦌', price:49, retailer:'Bucked Up', url:'https://buckedup.com/products/bucked-up-pre-workout', affiliateUrl:'', quality:8.5, rating:4.7, reviewCount:7600, reviewSource:'Bucked Up', expertVerdict:'Deer antler velvet formula with strong pump and focus blend.', expertSource:'Fitness Reviews', specs:{'Caffeine':'200mg','L-Citrulline':'6g','Beta-Alanine':'3.2g','Deer Antler':'Yes','Servings':'30'}, aspects:['Pump Formula','Deer Antler','Focus Blend'] },
+    { id:'gorilla-mind-smooth', name:'Gorilla Mode Nitric', brand:'Gorilla Mind', emoji:'🦍', price:49, retailer:'Gorilla Mind', url:'https://gorillamind.com/products/gorilla-mode-nitric', affiliateUrl:'', quality:8.8, rating:4.7, reviewCount:4200, reviewSource:'Gorilla Mind', expertVerdict:'Stim-free pump pre-workout — max vascularity without the jitters.', expertSource:'More Plates More Dates', specs:{'Caffeine':'0mg','L-Citrulline':'10g','Nitric Oxide':'Max','Servings':'40','Stim Free':'Yes'}, aspects:['Stim Free','10g Citrulline','Max Pump'] },
+  ],
+
+  protein: [
+    { id:'on-gold-standard', name:'Gold Standard 100% Whey', brand:'Optimum Nutrition', emoji:'🥛', price:54, retailer:'Amazon', url:'https://www.amazon.com/s?k=optimum+nutrition+gold+standard+whey', affiliateUrl:'', quality:9.0, rating:4.8, reviewCount:125000, reviewSource:'Amazon', expertVerdict:'The best-selling protein of all time — proven, affordable, effective.', expertSource:'Examine.com', specs:{'Protein':'24g','Calories':'120','Carbs':'3g','Fat':'1.5g','Servings':'74'}, aspects:['Best Seller','24g Protein','74 Servings'] },
+    { id:'transparent-whey', name:'100% Whey Protein Isolate', brand:'Transparent Labs', emoji:'🔬', price:59, retailer:'Transparent Labs', url:'https://www.transparentlabs.com/products/100-grass-fed-whey-protein-isolate', affiliateUrl:'', quality:9.6, rating:4.9, reviewCount:7800, reviewSource:'Transparent Labs', expertVerdict:'Cleanest whey protein — grass-fed, no artificial anything.', expertSource:'Examine.com', specs:{'Protein':'28g','Calories':'120','Carbs':'1g','Fat':'0.5g','Source':'Grass-Fed'}, aspects:['Grass Fed','Cleanest Formula','28g Protein'] },
+    { id:'ghost-whey', name:'Ghost Whey Protein', brand:'Ghost', emoji:'👻', price:54, retailer:'Ghost', url:'https://ghostlifestyle.com/products/ghost-whey', affiliateUrl:'', quality:8.8, rating:4.8, reviewCount:18000, reviewSource:'Ghost', expertVerdict:'Best tasting protein — collab flavors and fully transparent label.', expertSource:'Barbend', specs:{'Protein':'25g','Calories':'150','Carbs':'5g','Fat':'3.5g','Servings':'25'}, aspects:['Best Taste','Collab Flavors','Transparent Label'] },
+    { id:'dymatize-iso100', name:'ISO100 Hydrolyzed Whey', brand:'Dymatize', emoji:'💪', price:56, retailer:'Amazon', url:'https://www.amazon.com/s?k=Dymatize+ISO100+protein', affiliateUrl:'', quality:9.2, rating:4.8, reviewCount:34000, reviewSource:'Amazon', expertVerdict:'Hydrolyzed isolate for fastest absorption — serious athletes only.', expertSource:'Barbend', specs:{'Protein':'25g','Calories':'120','Carbs':'2g','Fat':'0.5g','Type':'Hydrolyzed Isolate'}, aspects:['Hydrolyzed','Fastest Absorption','Isolate'] },
+    { id:'legion-whey', name:'Whey+ Protein', brand:'Legion', emoji:'⚡', price:59, retailer:'Legion', url:'https://www.legionathletics.com/products/supplements/whey-protein/', affiliateUrl:'', quality:9.1, rating:4.8, reviewCount:8200, reviewSource:'Legion', expertVerdict:'Natural, science-based protein with excellent taste and value.', expertSource:'Examine.com', specs:{'Protein':'22g','Calories':'100','Carbs':'3g','Fat':'0g','Sweeteners':'Stevia'}, aspects:['100% Natural','No Artificial','Science Based'] },
+    { id:'thorne-whey', name:'Whey Protein Isolate', brand:'Thorne', emoji:'⚕️', price:75, retailer:'Thorne', url:'https://www.thorne.com/products/dp/whey-protein-isolate', affiliateUrl:'', quality:9.4, rating:4.8, reviewCount:2100, reviewSource:'Thorne', expertVerdict:'NSF Certified for Sport — the choice of professional athletes.', expertSource:'NSF', specs:{'Protein':'21g','Calories':'110','Carbs':'2g','Fat':'1g','NSF Certified':'Yes'}, aspects:['NSF Certified','Pro Athlete Choice','Pharmaceutical Grade'] },
+    { id:'nutricost-whey', name:'Whey Protein Concentrate', brand:'Nutricost', emoji:'💊', price:39, retailer:'Amazon', url:'https://www.amazon.com/s?k=Nutricost+whey+protein+concentrate', affiliateUrl:'', quality:7.5, rating:4.5, reviewCount:28000, reviewSource:'Amazon', expertVerdict:'Best budget protein — simple, effective, no frills.', expertSource:'Barbend', specs:{'Protein':'25g','Calories':'130','Carbs':'5g','Fat':'2g','Servings':'75'}, aspects:['Best Budget','75 Servings','No Frills'] },
+    { id:'on-casein', name:'Gold Standard Casein', brand:'Optimum Nutrition', emoji:'🌙', price:52, retailer:'Amazon', url:'https://www.amazon.com/s?k=optimum+nutrition+casein+protein', affiliateUrl:'', quality:8.8, rating:4.7, reviewCount:19000, reviewSource:'Amazon', expertVerdict:'Best slow-release protein — ideal before bed for overnight recovery.', expertSource:'Examine.com', specs:{'Protein':'24g','Calories':'130','Carbs':'4g','Fat':'1g','Absorption':'Slow'}, aspects:['Slow Release','Overnight Recovery','Best Casein'] },
+  ],
+
+  creatine: [
+    { id:'transparent-creatine', name:'Creatine HMB', brand:'Transparent Labs', emoji:'🔬', price:49, retailer:'Transparent Labs', url:'https://www.transparentlabs.com/products/creatine-hmb', affiliateUrl:'', quality:9.5, rating:4.9, reviewCount:12000, reviewSource:'Transparent Labs', expertVerdict:'Best creatine formula — monohydrate plus HMB for muscle retention.', expertSource:'Examine.com', specs:{'Creatine':'5g','HMB':'1.5g','Type':'Monohydrate','Servings':'30','Third Party':'Yes'}, aspects:['Plus HMB','Third Party Tested','Cleanest Formula'] },
+    { id:'on-creatine', name:'Micronized Creatine Powder', brand:'Optimum Nutrition', emoji:'🥛', price:29, retailer:'Amazon', url:'https://www.amazon.com/s?k=optimum+nutrition+micronized+creatine', affiliateUrl:'', quality:9.0, rating:4.8, reviewCount:67000, reviewSource:'Amazon', expertVerdict:'Most popular creatine — micronized for better mixing, great price.', expertSource:'Examine.com', specs:{'Creatine':'5g','Type':'Micronized Monohydrate','Servings':'60','Calories':'0','Mixability':'Excellent'}, aspects:['Micronized','Best Seller','Excellent Value'] },
+    { id:'thorne-creatine', name:'Creatine', brand:'Thorne', emoji:'⚕️', price:42, retailer:'Thorne', url:'https://www.thorne.com/products/dp/creatine', affiliateUrl:'', quality:9.4, rating:4.9, reviewCount:3400, reviewSource:'Thorne', expertVerdict:'NSF Certified creatine — pharmaceutical grade for pro athletes.', expertSource:'NSF', specs:{'Creatine':'5g','Type':'Monohydrate','Servings':'90','NSF Certified':'Yes','Filler':'None'}, aspects:['NSF Certified','No Fillers','Pharmaceutical Grade'] },
+    { id:'legion-recharge', name:'Recharge Post-Workout', brand:'Legion', emoji:'⚡', price:49, retailer:'Legion', url:'https://www.legionathletics.com/products/supplements/recharge/', affiliateUrl:'', quality:9.0, rating:4.8, reviewCount:6800, reviewSource:'Legion', expertVerdict:'Creatine plus L-carnitine for recovery — best post-workout creatine.', expertSource:'Examine.com', specs:{'Creatine':'5g','L-Carnitine':'2.1g','Type':'Monohydrate','Servings':'30','Recovery':'Enhanced'}, aspects:['Plus L-Carnitine','Recovery Focused','Natural Flavors'] },
+    { id:'nutricost-creatine', name:'Creatine Monohydrate', brand:'Nutricost', emoji:'💊', price:22, retailer:'Amazon', url:'https://www.amazon.com/s?k=Nutricost+creatine+monohydrate', affiliateUrl:'', quality:7.8, rating:4.6, reviewCount:31000, reviewSource:'Amazon', expertVerdict:'Cheapest reputable creatine — pure monohydrate, nothing else.', expertSource:'Barbend', specs:{'Creatine':'5g','Type':'Monohydrate','Servings':'100','Calories':'0','Price Per Serving':'$0.22'}, aspects:['Cheapest Option','100 Servings','Pure Monohydrate'] },
+    { id:'momentous-creatine', name:'Creatine Monohydrate', brand:'Momentous', emoji:'🏆', price:44, retailer:'Momentous', url:'https://livemomentous.com/products/creatine', affiliateUrl:'', quality:9.2, rating:4.9, reviewCount:2200, reviewSource:'Momentous', expertVerdict:'NSF Certified creatine trusted by NFL and NBA athletes.', expertSource:'NFL Players', specs:{'Creatine':'5g','Type':'Monohydrate','NSF Certified':'Yes','Servings':'30','Athletes':'NFL/NBA'}, aspects:['Pro Athlete Choice','NSF Certified','Premium Brand'] },
+    { id:'klean-creatine', name:'Klean Creatine', brand:'Klean Athlete', emoji:'🌱', price:38, retailer:'Klean Athlete', url:'https://kleanathlete.com/products/klean-creatine', affiliateUrl:'', quality:9.0, rating:4.8, reviewCount:1800, reviewSource:'Klean Athlete', expertVerdict:'NSF Certified and Informed Sport — clean for drug-tested athletes.', expertSource:'Informed Sport', specs:{'Creatine':'5g','Type':'Monohydrate','NSF':'Yes','Informed Sport':'Yes','Servings':'60'}, aspects:['Informed Sport','Drug Test Safe','NSF Certified'] },
+    { id:'con-cret-creatine', name:'CON-CRĒT Creatine HCl', brand:'ProMera Sports', emoji:'💎', price:35, retailer:'Amazon', url:'https://www.amazon.com/s?k=CON-CRET+creatine+HCl', affiliateUrl:'', quality:8.2, rating:4.5, reviewCount:4100, reviewSource:'Amazon', expertVerdict:'HCl form needs smaller dose — good for those who bloat on monohydrate.', expertSource:'Examine.com', specs:{'Creatine':'750mg HCl','Dose':'Small','Bloating':'Reduced','Servings':'64','Type':'Hydrochloride'}, aspects:['No Bloating','Small Dose','HCl Form'] },
+  ],
+
+  recovery: [
+    { id:'transparent-sleep', name:'Sleep & Recovery', brand:'Transparent Labs', emoji:'💤', price:59, retailer:'Transparent Labs', url:'https://www.transparentlabs.com/products/sleep-and-recovery', affiliateUrl:'', quality:9.4, rating:4.9, reviewCount:5600, reviewSource:'Transparent Labs', expertVerdict:'Best sleep supplement — melatonin, ashwagandha, and zinc in one.', expertSource:'Examine.com', specs:{'Melatonin':'3mg','Ashwagandha':'600mg','Zinc':'15mg','GABA':'500mg','Servings':'30'}, aspects:['Best Formula','Sleep + Recovery','Third Party Tested'] },
+    { id:'legion-lunar', name:'Lunar Sleep Aid', brand:'Legion', emoji:'🌙', price:49, retailer:'Legion', url:'https://www.legionathletics.com/products/supplements/lunar/', affiliateUrl:'', quality:9.0, rating:4.8, reviewCount:3200, reviewSource:'Legion', expertVerdict:'Science-based sleep formula with lemon balm and melatonin.', expertSource:'Examine.com', specs:{'Melatonin':'2mg','L-Theanine':'400mg','Lemon Balm':'600mg','GABA':'600mg','Servings':'30'}, aspects:['Science Based','Natural Ingredients','Non-Habit Forming'] },
+    { id:'thorne-amino', name:'Amino Complex', brand:'Thorne', emoji:'⚕️', price:55, retailer:'Thorne', url:'https://www.thorne.com/products/dp/amino-complex', affiliateUrl:'', quality:9.3, rating:4.8, reviewCount:2100, reviewSource:'Thorne', expertVerdict:'NSF Certified BCAA + EAA complex for elite athlete recovery.', expertSource:'NSF', specs:{'BCAAs':'7g','EAAs':'Yes','NSF Certified':'Yes','Leucine':'3.5g','Servings':'30'}, aspects:['NSF Certified','Full EAA Profile','Pro Athlete'] },
+    { id:'momentous-recovery', name:'Recovery Protein', brand:'Momentous', emoji:'🏆', price:69, retailer:'Momentous', url:'https://livemomentous.com/products/recovery', affiliateUrl:'', quality:9.1, rating:4.8, reviewCount:1800, reviewSource:'Momentous', expertVerdict:'Used by NFL teams — tart cherry, whey, and creatine combined.', expertSource:'NFL Players', specs:{'Protein':'25g','Tart Cherry':'480mg','Creatine':'3g','NSF Certified':'Yes','Servings':'30'}, aspects:['NFL Trusted','Tart Cherry','3-in-1 Formula'] },
+    { id:'on-bcaa', name:'BCAA 1000 Caps', brand:'Optimum Nutrition', emoji:'💊', price:28, retailer:'Amazon', url:'https://www.amazon.com/s?k=optimum+nutrition+BCAA+1000', affiliateUrl:'', quality:8.5, rating:4.7, reviewCount:22000, reviewSource:'Amazon', expertVerdict:'Most trusted BCAA — convenient capsule form, great price.', expertSource:'Barbend', specs:{'Leucine':'500mg','Isoleucine':'250mg','Valine':'250mg','Servings':'60','Form':'Capsule'}, aspects:['Capsule Form','Best Seller','Trusted Brand'] },
+    { id:'ghost-bcaa', name:'BCAA', brand:'Ghost', emoji:'👻', price:39, retailer:'Ghost', url:'https://ghostlifestyle.com/products/ghost-bcaa', affiliateUrl:'', quality:8.7, rating:4.8, reviewCount:8900, reviewSource:'Ghost', expertVerdict:'Best-tasting BCAA with collab flavors and transparent dosing.', expertSource:'Barbend', specs:{'Leucine':'4g','Isoleucine':'2g','Valine':'2g','Hydration':'Yes','Servings':'30'}, aspects:['Best Taste','Collab Flavors','Plus Hydration'] },
+    { id:'klean-bcaa', name:'BCAA + Peak ATP', brand:'Klean Athlete', emoji:'🌱', price:49, retailer:'Klean Athlete', url:'https://kleanathlete.com/products/klean-bcaa-peak-atp', affiliateUrl:'', quality:9.1, rating:4.8, reviewCount:1200, reviewSource:'Klean Athlete', expertVerdict:'Informed Sport certified BCAA plus ATP for power output.', expertSource:'Informed Sport', specs:{'BCAAs':'5g','Peak ATP':'400mg','Informed Sport':'Yes','Drug Test Safe':'Yes','Servings':'30'}, aspects:['Informed Sport','Drug Test Safe','Plus ATP'] },
+    { id:'nutricost-glutamine', name:'L-Glutamine Powder', brand:'Nutricost', emoji:'🔄', price:22, retailer:'Amazon', url:'https://www.amazon.com/s?k=Nutricost+L-glutamine', affiliateUrl:'', quality:7.8, rating:4.5, reviewCount:14000, reviewSource:'Amazon', expertVerdict:'Cheapest glutamine for gut health and muscle recovery.', expertSource:'Examine.com', specs:{'Glutamine':'5g','Type':'L-Glutamine','Servings':'100','Calories':'0','Price Per Serving':'$0.22'}, aspects:['Cheapest Option','100 Servings','Pure Glutamine'] },
+  ],
+
 };
 
-// ── SEARCH ONE CATEGORY (with retry on rate limit) ───────────
-async function searchCategory(catKey, attempt = 1) {
-  const cat = CATEGORIES[catKey];
-  if (!cat) throw new Error(`Unknown: ${catKey}`);
-
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'anthropic-version': '2023-06-01',
-      'x-api-key': ANTHROPIC_API_KEY,
-    },
-    body: JSON.stringify({
-      model: SEARCH_MODEL,
-      max_tokens: 3000,
-      system: [SYSTEM_PROMPT],
-      tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-      messages: [{
-        role: 'user',
-        content: `Top 8 ${cat.label} available now (2025-2026). Preferred brands: ${cat.brands}. JSON array only.`,
-      }],
-    }),
-  });
-
-  // Rate limit — wait and retry up to 4 times with increasing delays
-  if (res.status === 429) {
-    if (attempt >= 4) throw new Error('Rate limit: max retries exceeded');
-    const wait = attempt * 30000; // 30s, 60s, 90s
-    console.log(`  [${catKey}] Rate limited — waiting ${wait/1000}s before retry ${attempt+1}/4…`);
-    await new Promise(r => setTimeout(r, wait));
-    return searchCategory(catKey, attempt + 1);
-  }
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(`API ${res.status}: ${err.error?.message || 'unknown'}`);
-  }
-
-  const data = await res.json();
-  if (data.usage) {
-    const u = data.usage;
-    console.log(`  [${catKey}] in:${u.input_tokens} out:${u.output_tokens} cache_read:${u.cache_read_input_tokens||0}`);
-  }
-
-  let text = '';
-  for (const block of data.content || []) {
-    if (block.type === 'text') text += block.text;
-  }
-
-  const match = text.match(/\[[\s\S]*\]/);
-  if (!match) throw new Error('No JSON in response');
-
-  return JSON.parse(match[0])
-    .filter(p => p.name && p.brand && p.price && p.url)
-    .slice(0, 8)
-    .map((p, i) => ({
-      ...p,
-      id: p.id || `${p.brand}-${i}`.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      affiliateUrl: '',
-    }));
-}
-
-// ── FULL REFRESH ──────────────────────────────────────────────
-let refreshing = false;
-
-async function refreshAll() {
-  if (refreshing || !ANTHROPIC_API_KEY) return;
-  refreshing = true;
-
-  const catKeys = Object.keys(CATEGORIES);
-  console.log(`\n[${new Date().toISOString()}] Starting refresh of ${catKeys.length} categories…`);
-
-  // Start from existing cache so failures never wipe good data
-  const existing = getCache() || { products: {} };
-  const products = { ...existing.products };
-  const errors = [];
-
-  for (const catKey of catKeys) {
-    try {
-      console.log(`  Searching: ${catKey}…`);
-      products[catKey] = await searchCategory(catKey);
-      console.log(`  ✓ ${catKey}: ${products[catKey].length} products`);
-
-      // Save to cache after every successful category so a crash mid-run doesn't lose progress
-      const partial = {
-        timestamp: existing.timestamp || Date.now(),
-        refreshedAt: new Date().toISOString(),
-        nextRefresh: new Date(Date.now() + CACHE_TTL).toISOString(),
-        products,
-        errors,
-        _githubSha: existing._githubSha,
-      };
-      setCache(partial);
-      // Write to GitHub every 3 categories to avoid too many commits
-      if (Object.keys(products).length % 3 === 0) {
-        await writeToGitHub(partial).catch(() => {});
-      }
-
-      // 5s pause between calls — Haiku Tier 1 has strict rate limits
-      await new Promise(r => setTimeout(r, 5000));
-
-    } catch (err) {
-      console.error(`  ✗ ${catKey}: ${err.message}`);
-      errors.push({ cat: catKey, error: err.message });
-      if (existing.products[catKey]) {
-        products[catKey] = existing.products[catKey];
-        console.log(`  → Kept existing data for ${catKey}`);
-      }
-      await new Promise(r => setTimeout(r, 5000));
-    }
-  }
-
-  const newCache = {
-    timestamp: Date.now(),
-    refreshedAt: new Date().toISOString(),
-    nextRefresh: new Date(Date.now() + CACHE_TTL).toISOString(),
-    products,
-    errors,
-    _githubSha: existing._githubSha,
-  };
-
-  setCache(newCache);
-  await writeToGitHub(newCache);
-
-  refreshing = false;
-  const good = catKeys.length - errors.length;
-  console.log(`[${new Date().toISOString()}] Refresh done: ${good}/${catKeys.length} categories. Next: ${newCache.nextRefresh}`);
-  if (errors.length) console.log('  Failed:', errors.map(e => e.cat).join(', '));
-}
-
-// ── ON-DEMAND REVIEW FETCH ────────────────────────────────────
-async function fetchReviews(productName, brand, url) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'anthropic-version': '2023-06-01',
-      'x-api-key': ANTHROPIC_API_KEY,
-    },
-    body: JSON.stringify({
-      model: SEARCH_MODEL,
-      max_tokens: 600,
-      tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-      messages: [{
-        role: 'user',
-        content: `Find 3 real reviews of "${productName}" by ${brand}. Return ONLY a JSON array: [{"author":"Name","text":"Quote under 60 words"}]. Exactly 3 items. No markdown.`,
-      }],
-    }),
-  });
-
-  if (!res.ok) throw new Error(`Review API ${res.status}`);
-  const data = await res.json();
-  let text = '';
-  for (const block of data.content || []) { if (block.type === 'text') text += block.text; }
-  const match = text.match(/\[[\s\S]*?\]/);
-  return match ? JSON.parse(match[0]).slice(0, 3) : [];
-}
+const CATEGORY_META = {
+  benches:     { group:'equipment',   label:'Weight Benches' },
+  barbells:    { group:'equipment',   label:'Barbells' },
+  dumbbells:   { group:'equipment',   label:'Dumbbells' },
+  plates:      { group:'equipment',   label:'Weight Plates' },
+  racks:       { group:'equipment',   label:'Racks & Rigs' },
+  cardio:      { group:'equipment',   label:'Cardio' },
+  shorts:      { group:'clothing',    label:'Gym Shorts' },
+  compression: { group:'clothing',    label:'Compression' },
+  hoodies:     { group:'clothing',    label:'Hoodies' },
+  footwear:    { group:'clothing',    label:'Footwear' },
+  preworkout:  { group:'supplements', label:'Pre-Workout' },
+  protein:     { group:'supplements', label:'Protein' },
+  creatine:    { group:'supplements', label:'Creatine' },
+  recovery:    { group:'supplements', label:'Recovery' },
+};
 
 // ── ROUTES ────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
-  const cache = getCache();
-  res.json({
-    status: 'ok',
-    model: SEARCH_MODEL,
-    githubCache: !!(GITHUB_TOKEN && GITHUB_REPO),
-    cacheAge: cache ? `${Math.round((Date.now() - cache.timestamp) / 3600000)}h` : 'none',
-    refreshedAt: cache?.refreshedAt || null,
-    nextRefresh: cache?.nextRefresh || null,
-    categoriesLoaded: Object.keys(cache?.products || {}).length,
-    refreshing,
-  });
+  res.json({ status:'ok', mode:'sample-data', categories: Object.keys(PRODUCTS).length });
 });
 
 app.get('/api/products/:cat', (req, res) => {
   const cat = req.params.cat;
-  if (!CATEGORIES[cat]) return res.status(404).json({ error: `Unknown category: ${cat}` });
-
-  const cache = getCache();
-  const products = cache?.products?.[cat];
-
-  if (!products || !products.length) {
-    // Trigger background refresh if not already running
-    if (!refreshing) {
-      console.log(`Cache miss for "${cat}" — triggering background refresh`);
-      refreshAll().catch(console.error);
-    }
-    return res.status(503).json({
-      error: 'Products are loading for the first time. This takes 3-5 minutes. Please try again shortly.',
-      loading: true,
-      refreshing: true,
-    });
-  }
-
-  res.json({ products, category: cat, group: CATEGORIES[cat].group, refreshedAt: cache.refreshedAt, nextRefresh: cache.nextRefresh, count: products.length });
-});
-
-app.get('/api/categories', (req, res) => {
-  const cache = getCache();
+  const products = PRODUCTS[cat];
+  if (!products) return res.status(404).json({ error:`Unknown category: ${cat}` });
   res.json({
-    categories: Object.entries(CATEGORIES).map(([key, cat]) => ({
-      key, label: cat.label, group: cat.group,
-      loaded: !!(cache?.products?.[key]?.length),
-      count: cache?.products?.[key]?.length || 0,
-    })),
-    refreshedAt: cache?.refreshedAt || null,
-    nextRefresh: cache?.nextRefresh || null,
+    products,
+    category: cat,
+    group: CATEGORY_META[cat]?.group,
+    refreshedAt: REFRESHED_AT,
+    nextRefresh: null,
+    count: products.length,
   });
 });
 
-// On-demand reviews — fetched when user opens Details modal
-app.post('/api/reviews', async (req, res) => {
-  const { productName, brand, url } = req.body;
-  if (!productName || !brand) return res.status(400).json({ error: 'Send productName and brand.' });
-  try {
-    const reviews = await fetchReviews(productName, brand, url || '');
-    res.json({ reviews });
-  } catch (err) {
-    console.error('Review fetch error:', err.message);
-    res.json({ reviews: [] });
-  }
+app.get('/api/categories', (req, res) => {
+  res.json({
+    categories: Object.entries(CATEGORY_META).map(([key, meta]) => ({
+      key,
+      label: meta.label,
+      group: meta.group,
+      loaded: true,
+      count: PRODUCTS[key]?.length || 0,
+    })),
+    refreshedAt: REFRESHED_AT,
+  });
 });
 
-// Zero-token comparison summary
+// Zero-token comparison
 app.post('/api/compare', (req, res) => {
   const { p1, p2 } = req.body;
-  if (!p1 || !p2) return res.status(400).json({ error: 'Send p1 and p2.' });
+  if (!p1 || !p2) return res.status(400).json({ error:'Send p1 and p2.' });
   const v1 = p1.quality / p1.price, v2 = p2.quality / p2.price;
   const diff = Math.abs(p1.price - p2.price);
   const qw = p1.quality >= p2.quality ? p1 : p2;
@@ -430,76 +279,28 @@ app.post('/api/compare', (req, res) => {
   const pricey = cheap.id === p1.id ? p2 : p1;
   const vw = v1 >= v2 ? p1 : p2;
   let summary;
-  if (diff === 0) summary = `Same price at $${p1.price}. <strong>${qw.name}</strong> wins on quality (${qw.quality}/10) — easy pick.`;
-  else if (diff < 40) summary = `Only $${diff} apart. Quality makes it clear — go with <strong>${qw.name}</strong> (${qw.quality}/10 vs ${(qw.id===p1.id?p2:p1).quality}/10).`;
-  else if (vw.id === cheap.id) summary = `<strong>${cheap.name}</strong> is $${diff} cheaper AND better value per dollar. Unless you need something specific from <strong>${pricey.name}</strong>, save the money.`;
-  else summary = `<strong>${pricey.name}</strong> costs $${diff} more but earns it — ${pricey.quality}/10 vs ${cheap.quality}/10 quality. Worth the upgrade if budget allows.`;
+  if (diff === 0) summary = `Same price. <strong>${qw.name}</strong> wins on quality (${qw.quality}/10).`;
+  else if (diff < 40) summary = `Only $${diff} apart — go with <strong>${qw.name}</strong> (${qw.quality}/10 vs ${(qw.id===p1.id?p2:p1).quality}/10).`;
+  else if (vw.id === cheap.id) summary = `<strong>${cheap.name}</strong> is $${diff} cheaper AND better value per dollar. Save the money.`;
+  else summary = `<strong>${pricey.name}</strong> costs $${diff} more but earns it — ${pricey.quality}/10 vs ${cheap.quality}/10. Worth the upgrade if budget allows.`;
   res.json({ summary, winnerId: qw.id });
 });
 
-// Admin manual refresh
-app.post('/api/admin/refresh', (req, res) => {
-  if (refreshing) return res.json({ message: 'Already refreshing.' });
-  res.json({ message: 'Full refresh started in background.' });
-  refreshAll().catch(console.error);
+// Reviews endpoint — returns static sample reviews (no API cost)
+app.post('/api/reviews', (req, res) => {
+  const { productName, brand } = req.body;
+  res.json({ reviews: [
+    { author:`${brand} Customer`, text:`Really happy with the ${productName}. Exactly what I was looking for and the quality is excellent.` },
+    { author:'Verified Buyer', text:`Been using this for 3 months now. Solid build, no complaints. Would definitely recommend to anyone looking in this category.` },
+    { author:'Fitness Enthusiast', text:`Great product overall. The price-to-quality ratio is hard to beat. Will be buying again.` },
+  ]});
 });
 
-app.use((req, res) => res.status(404).json({ error: 'Not found' }));
+app.use((req, res) => res.status(404).json({ error:'Not found' }));
 
-// ── START ──────────────────────────────────────────────────────
-app.listen(PORT, async () => {
-  console.log(`\n✅ GymGear backend on port ${PORT}`);
-  console.log(`🤖 Model: ${SEARCH_MODEL}`);
+app.listen(PORT, () => {
+  const total = Object.values(PRODUCTS).reduce((s, p) => s + p.length, 0);
+  console.log(`✅ GymGear sample server on port ${PORT}`);
+  console.log(`📦 ${Object.keys(PRODUCTS).length} categories, ${total} products — no API calls`);
   console.log(`🔒 Allowed origins: ${ALLOWED_ORIGINS.join(', ')}`);
-  console.log(`📦 GitHub cache: ${GITHUB_REPO || 'NOT CONFIGURED — set GITHUB_TOKEN + GITHUB_CACHE_REPO'}\n`);
-
-  // 1. Try in-memory (already empty on cold start)
-  // 2. Try local /tmp backup (survives warm restarts)
-  // 3. Try GitHub (survives everything)
-  // 4. If nothing works, trigger a fresh search
-
-  let loaded = false;
-
-  // Check /tmp backup first (fast, free)
-  try {
-    if (fs.existsSync(LOCAL_BACKUP)) {
-      const local = JSON.parse(fs.readFileSync(LOCAL_BACKUP, 'utf8'));
-      if (Date.now() - local.timestamp < CACHE_TTL) {
-        setCache(local);
-        console.log(`📦 Loaded from /tmp backup (${Object.keys(local.products).length} categories)`);
-        loaded = true;
-      }
-    }
-  } catch {}
-
-  // Even if /tmp was fine, still pull from GitHub to get the definitive version
-  // (in case this is a fresh Render instance with empty /tmp)
-  if (!loaded) {
-    const gh = await readFromGitHub();
-    if (gh && Date.now() - gh.timestamp < CACHE_TTL) {
-      setCache(gh);
-      // Also write to /tmp so subsequent warm restarts are faster
-      try { fs.writeFileSync(LOCAL_BACKUP, JSON.stringify(gh)); } catch {}
-      console.log(`✅ Loaded from GitHub (${Object.keys(gh.products).length} categories, ${gh.refreshedAt})`);
-      loaded = true;
-    } else if (gh) {
-      // GitHub data exists but is stale — load it anyway so users see something,
-      // then refresh in background
-      setCache(gh);
-      console.log(`⚠️  GitHub cache stale (${gh.refreshedAt}) — loading it while refreshing in background`);
-      loaded = true;
-      refreshAll().catch(console.error);
-    }
-  }
-
-  if (!loaded) {
-    console.log('🔄 No cache found anywhere — starting fresh search (takes ~3-5 min)…');
-    refreshAll().catch(console.error);
-  }
-
-  // Weekly refresh timer — runs even when no users are active
-  setInterval(() => {
-    console.log('\n⏰ Weekly refresh timer fired');
-    refreshAll().catch(console.error);
-  }, CACHE_TTL);
 });
