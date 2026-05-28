@@ -7,7 +7,14 @@ const PORT = process.env.PORT || 3001;
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
   .split(',').map(o => o.trim()).filter(Boolean)
-  .concat(['https://gymgear-frontend5.vercel.app','http://localhost:3000','http://localhost:5500','http://127.0.0.1:5500']);
+  .concat([
+    'https://gymgear-frontend5.vercel.app',
+    'https://gymgearcompare.com',
+    'https://www.gymgearcompare.com',
+    'http://localhost:3000',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500'
+  ]);
 
 app.use(express.json());
 app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');next()});
