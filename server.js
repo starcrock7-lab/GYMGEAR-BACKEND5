@@ -15,7 +15,7 @@ app.use((req,res,next)=>{
   const o=req.headers.origin||'';
   if(ALLOWED_ORIGINS.includes(o)){res.setHeader('Access-Control-Allow-Origin',o);res.setHeader('Vary','Origin')}
   res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers','Content-Type');
+  res.setHeader('Access-Control-Allow-Headers','Content-Type,X-Site-Key');
   if(req.method==='OPTIONS')return res.sendStatus(204);
   next();
 });
@@ -29,7 +29,11 @@ app.use((req,res,next)=>{
 });
 app.use('/api',(req,res,next)=>{
   const o=req.headers.origin||'',r=req.headers.referer||'';
-  if(!ALLOWED_ORIGINS.includes(o)&&!ALLOWED_ORIGINS.some(x=>r.startsWith(x)))return res.status(403).json({error:'Forbidden'});
+  const originOk=ALLOWED_ORIGINS.includes(o)||ALLOWED_ORIGINS.some(x=>r.startsWith(x));
+  if(!originOk)return res.status(403).json({error:'Forbidden'});
+  // Secret key check — rejects requests not coming from our frontend
+  const SITE_KEY=process.env.SITE_KEY||'';
+  if(SITE_KEY&&req.headers['x-site-key']!==SITE_KEY)return res.status(403).json({error:'Forbidden'});
   next();
 });
 
