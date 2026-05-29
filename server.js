@@ -300,13 +300,56 @@ app.get('/api/categories',(req,res)=>res.json({
 app.post('/api/compare',(req,res)=>{
   const {p1,p2}=req.body;
   if(!p1||!p2)return res.status(400).json({error:'Send p1 and p2.'});
-  const v1=p1.quality/p1.price,v2=p2.quality/p2.price,diff=Math.abs(p1.price-p2.price);
-  const qw=p1.quality>=p2.quality?p1:p2,cheap=p1.price<=p2.price?p1:p2,pricey=cheap.id===p1.id?p2:p1,vw=v1>=v2?p1:p2;
-  let summary;
-  if(diff===0)summary=`Same price. <strong>${qw.name}</strong> wins on quality (${qw.quality}/10).`;
-  else if(diff<40)summary=`Only $${diff} apart — go with <strong>${qw.name}</strong> (${qw.quality}/10 vs ${(qw.id===p1.id?p2:p1).quality}/10).`;
-  else if(vw.id===cheap.id)summary=`<strong>${cheap.name}</strong> is $${diff} cheaper AND better value per dollar. Save the money.`;
-  else summary=`<strong>${pricey.name}</strong> costs $${diff} more but earns it — ${pricey.quality}/10 vs ${cheap.quality}/10. Worth the upgrade if budget allows.`;
+
+  const qw=p1.quality>=p2.quality?p1:p2;
+  const ql=qw.id===p1.id?p2:p1;
+  const cheap=p1.price<=p2.price?p1:p2;
+  const pricey=cheap.id===p1.id?p2:p1;
+  const p1eff=p1.quality/(p1.salePrice||p1.price);
+  const p2eff=p2.quality/(p2.salePrice||p2.price);
+  const vw=p1eff>=p2eff?p1:p2;
+  const diff=Math.abs((p1.salePrice||p1.price)-(p2.salePrice||p2.price));
+
+  // Build pros for winner
+  const winnerPros=[];
+  const loserPros=[];
+  if(qw.quality>ql.quality) winnerPros.push(`Higher quality score (${qw.quality}/10 vs ${ql.quality}/10)`);
+  if((qw.salePrice||qw.price)<(ql.salePrice||ql.price)) winnerPros.push(`$${diff} cheaper`);
+  if(qw.rating>ql.rating) winnerPros.push(`Better customer rating (${qw.rating}★ vs ${ql.rating}★)`);
+  if(qw.reviewCount>ql.reviewCount) winnerPros.push(`More reviews (${qw.reviewCount.toLocaleString()} vs ${ql.reviewCount.toLocaleString()})`);
+  if(vw.id===qw.id) winnerPros.push('Better value per dollar');
+  if(qw.aspects?.length) winnerPros.push(...qw.aspects.slice(0,2));
+
+  // Loser still has some good points
+  if((ql.salePrice||ql.price)<(qw.salePrice||qw.price)) loserPros.push(`$${diff} cheaper`);
+  if(ql.rating>qw.rating) loserPros.push(`Better customer rating (${ql.rating}★)`);
+  if(ql.aspects?.length) loserPros.push(...ql.aspects.slice(0,2));
+
+  const summary=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px">
+      <div>
+        <div style="font-size:0.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#15803d;margin-bottom:6px">✓ ${qw.name}</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:4px">
+          ${winnerPros.map(p=>`<li style="font-size:0.8rem;color:var(--text-2);display:flex;gap:6px"><span style="color:#15803d;flex-shrink:0">✓</span>${p}</li>`).join('')}
+        </ul>
+      </div>
+      <div>
+        <div style="font-size:0.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px">— ${ql.name}</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:4px">
+          ${loserPros.length?loserPros.map(p=>`<li style="font-size:0.8rem;color:var(--text-2);display:flex;gap:6px"><span style="color:var(--text-3);flex-shrink:0">·</span>${p}</li>`).join(''):'<li style="font-size:0.8rem;color:var(--text-3)">No clear advantages</li>'}
+        </ul>
+      </div>
+    </div>
+    <div style="background:var(--accent-l);border-left:3px solid var(--accent);padding:10px 14px;border-radius:0 4px 4px 0;font-size:0.84rem;color:var(--text)">
+      <strong>Verdict:</strong> ${
+        diff===0
+          ? `Both are the same price. <strong>${qw.name}</strong> wins on quality — easy pick.`
+          : vw.id===cheap.id
+            ? `<strong>${cheap.name}</strong> is cheaper AND better value. No reason to pay more.`
+            : `<strong>${pricey.name}</strong> costs $${diff} more but delivers ${pricey.quality}/10 quality vs ${cheap.quality}/10. ${diff<100?'Probably worth it.':'Only worth it if budget allows.'}`
+      }
+    </div>`;
+
   res.json({summary,winnerId:qw.id});
 });
 
