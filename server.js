@@ -318,7 +318,7 @@ accessories:[
 };
 
 const CATEGORY_META = {
-  benches:{group:'equipment',label:'Weight Benches'},barbells:{group:'equipment',label:'Barbells'},dumbbells:{group:'equipment',label:'Dumbbells'},plates:{group:'equipment',label:'Weight Plates'},racks:{group:'equipment',label:'Racks & Rigs'},cardio:{group:'equipment',label:'Cardio'},kettlebells:{group:'equipment',label:'Kettlebells'},bands:{group:'equipment',label:'Resistance Bands'},accessories:{group:'equipment',label:'Accessories'},
+  benches:{group:'equipment',label:'Weight Benches'},barbells:{group:'equipment',label:'Barbells'},dumbbells:{group:'equipment',label:'Dumbbells'},plates:{group:'equipment',label:'Weight Plates'},racks:{group:'equipment',label:'Racks & Rigs'},cardio:{group:'equipment',label:'Cardio'},kettlebells:{group:'equipment',label:'Kettlebells'},bands:{group:'equipment',label:'Resistance Bands'},accessories:{group:'gear',label:'Accessories'},
   shorts:{group:'clothing',label:'Gym Shorts'},compression:{group:'clothing',label:'Compression'},tanks:{group:'clothing',label:'Tank Tops'},hoodies:{group:'clothing',label:'Hoodies'},footwear:{group:'clothing',label:'Footwear'},sportsbras:{group:'clothing',label:'Sports Bras'},
   preworkout:{group:'supplements',label:'Pre-Workout'},protein:{group:'supplements',label:'Protein'},creatine:{group:'supplements',label:'Creatine'},recovery:{group:'supplements',label:'Recovery'},vitamins:{group:'supplements',label:'Vitamins'},fatburners:{group:'supplements',label:'Fat Burners'},
 };
