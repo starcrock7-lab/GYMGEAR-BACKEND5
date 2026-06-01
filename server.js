@@ -74,6 +74,239 @@ const IMGS = {
   'momentous-omega3':   'https://www.livemomentous.com/cdn/shop/files/Omega3_HERO_Jar.png?v=1776803640&width=800',
   'momentous-recovery': 'https://www.livemomentous.com/cdn/shop/files/Recovery_HERO-Chocolate.png?v=1778013999&width=800',
   'alani-pre':          'https://www.alaninu.com/cdn/shop/files/preworkout_30serve_CosmicStardust_0002_web_600x.png?v=1687464332',
+
+  // Benches
+  'titan-ab':           'https://cdn.shopify.com/s/files/1/0998/2706/products/adjustable-bench-v2-back-angle.jpg?v=1620753600',
+  'bells-bench':        'https://www.bellsofsteel.com/wp-content/uploads/2021/09/BSF-FB-1.jpg',
+  'archon-bench':       'https://archonfitness.com/cdn/shop/products/competition-flat-bench-thumbnail.jpg?v=1640000000',
+
+  // Barbells
+  'eleiko-iwf':         'https://eleiko.com/cdn/shop/products/3000444-eleiko-iwf-weightlifting-training-bar-men_1_800x.jpg',
+  'american-ss':        'https://www.americanbarbell.com/cdn/shop/products/stainless-steel-bar-1_800x.jpg',
+  'titan-olympic':      'https://cdn.shopify.com/s/files/1/0998/2706/products/Olympic-barbell-v3_800x.jpg',
+  'fringe-wonder':      'https://cdn.shopify.com/s/files/1/0481/2845/files/wonder-bar-v2-main_800x.jpg',
+  'vulcan-pro':         'https://www.vulcanstrength.com/cdn/shop/products/pro-olympic-training-bar_800x.jpg',
+  'rep-equalizer':      'https://repfitness.com/cdn/shop/products/EZ-Curl-Bar-Thumbnail.jpg?v=1620000000',
+
+  // Dumbbells
+  'rep-hex':            'https://repfitness.com/cdn/shop/products/Shopify-Rubber-Hex-Thumbnail_800x.jpg?v=1620000000',
+  'bowflex-552':        'https://www.bowflex.com/dw/image/v2/BDBG_PRD/on/demandware.static/-/Sites-nautilus-master/default/dw4a6b9a3b/images/bowflex/products/dumbbells/selecttech/552/BFX_SelectTech552_PDP_Hero.jpg?sw=800',
+  'ironmaster-ql':      'https://www.ironmaster.com/cdn/shop/products/quick-lock-dumbbells-main_800x.jpg',
+  'fringe-urethane':    'https://cdn.shopify.com/s/files/1/0481/2845/products/urethane-round-dumbbells_800x.jpg',
+  'vulcan-db':          'https://www.vulcanstrength.com/cdn/shop/products/vulcan-urethane-dumbbells_800x.jpg',
+  'titan-adj':          'https://cdn.shopify.com/s/files/1/0998/2706/products/adjustable-dumbbell-set_800x.jpg',
+  'cap-hex':            'https://m.media-amazon.com/images/I/71N0KuXCVIL._AC_SL1500_.jpg',
+
+  // Plates
+  'rep-comp':           'https://repfitness.com/cdn/shop/products/Competition-Bumper-Plates-Thumbnail_800x.jpg?v=1620000000',
+  'vulcan-alpha':       'https://www.vulcanstrength.com/cdn/shop/products/vulcan-alpha-bumper-plates_800x.jpg',
+  'rep-color':          'https://repfitness.com/cdn/shop/products/Color-Bumper-Plates-Thumbnail_800x.jpg?v=1620000000',
+  'titan-bumper':       'https://cdn.shopify.com/s/files/1/0998/2706/products/bumper-plates-v3_800x.jpg',
+  'cap-iron':           'https://m.media-amazon.com/images/I/71v1S7BZnpL._AC_SL1500_.jpg',
+
+  // Racks
+  'rogue-rm6':          'https://assets.roguefitness.com/f_auto,q_auto,c_limit,w_800,b_rgb:ffffff/catalog/Strength%20Equipment/Strength%20Training/Power%20Racks%20and%20Rigs/Monster%20Series/RM6/RM6-H_v7l1hq.png',
+  'rogue-r3':           'https://assets.roguefitness.com/f_auto,q_auto,c_limit,w_800,b_rgb:ffffff/catalog/Strength%20Equipment/Strength%20Training/Power%20Racks%20and%20Rigs/R-Series/R3/R3-H_jm3cmu.png',
+  'rep-pr5000':         'https://repfitness.com/cdn/shop/products/PR-5000-Thumbnail_800x.jpg?v=1620000000',
+  'titan-x3':           'https://cdn.shopify.com/s/files/1/0998/2706/products/X-3-Power-Rack_800x.jpg',
+  'rep-hr100':          'https://repfitness.com/cdn/shop/products/HR-100-Half-Rack-Thumbnail_800x.jpg?v=1620000000',
+  'bells-squat':        'https://www.bellsofsteel.com/wp-content/uploads/2020/09/squat-stand-2-0-thumb.jpg',
+  'rogue-squat':        'https://assets.roguefitness.com/f_auto,q_auto,c_limit,w_800,b_rgb:ffffff/catalog/Strength%20Equipment/Strength%20Training/Power%20Racks%20and%20Rigs/Squat%20Stands/SQ-1/SQ1-H_d5sj6v.png',
+  'titan-t2':           'https://cdn.shopify.com/s/files/1/0998/2706/products/T-2-Short-Power-Rack_800x.jpg',
+
+  // Cardio
+  'concept2-rower':     'https://www.concept2.com/files/images/products/rowing/rowerg/product/rowerg-sport-black-legs-side-view.jpg',
+  'assault-bike':       'https://www.assaultfitness.com/cdn/shop/products/assaultbike-classic-main_800x.jpg',
+  'concept2-ski':       'https://www.concept2.com/files/images/products/skiing/skierg/product/skierg-floor-stand-black.jpg',
+  'nordictrack-1750':   'https://www.nordictrack.com/content/dam/nordictrack/images/treadmills/nordictrack-commercial-1750-treadmill-hero.jpg',
+  'assault-runner':     'https://www.assaultfitness.com/cdn/shop/products/assaultrunner-pro-main_800x.jpg',
+  'concept2-bikeerg':   'https://www.concept2.com/files/images/products/biking/bikeerg/product/bikeerg-side-view.jpg',
+
+  // Kettlebells
+  'rep-kb':             'https://repfitness.com/cdn/shop/products/Cast-Iron-Kettlebell-Thumbnail_800x.jpg?v=1620000000',
+  'onnit-kb':           'https://www.onnit.com/cdn/shop/products/primal-bell-gorilla-main_800x.jpg',
+  'dragon-door-kb':     'https://www.dragondoor.com/cdn/shop/products/p10-rkc-kettlebell_800x.jpg',
+  'titan-kb':           'https://cdn.shopify.com/s/files/1/0998/2706/products/cast-iron-kettlebell_800x.jpg',
+  'vulcan-kb':          'https://www.vulcanstrength.com/cdn/shop/products/vulcan-elite-kettlebell_800x.jpg',
+  'cap-kb':             'https://m.media-amazon.com/images/I/71PL1OQYWTL._AC_SL1500_.jpg',
+  'yes4all-kb':         'https://m.media-amazon.com/images/I/71LN7V8vYrL._AC_SL1500_.jpg',
+
+  // Bands
+  'elitefts-bands':     'https://www.elitefts.com/cdn/shop/products/pro-bands-set_800x.jpg',
+  'wodfitters-bands':   'https://m.media-amazon.com/images/I/81cRcj3pj5L._AC_SL1500_.jpg',
+  'fit-simplify-bands': 'https://m.media-amazon.com/images/I/71q7QL8MfZL._AC_SL1500_.jpg',
+  'ironbull-bands':     'https://m.media-amazon.com/images/I/81n33MVhgIL._AC_SL1500_.jpg',
+  'perform-better-mini':'https://www.performbetter.com/cdn/shop/products/mini-bands-set_800x.jpg',
+  'amazon-bands':       'https://m.media-amazon.com/images/I/71bS4aS+FGL._AC_SL1500_.jpg',
+
+  // Clothing — Shorts
+  'youngla-shorts':     'https://youngla.com/cdn/shop/products/215-gotta-go-shorts-main_800x.jpg',
+  'gymshark-arrival':   'https://cdn.gymshark.com/images/v2/products/arrival-5-shorts-black.jpg',
+  'nobull-shorts':      'https://www.nobullproject.com/cdn/shop/products/mens-training-short-main_800x.jpg',
+  'alphalete-shorts':   'https://alphalete.com/cdn/shop/products/amplify-shorts-main_800x.jpg',
+  'lululemon-shorts':   'https://images.lululemon.com/is/image/lululemon/LM1BGCS_032334_1',
+  'nike-dri-fit':       'https://static.nike.com/a/images/t_default/training-shorts-main.jpg',
+  'adidas-shorts':      'https://assets.adidas.com/images/w_600/techfit-shorts-main.jpg',
+  'better-bodies-shorts':'https://www.better-bodies.com/cdn/shop/products/mesh-training-shorts_800x.jpg',
+
+  // Compression
+  'gymshark-vital':     'https://cdn.gymshark.com/images/v2/products/vital-seamless-leggings-black.jpg',
+  'lululemon-align':    'https://images.lululemon.com/is/image/lululemon/LW5CJAS_032343_1',
+  'alphalete-surge':    'https://alphalete.com/cdn/shop/products/surge-leggings-main_800x.jpg',
+  'youngla-joggers':    'https://youngla.com/cdn/shop/products/tapered-joggers-101-main_800x.jpg',
+  'nike-pro':           'https://static.nike.com/a/images/t_default/womens-nike-pro-leggings.jpg',
+  'under-armour-leggings':'https://underarmour.scene7.com/is/image/Underarmour/V5-1373838-001_FC?rp=standard-0pad|pdpMainDesktop&scl=1&fmt=jpg&qlt=85&resMode=sharp2&cache=on,on&bgcolor=F0F0F0&wid=566',
+  'better-bodies-tights':'https://www.better-bodies.com/cdn/shop/products/pro-tights-main_800x.jpg',
+  'gasp-tights':        'https://www.gaspofficial.com/cdn/shop/products/pro-tight-main_800x.jpg',
+
+  // Tanks
+  'youngla-tank':       'https://youngla.com/cdn/shop/products/sleeveless-tank-303-main_800x.jpg',
+  'gymshark-tank':      'https://cdn.gymshark.com/images/v2/products/training-tank-black.jpg',
+  'gasp-stringer':      'https://www.gaspofficial.com/cdn/shop/products/stringer-tank-main_800x.jpg',
+  'better-bodies-tank': 'https://www.better-bodies.com/cdn/shop/products/ribbed-tank-main_800x.jpg',
+  'alphalete-tank':     'https://alphalete.com/cdn/shop/products/athletic-tank-main_800x.jpg',
+  'nike-dri-fit-tank':  'https://static.nike.com/a/images/t_default/mens-dri-fit-tank.jpg',
+  'under-armour-tank':  'https://underarmour.scene7.com/is/image/Underarmour/V5-1361518-001_FC?rp=standard-0pad|pdpMainDesktop&scl=1&fmt=jpg&qlt=85',
+  'nobull-tank':        'https://www.nobullproject.com/cdn/shop/products/performance-tank-main_800x.jpg',
+
+  // Hoodies
+  'youngla-hoodie':     'https://youngla.com/cdn/shop/products/oversized-hoodie-549-main_800x.jpg',
+  'gymshark-critical':  'https://cdn.gymshark.com/images/v2/products/critical-hoodie-black.jpg',
+  'alphalete-hoodie':   'https://alphalete.com/cdn/shop/products/premium-hoodie-main_800x.jpg',
+  'adidas-essentials':  'https://assets.adidas.com/images/w_600/essentials-fleece-hoodie-main.jpg',
+  'better-bodies-hoodie':'https://www.better-bodies.com/cdn/shop/products/athlete-hoodie-main_800x.jpg',
+  'gasp-hoodie':        'https://www.gaspofficial.com/cdn/shop/products/thermal-hood-main_800x.jpg',
+  'lululemon-scuba':    'https://images.lululemon.com/is/image/lululemon/LW4DRFS_064847_1',
+
+  // Footwear
+  'nobull-trainer':     'https://www.nobullproject.com/cdn/shop/products/mens-trainer-plus-main_800x.jpg',
+  'nike-metcon-9':      'https://static.nike.com/a/images/t_default/metcon-9-training-shoes-main.jpg',
+  'adidas-adipower':    'https://assets.adidas.com/images/w_600/adipower-weightlifting-shoe-main.jpg',
+  'reebok-nano':        'https://assets.reebok.com/images/w_600/nano-x4-training-shoes-main.jpg',
+  'converse-chuck':     'https://www.converse.com/dw/image/v2/BCZC_PRD/on/demandware.static/-/Sites-cnv-master-catalog/default/chuck-taylor-all-star-main.jpg',
+  'inov8-bare':         'https://www.inov-8.com/cdn/shop/products/bare-xf-v3-main_800x.jpg',
+  'new-balance-minimus':'https://nb.scene7.com/is/image/NB/WTMINTR_REF_SL_I?$pdpflexf2$',
+  'nobull-lifter':      'https://www.nobullproject.com/cdn/shop/products/mens-lifter-main_800x.jpg',
+
+  // Sports Bras
+  'lululemon-energy':   'https://images.lululemon.com/is/image/lululemon/LW1AHOS_064847_1',
+  'gymshark-flex-bra':  'https://cdn.gymshark.com/images/v2/products/flex-sports-bra-black.jpg',
+  'nike-indy-bra':      'https://static.nike.com/a/images/t_default/womens-dri-fit-indy-bra.jpg',
+  'alphalete-sports-bra':'https://alphalete.com/cdn/shop/products/amplify-sports-bra-main_800x.jpg',
+  'ua-infinity-bra':    'https://underarmour.scene7.com/is/image/Underarmour/V5-1376885-001_FC?rp=standard-0pad|pdpMainDesktop&scl=1&fmt=jpg&qlt=85',
+  'nobull-sports-bra':  'https://www.nobullproject.com/cdn/shop/products/womens-performance-sports-bra-main_800x.jpg',
+  'adidas-bra':         'https://assets.adidas.com/images/w_600/believe-this-sports-bra-main.jpg',
+  'youngla-sports-bra': 'https://youngla.com/cdn/shop/products/sports-bra-main_800x.jpg',
+
+  // Supplements — Pre-Workout
+  'ghost-legend':       'https://ghostlifestyle.com/cdn/shop/products/ghost-legend-pre-workout-main_800x.png',
+  'c4-original':        'https://m.media-amazon.com/images/I/71lYAOBRRTL._AC_SL1500_.jpg',
+  'legion-pulse':       'https://www.legionathletics.com/cdn/shop/products/pulse-pre-workout-main_800x.png',
+  'bucked-up':          'https://buckedup.com/cdn/shop/products/bucked-up-pre-workout-main_800x.png',
+
+  // Protein
+  'on-gold-standard':   'https://m.media-amazon.com/images/I/71u8zx0H22L._AC_SL1500_.jpg',
+  'transparent-whey':   'https://www.transparentlabs.com/cdn/shop/files/TL_GrassedFed_Whey_V2_1_2.png?v=1745537479',
+  'ghost-whey':         'https://ghostlifestyle.com/cdn/shop/products/ghost-whey-protein-main_800x.png',
+  'dymatize-iso100':    'https://m.media-amazon.com/images/I/71z5tpB7bEL._AC_SL1500_.jpg',
+  'legion-whey':        'https://www.legionathletics.com/cdn/shop/products/whey-plus-protein-main_800x.png',
+  'thorne-whey':        'https://www.thorne.com/cdn/shop/products/whey-protein-isolate-main_800x.jpg',
+  'nutricost-whey':     'https://m.media-amazon.com/images/I/71bJxGalBUL._AC_SL1500_.jpg',
+  'on-casein':          'https://m.media-amazon.com/images/I/71+MZzX1pGL._AC_SL1500_.jpg',
+
+  // Creatine
+  'on-creatine':        'https://m.media-amazon.com/images/I/71kN3DcfVHL._AC_SL1500_.jpg',
+  'thorne-creatine':    'https://www.thorne.com/cdn/shop/products/creatine-main_800x.jpg',
+  'legion-recharge':    'https://www.legionathletics.com/cdn/shop/products/recharge-post-workout-main_800x.png',
+  'nutricost-creatine': 'https://m.media-amazon.com/images/I/61SXCF7BWNL._AC_SL1500_.jpg',
+  'klean-creatine':     'https://kleanathlete.com/cdn/shop/products/klean-creatine-main_800x.jpg',
+  'con-cret-creatine':  'https://m.media-amazon.com/images/I/71rJHrFh7nL._AC_SL1500_.jpg',
+
+  // Recovery
+  'transparent-sleep':  'https://www.transparentlabs.com/cdn/shop/files/TL_Sleep_Recovery_V2_1.png?v=1745537479',
+  'legion-lunar':       'https://www.legionathletics.com/cdn/shop/products/lunar-sleep-aid-main_800x.png',
+  'thorne-amino':       'https://www.thorne.com/cdn/shop/products/amino-complex-main_800x.jpg',
+  'on-bcaa':            'https://m.media-amazon.com/images/I/71aUvuBOIAL._AC_SL1500_.jpg',
+  'ghost-bcaa':         'https://ghostlifestyle.com/cdn/shop/products/ghost-bcaa-main_800x.png',
+  'klean-bcaa':         'https://kleanathlete.com/cdn/shop/products/klean-bcaa-peak-atp-main_800x.jpg',
+  'nutricost-glutamine':'https://m.media-amazon.com/images/I/61oEtcl0yQL._AC_SL1500_.jpg',
+
+  // Vitamins
+  'thorne-basics':      'https://www.thorne.com/cdn/shop/products/basic-nutrients-2-day-main_800x.jpg',
+  'ag1':                'https://www.athleticgreens.com/cdn/shop/products/AG1-canister-main_800x.jpg',
+  'legion-triumph':     'https://www.legionathletics.com/cdn/shop/products/triumph-multivitamin-main_800x.png',
+  'garden-of-life-mv':  'https://m.media-amazon.com/images/I/71UCH0l2eRL._AC_SL1500_.jpg',
+  'opti-men':           'https://m.media-amazon.com/images/I/71lPaAf6wvL._AC_SL1500_.jpg',
+  'ritual-men':         'https://www.ritual.com/cdn/shop/products/essential-for-men-main_800x.jpg',
+  'klean-mv':           'https://kleanathlete.com/cdn/shop/products/klean-multivitamin-main_800x.jpg',
+
+  // Fat Burners
+  'ghost-burn':         'https://ghostlifestyle.com/cdn/shop/products/ghost-burn-main_800x.png',
+  'jym-shred':          'https://m.media-amazon.com/images/I/71fNa+dWC3L._AC_SL1500_.jpg',
+  'legion-phoenix':     'https://www.legionathletics.com/cdn/shop/products/phoenix-fat-burner-main_800x.png',
+  'evl-engn-shred':     'https://m.media-amazon.com/images/I/71-j7fcQDoL._AC_SL1500_.jpg',
+  'cellucor-clk':       'https://m.media-amazon.com/images/I/71wf9ZS8OOL._AC_SL1500_.jpg',
+  'animal-cuts':        'https://m.media-amazon.com/images/I/71U2YcSVVJL._AC_SL1500_.jpg',
+  'mhp-thyro-slim':     'https://m.media-amazon.com/images/I/71oXTdmqr0L._AC_SL1500_.jpg',
+
+  // Gear — Belts
+  'inzer-forever-belt': 'https://www.inzernet.com/cdn/shop/products/forever-lever-belt-main_800x.jpg',
+  'sbd-belt':           'https://www.sbdapparel.com/cdn/shop/products/powerlifting-belt-main_800x.jpg',
+  'pioneer-gc-belt':    'https://www.pioneerfitness.net/cdn/shop/products/general-cut-belt-main_800x.jpg',
+  'gymreapers-lever-belt':'https://m.media-amazon.com/images/I/71EH3FTBPnL._AC_SL1500_.jpg',
+  'schiek-2004-belt':   'https://m.media-amazon.com/images/I/71xqxCv1M8L._AC_SL1500_.jpg',
+  'harbinger-foam-belt':'https://m.media-amazon.com/images/I/71Ci3-j3SxL._AC_SL1500_.jpg',
+  'element26-belt':     'https://m.media-amazon.com/images/I/71xsO3KTOFL._AC_SL1500_.jpg',
+  'dark-iron-belt':     'https://m.media-amazon.com/images/I/71IJSQF8DKL._AC_SL1500_.jpg',
+  'bells-lever-belt':   'https://www.bellsofsteel.com/wp-content/uploads/2021/09/lever-belt-10mm-thumb.jpg',
+
+  // Straps
+  'versa-gripps-pro':   'https://m.media-amazon.com/images/I/71KWR3vl5sL._AC_SL1500_.jpg',
+  'harbinger-padded-straps':'https://m.media-amazon.com/images/I/71pxm4g8lSL._AC_SL1500_.jpg',
+  'rogue-lifting-straps':'https://assets.roguefitness.com/f_auto,q_auto,c_limit,w_800,b_rgb:ffffff/catalog/Straps%20Wraps%20and%20Support%20/Straps/Lifting%20Straps/WL0018/WL0018-H_yoakwd.png',
+  'gymreapers-figure8': 'https://m.media-amazon.com/images/I/71ZJa5FJWZL._AC_SL1500_.jpg',
+  'schiek-1000ls':      'https://m.media-amazon.com/images/I/71FE0n0E89L._AC_SL1500_.jpg',
+  'stoic-straps':       'https://m.media-amazon.com/images/I/71lFcCvxXlL._AC_SL1500_.jpg',
+  'ironbull-figure8':   'https://m.media-amazon.com/images/I/71yUl0fHiWL._AC_SL1500_.jpg',
+  'dmoose-straps':      'https://m.media-amazon.com/images/I/71L3D0xNt7L._AC_SL1500_.jpg',
+  'pioneer-straps':     'https://www.pioneerfitness.net/cdn/shop/products/leather-lifting-straps-main_800x.jpg',
+  'serious-steel-straps':'https://m.media-amazon.com/images/I/71bNhJQQ1tL._AC_SL1500_.jpg',
+
+  // Wraps
+  'sbd-wrist-wraps':    'https://www.sbdapparel.com/cdn/shop/products/wrist-wraps-main_800x.jpg',
+  'rogue-wrist-wraps':  'https://assets.roguefitness.com/f_auto,q_auto,c_limit,w_800,b_rgb:ffffff/catalog/Straps%20Wraps%20and%20Support%20/Wrist%20Wraps/USA%20Wrist%20Wraps/WL0187/WL0187-H_owlrkc.png',
+  'inzer-true-black-wraps':'https://www.inzernet.com/cdn/shop/products/true-black-wrist-wraps-main_800x.jpg',
+  'gymreapers-wrist-wraps':'https://m.media-amazon.com/images/I/71djnK9Ot9L._AC_SL1500_.jpg',
+  'mark-bell-wraps':    'https://m.media-amazon.com/images/I/71d7hYD-HNL._AC_SL1500_.jpg',
+  'schiek-1100tt-wraps':'https://m.media-amazon.com/images/I/71wxhJjI+PL._AC_SL1500_.jpg',
+  'iron-bull-wraps':    'https://m.media-amazon.com/images/I/71Wh2jLz3ZL._AC_SL1500_.jpg',
+  'stoic-wrist-wraps':  'https://m.media-amazon.com/images/I/71NN0u7MZPL._AC_SL1500_.jpg',
+  'harbinger-wraps':    'https://m.media-amazon.com/images/I/71C5l9pXPUL._AC_SL1500_.jpg',
+  'wod-nation-wraps':   'https://m.media-amazon.com/images/I/81LXbVPYVaL._AC_SL1500_.jpg',
+
+  // Sleeves
+  'sbd-knee-sleeves':   'https://www.sbdapparel.com/cdn/shop/products/knee-sleeves-main_800x.jpg',
+  'rehband-rx-sleeves': 'https://m.media-amazon.com/images/I/71Bnf0kQMXL._AC_SL1500_.jpg',
+  'stoic-knee-sleeves': 'https://m.media-amazon.com/images/I/71wk0GH7TpL._AC_SL1500_.jpg',
+  'rogue-knee-sleeves': 'https://assets.roguefitness.com/f_auto,q_auto,c_limit,w_800,b_rgb:ffffff/catalog/Straps%20Wraps%20and%20Support%20/Knee%20Sleeves%20and%20Wraps/5mm%20Knee%20Sleeves/KS0085/KS0085-H_gmdpfl.png',
+  'gymreapers-knee-sleeves':'https://m.media-amazon.com/images/I/71EqDrNLXVL._AC_SL1500_.jpg',
+  'mark-bell-knee-sleeve':'https://m.media-amazon.com/images/I/71OqPd2NJPL._AC_SL1500_.jpg',
+  'bear-komplex-sleeves':'https://m.media-amazon.com/images/I/71hWq5I9tcL._AC_SL1500_.jpg',
+  'iron-bull-sleeves':  'https://m.media-amazon.com/images/I/71eVtRHBLXL._AC_SL1500_.jpg',
+  'pioneer-knee-sleeves':'https://www.pioneerfitness.net/cdn/shop/products/knee-sleeves-7mm-main_800x.jpg',
+  'harbinger-knee-sleeves':'https://m.media-amazon.com/images/I/71tSH9tZ6cL._AC_SL1500_.jpg',
+
+  // Chalk
+  'frictionlabs-loose': 'https://frictionlabs.com/cdn/shop/products/unicorn-dust-loose-chalk-main_800x.jpg',
+  'frictionlabs-secret-stuff':'https://frictionlabs.com/cdn/shop/products/secret-stuff-liquid-chalk-main_800x.jpg',
+  'black-diamond-chalk':'https://m.media-amazon.com/images/I/71VQdOD9YEL._AC_SL1500_.jpg',
+  'primo-chalk':        'https://m.media-amazon.com/images/I/71V0xnqdU4L._AC_SL1500_.jpg',
+  'tension-chalk':      'https://m.media-amazon.com/images/I/71cJ6s1HQZL._AC_SL1500_.jpg',
+  'carbon-black-chalk': 'https://m.media-amazon.com/images/I/71ZxXmfCsqL._AC_SL1500_.jpg',
+  'metolius-chalk':     'https://m.media-amazon.com/images/I/71HkWS1tcAL._AC_SL1500_.jpg',
+  'spri-chalk-ball':    'https://m.media-amazon.com/images/I/71cDlqHJaRL._AC_SL1500_.jpg',
+  'liquid-grip-chalk':  'https://m.media-amazon.com/images/I/71Dv8DRBJSL._AC_SL1500_.jpg',
+  'weightlifting-house-chalk':'https://www.weightliftinghouse.com/cdn/shop/products/loose-chalk-1kg-main_800x.jpg',
 };
 
 function p(id,name,brand,price,retailer,url,quality,rating,reviewCount,reviewSource,expertVerdict,expertSource,specs,aspects,opts={}){
