@@ -753,6 +753,200 @@ app.post('/api/reviews',(req,res)=>{
   ]});
 });
 
+// ── KIT BUILDER ───────────────────────────────────────────────
+// One request returns three kits (Best Value / Best Match / Best Quality)
+// from the quiz answers. Groq (Llama 3.3 70B) picks product IDs when a key
+// is present; otherwise a deterministic builder runs. Either way the server
+// owns the product data — the model only ever selects IDs, never prices.
+
+// Categories that belong in a home-gym kit, in build-priority order.
+const KIT_CATEGORIES = ['racks','barbells','plates','benches','dumbbells','kettlebells','cardio','bands','jumpropes','yogamats','foamrollers'];
+
+// Flat lookup of every kit-eligible product, trimmed to what selection needs.
+const KIT_CATALOG = KIT_CATEGORIES.flatMap(cat =>
+  (PRODUCTS[cat]||[]).map(p => ({
+    id:p.id, name:p.name, brand:p.brand, cat,
+    price:p.salePrice||p.price, quality:p.quality, rating:p.rating,
+  }))
+);
+const KIT_BY_ID = new Map(KIT_CATALOG.map(p=>[p.id,p]));
+
+const BUDGET_CAP   = {'under-300':300,'300-800':800,'800-2000':2000,'2000-plus':8000};
+const PIECE_TARGET = {'key-pieces':2,'small-setup':4,'full-home-gym':6};
+const OWNED_TO_CAT = {barbell:'barbells',dumbbells:'dumbbells',bench:'benches',rack:'racks',cardio:'cardio'};
+
+// Per-tier budget tolerance: Best Value stays at budget, Best Match flexes
+// slightly, Best Quality is the aspirational stretch shown side by side.
+const TIER_CAP_MULT = {value:1, match:1.15, quality:1.8};
+const capFor = (type,cap) => Math.round(cap*(TIER_CAP_MULT[type]||1));
+
+// Bias the category order so the kit reflects goal + space.
+function categoryOrder(goal,space){
+  let order=[...KIT_CATEGORIES];
+  const bump=(cats)=>{order=[...cats,...order.filter(c=>!cats.includes(c))]};
+  if(goal==='lose-weight'||goal==='get-fit') bump(['cardio','kettlebells','bands','dumbbells']);
+  if(goal==='build-strength') bump(['racks','barbells','plates','benches']);
+  // Tight spaces can't host a rack or a treadmill-class machine.
+  if(space==='apartment-corner'||space==='small-room'){
+    const tight=['dumbbells','kettlebells','bands','jumpropes','yogamats','foamrollers','benches'];
+    order=[...tight,...order.filter(c=>!tight.includes(c))].filter(c=>c!=='racks');
+  }
+  return order;
+}
+
+// Greedy one-per-category pick for a tier, honouring budget + owned gear.
+function buildKit(strategy,{cap,target,ownedCats,order}){
+  const score={
+    value:p=>p.quality/p.price,      // most quality per dollar
+    match:p=>p.quality/Math.sqrt(p.price), // quality, lightly price-aware
+    quality:p=>p.quality,            // best regardless
+  }[strategy];
+  const picks=[]; let spent=0;
+  for(const cat of order){
+    if(picks.length>=target) break;
+    if(ownedCats.has(cat)) continue;
+    const best=KIT_CATALOG
+      .filter(p=>p.cat===cat && spent+p.price<=cap)
+      .sort((a,b)=>score(b)-score(a))[0];
+    if(best){ picks.push(best); spent+=best.price; }
+  }
+  // Budget left and slots left → add value picks from any remaining category.
+  if(picks.length<target){
+    const used=new Set(picks.map(p=>p.cat));
+    const extra=KIT_CATALOG
+      .filter(p=>!used.has(p.cat)&&!ownedCats.has(p.cat)&&spent+p.price<=cap)
+      .sort((a,b)=>(b.quality/b.price)-(a.quality/a.price));
+    for(const p of extra){ if(picks.length>=target)break; picks.push(p); spent+=p.price; used.add(p.cat); }
+  }
+  return picks.map(p=>p.id);
+}
+
+const KIT_TIERS=[
+  {type:'value',  name:'Best Value',  strategy:'value'},
+  {type:'match',  name:'Best Match',  strategy:'match'},
+  {type:'quality',name:'Best Quality',strategy:'quality'},
+];
+
+function fallbackKits(answers){
+  const cap=BUDGET_CAP[answers.budget]||2000;
+  const target=PIECE_TARGET[answers.equipmentCount]||4;
+  const ownedCats=new Set((answers.owned||[]).map(id=>OWNED_TO_CAT[id]).filter(Boolean));
+  const order=categoryOrder(answers.goal,answers.space);
+  return KIT_TIERS.map(t=>({
+    type:t.type, name:t.name,
+    productIds:buildKit(t.strategy,{cap:capFor(t.type,cap),target,ownedCats,order}),
+  }));
+}
+
+const priceOf = p => p.salePrice||p.price;
+
+// Categories that don't physically fit a space — enforced even if the model
+// ignores the hint. A rack (or rig) can't live in an apartment corner.
+function forbiddenCats(space){
+  return space==='apartment-corner'||space==='small-room' ? new Set(['racks']) : new Set();
+}
+
+// Hydrate the model/fallback's chosen IDs into full product objects, then
+// enforce the hard constraints the model can't be trusted with: drop unknown
+// IDs (no hallucinated pick reaches the client), drop space-forbidden and
+// owned categories, dedupe by category, and trim to the tier budget.
+function hydrateKits(rawKits,budgetCap,forbidden,ownedCats){
+  return rawKits.map(k=>{
+    let products=(k.productIds||[])
+      .map(id=>{const lite=KIT_BY_ID.get(id);if(!lite)return null;
+        const full=(PRODUCTS[lite.cat]||[]).find(p=>p.id===id);return full?{...full,category:lite.cat}:null;})
+      .filter(Boolean)
+      .filter(p=>!forbidden.has(p.category)&&!ownedCats.has(p.category));
+    // Dedupe by category so a kit never lists two benches.
+    const seen=new Set();
+    products=products.filter(p=>seen.has(p.category)?false:seen.add(p.category));
+    // Trim to the tier's budget, dropping the priciest first. Honour budget
+    // over piece count — a single in-budget item beats two over budget.
+    const cap=capFor(k.type,budgetCap);
+    let total=products.reduce((s,p)=>s+priceOf(p),0);
+    while(total>cap && products.length>1){
+      const i=products.reduce((mi,p,idx,a)=>priceOf(p)>priceOf(a[mi])?idx:mi,0);
+      total-=priceOf(products[i]); products.splice(i,1);
+    }
+    return {
+      type:k.type, name:k.name,
+      description:typeof k.description==='string'?k.description.trim().slice(0,300):'',
+      products, totalPrice:total,
+    };
+  }).filter(k=>k.products.length>0);
+}
+
+// Default copy when Groq is absent or fails — never blank.
+const GOAL_WORD={'build-strength':'strength','lose-weight':'fat-loss','get-fit':'all-round fitness','home-gym-setup':'complete home-gym'};
+function defaultCopy(kit,answers){
+  const lead=kit.products[0]?.name||'your essentials';
+  const goal=GOAL_WORD[answers.goal]||'training';
+  const blurb={
+    value:`The smartest ${goal} setup for the money, anchored by the ${lead}.`,
+    match:`Balanced for your space and budget — built around the ${lead}.`,
+    quality:`Buy-once gear that lasts a lifetime, led by the ${lead}.`,
+  }[kit.type]||`A ${goal} kit built around the ${lead}.`;
+  return {name:kit.name,description:blurb};
+}
+
+// Groq writes only the name + description for already-chosen kits. It cannot
+// touch product selection, so it can never produce a bad or over-budget cart.
+async function groqCopy(answers,kits){
+  const key=process.env.GROQ_API_KEY;
+  if(!key) return null;
+  const owned=(answers.owned||[]).map(id=>OWNED_TO_CAT[id]).filter(Boolean);
+  const summary=kits.map(k=>
+    `${k.type} ($${k.totalPrice}): ${k.products.map(p=>`${p.name} (${p.brand})`).join(', ')}`
+  ).join('\n');
+  const sys=`You write punchy marketing copy for pre-built home-gym kits. Return strict JSON {"kits":[{"type":"value|match|quality","name":string,"description":string}]} for all three kits. name = a short punchy kit name, max 4 words. description = two short sentences (max 30 words) on why this exact set of products fits the buyer. Do not invent products or prices; describe only what is listed.`;
+  const user=`Buyer — goal: ${answers.goal}, budget tier: ${answers.budget}, space: ${answers.space}, already owns: ${owned.join(', ')||'nothing'}.\n\nThe three kits and their products:\n${summary}`;
+  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',signal:AbortSignal.timeout(12000),
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+    body:JSON.stringify({model:'llama-3.3-70b-versatile',temperature:0.7,
+      response_format:{type:'json_object'},
+      messages:[{role:'system',content:sys},{role:'user',content:user}]}),
+  });
+  if(!r.ok) throw new Error(`Groq ${r.status}`);
+  const parsed=JSON.parse((await r.json()).choices[0].message.content);
+  if(!Array.isArray(parsed.kits)) throw new Error('Groq: bad shape');
+  const byType=new Map(parsed.kits.map(k=>[k.type,k]));
+  return byType;
+}
+
+app.post('/api/kit',async(req,res)=>{
+  const a=req.body||{};
+  if(!a.goal||!a.budget) return res.status(400).json({error:'Send at least goal and budget.'});
+  const cap=BUDGET_CAP[a.budget]||2000;
+  const forbidden=forbiddenCats(a.space);
+  const ownedCats=new Set((a.owned||[]).map(id=>OWNED_TO_CAT[id]).filter(Boolean));
+
+  // Deterministic selection owns the cart — always budget-, space-, and
+  // owned-aware. Groq only dresses it with names and descriptions.
+  let kits=hydrateKits(fallbackKits(a),cap,forbidden,ownedCats);
+
+  let generatedBy='fallback';
+  try{
+    const copy=await groqCopy(a,kits);
+    if(copy){
+      generatedBy='groq';
+      kits=kits.map(k=>{
+        const c=copy.get(k.type);
+        const fallbackCopy=defaultCopy(k,a);
+        return {...k,
+          name:(c?.name||'').toString().trim().slice(0,40)||fallbackCopy.name,
+          description:(c?.description||'').toString().trim().slice(0,300)||fallbackCopy.description};
+      });
+    }else{
+      kits=kits.map(k=>({...k,...defaultCopy(k,a)}));
+    }
+  }catch(err){
+    console.warn('Groq copy failed, using default copy:',err.message);
+    kits=kits.map(k=>({...k,...defaultCopy(k,a)}));
+  }
+  res.json({kits,generatedBy,generatedAt:new Date().toISOString()});
+});
+
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 
 app.listen(PORT,()=>{
