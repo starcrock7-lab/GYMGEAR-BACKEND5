@@ -794,20 +794,23 @@ function categoryOrder(goal,space){
   return order;
 }
 
-// Greedy one-per-category pick for a tier, honouring budget + owned gear.
+// Greedy one-per-category pick for a tier. Three distinct strategies so the
+// kits never collapse into each other: value = cheapest decent option,
+// match = best-loved (rating), quality = best built (quality score).
 function buildKit(strategy,{cap,target,ownedCats,order}){
   const score={
-    value:p=>p.quality/p.price,      // most quality per dollar
-    match:p=>p.quality/Math.sqrt(p.price), // quality, lightly price-aware
-    quality:p=>p.quality,            // best regardless
+    value:p=>-p.price,                  // cheapest first
+    match:p=>p.rating+p.quality/100,    // highest rated, quality breaks ties
+    quality:p=>p.quality,               // best built regardless
   }[strategy];
   const picks=[]; let spent=0;
   for(const cat of order){
     if(picks.length>=target) break;
     if(ownedCats.has(cat)) continue;
-    const best=KIT_CATALOG
-      .filter(p=>p.cat===cat && spent+p.price<=cap)
-      .sort((a,b)=>score(b)-score(a))[0];
+    let cands=KIT_CATALOG.filter(p=>p.cat===cat && spent+p.price<=cap);
+    // Value still wants decent gear — gate to quality ≥7 unless nothing fits.
+    if(strategy==='value'){ const decent=cands.filter(p=>p.quality>=7); if(decent.length) cands=decent; }
+    const best=cands.sort((a,b)=>score(b)-score(a))[0];
     if(best){ picks.push(best); spent+=best.price; }
   }
   // Budget left and slots left → add value picks from any remaining category.
