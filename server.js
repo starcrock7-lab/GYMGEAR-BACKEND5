@@ -674,6 +674,29 @@ const CATEGORY_META = {
   belts:{group:'gear',label:'Lifting Belts'},straps:{group:'gear',label:'Lifting Straps'},wraps:{group:'gear',label:'Wrist Wraps'},sleeves:{group:'gear',label:'Knee Sleeves'},chalk:{group:'gear',label:'Chalk'},
   yogamats:{group:'accessories',label:'Yoga Mats'},foamrollers:{group:'accessories',label:'Foam Rollers'},gymbags:{group:'accessories',label:'Gym Bags'},jumpropes:{group:'accessories',label:'Jump Ropes'},
 };
+
+// Unify the spec matrix per category: every product in a category gets the
+// same spec rows so they compare apples-to-apples in the result, detail, and
+// swap views. Use the category's most-common spec keys (capped, ordered most-
+// common first), filling "—" where a product lacks that spec. Capping keeps
+// the sheet tidy — rare one-off specs are dropped from the shared matrix.
+const SPEC_NA = '—';
+const SPEC_MATRIX_MAX = 8;
+for (const list of Object.values(PRODUCTS)) {
+  const order = [], freq = {};
+  for (const p of list) for (const k of Object.keys(p.specs || {})) {
+    if (!(k in freq)) order.push(k);
+    freq[k] = (freq[k] || 0) + 1;
+  }
+  order.sort((a, b) => freq[b] - freq[a]); // stable: ties keep first-seen order
+  const matrix = order.slice(0, SPEC_MATRIX_MAX);
+  for (const p of list) {
+    const full = {};
+    for (const k of matrix) full[k] = p.specs && p.specs[k] != null ? p.specs[k] : SPEC_NA;
+    p.specs = full;
+  }
+}
+
 // ── ROUTES ────────────────────────────────────────────────────
 app.get('/health',(req,res)=>res.json({status:'ok',mode:'sample-data',categories:Object.keys(PRODUCTS).length}));
 
