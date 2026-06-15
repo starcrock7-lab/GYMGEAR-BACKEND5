@@ -697,6 +697,43 @@ for (const list of Object.values(PRODUCTS)) {
   }
 }
 
+// Imagery + affiliate links. Brand-CDN images mostly 404 or are referer-
+// blocked in the browser, so every product gets a hotlink-friendly Unsplash
+// photo keyed by category (verified to load). Every product also gets an
+// Amazon affiliate search link with our tag, so the Buy button (affiliateUrl
+// || url) always lands on a real, shoppable, commission-earning page.
+const UNSPLASH = (id) =>
+  `https://images.unsplash.com/photo-${id}?w=600&q=80&auto=format&fit=crop`;
+const CAT_IMAGE = {
+  benches: '1581009146145-b5ef050c2e1e', barbells: '1534438327276-14e5300c3a48',
+  dumbbells: '1599058917765-a780eda07a3e', plates: '1526506118085-60ce8714f8c5',
+  racks: '1534258936925-c58bed479fcb', cardio: '1571019613454-1cb2f99b2d8b',
+  kettlebells: '1517344884509-a0c97ec11bcc', bands: '1591291621164-2c6367723315',
+  shorts: '1556906781-9a412961c28c', compression: '1556906781-9a412961c28c',
+  tanks: '1483721310020-03333e577078', hoodies: '1483721310020-03333e577078',
+  footwear: '1542291026-7eec264c27ff', sportsbras: '1556906781-9a412961c28c',
+  preworkout: '1593095948071-474c5cc2989d', protein: '1579722820308-d74e571900a9',
+  creatine: '1593095948071-474c5cc2989d', recovery: '1584308666744-24d5c474f2ae',
+  vitamins: '1584308666744-24d5c474f2ae', fatburners: '1593095948071-474c5cc2989d',
+  belts: '1517963879433-6ad2b056d712', straps: '1517963879433-6ad2b056d712',
+  wraps: '1517963879433-6ad2b056d712', sleeves: '1517963879433-6ad2b056d712',
+  chalk: '1599058917212-d750089bc07e', yogamats: '1592432678016-e910b452f9a2',
+  foamrollers: '1607962837359-5e7e89f86776', gymbags: '1553062407-98eeb64c6a62',
+  jumpropes: '1434608519344-49d77a699e1d',
+};
+const DEFAULT_IMAGE = UNSPLASH('1534438327276-14e5300c3a48');
+const AMAZON_TAG = 'gymgearcompar-20';
+const amazonAffiliate = (name, brand) =>
+  `https://www.amazon.com/s?k=${encodeURIComponent(`${brand} ${name}`.trim())}&tag=${AMAZON_TAG}`;
+
+for (const [cat, list] of Object.entries(PRODUCTS)) {
+  const image = CAT_IMAGE[cat] ? UNSPLASH(CAT_IMAGE[cat]) : DEFAULT_IMAGE;
+  for (const p of list) {
+    p.image = image;
+    if (!p.affiliateUrl) p.affiliateUrl = amazonAffiliate(p.name, p.brand);
+  }
+}
+
 // ── ROUTES ────────────────────────────────────────────────────
 app.get('/health',(req,res)=>res.json({status:'ok',mode:'sample-data',categories:Object.keys(PRODUCTS).length}));
 
