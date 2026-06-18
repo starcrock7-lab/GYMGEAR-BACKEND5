@@ -726,11 +726,42 @@ const AMAZON_TAG = 'gymgearcompar-20';
 const amazonAffiliate = (name, brand) =>
   `https://www.amazon.com/s?k=${encodeURIComponent(`${brand} ${name}`.trim())}&tag=${AMAZON_TAG}`;
 
+// Product URLs verified to 404 / soft-404 / redirect away (tested live).
+// For these we send buyers to an Amazon affiliate search instead of a dead
+// page; every other product keeps its real brand product page.
+const BROKEN_URL_IDS = new Set([
+  'adidas-bra', 'adidas-defender', 'ag1', 'alani-pre', 'alo-warrior', 'alphalete-hoodie',
+  'alphalete-shorts', 'alphalete-sports-bra', 'alphalete-surge', 'alphalete-tank', 'amazon-bands', 'amazon-basics-mat',
+  'amazon-basics-rope', 'american-ss', 'archon-bench', 'assault-bike', 'assault-runner', 'bells-bench',
+  'bells-lever-belt', 'bells-power-bar', 'bells-squat', 'bowflex-552', 'bucked-up', 'buddy-lee-aero',
+  'cap-ob86b', 'concept2-bikeerg', 'crossrope-get-lean', 'eleiko-iwf', 'elite-surge-3', 'elitefts-bands',
+  'frictionlabs-loose', 'fringe-urethane', 'fringe-wonder', 'gaiam-premium', 'gasp-hoodie', 'gasp-stringer',
+  'gasp-tights', 'ghost-legend', 'gymshark-arrival', 'gymshark-critical', 'gymshark-gym-bag', 'gymshark-tank',
+  'gymshark-vital', 'hydrow-wave', 'inov8-bare', 'inzer-forever-belt', 'jump-rope-dudes-rope', 'kabuki-power-bar',
+  'klean-bcaa', 'klean-creatine', 'klean-mv', 'lululemon-align', 'lululemon-belt-bag', 'lululemon-energy',
+  'lululemon-mat', 'lululemon-scuba', 'lululemon-shorts', 'lux-fit-roller', 'manduka-pro', 'mhp-thyro-slim',
+  'momentous-creatine', 'new-balance-minimus', 'nike-brasilia', 'nike-hoops-elite', 'nike-metcon-9', 'nobull-lifter',
+  'nobull-shorts', 'nobull-tank', 'nobull-trainer', 'nordictrack-1750', 'nuobell-adj', 'onnit-kb',
+  'osprey-daylite', 'perform-better-mini', 'pioneer-gc-belt', 'pioneer-knee-sleeves', 'pioneer-straps', 'raw-thavage',
+  'reebok-nano', 'rep-ab3000', 'rep-alpine-bar', 'rep-color', 'rep-comp', 'rep-equalizer',
+  'rep-hex', 'rep-hr100', 'rep-kb', 'rep-pr5000', 'ritual-men', 'rogue-bands',
+  'rogue-rm6', 'rogue-squat', 'rogue-squat-bar', 'rogue-sr-1c', 'rumble-roller', 'rx-smart-gear-rope',
+  'sbd-knee-sleeves', 'sbd-sleeves', 'sbd-wrist-wraps', 'texas-power-bar', 'the-stick', 'theraband-roller',
+  'titan-ab', 'titan-adj', 'titan-bumper', 'titan-kb', 'titan-olympic', 'titan-t2',
+  'titan-x3', 'tptherapy-mb1', 'transparent-sleep', 'transparent-whey', 'ua-infinity-bra', 'ua-undeniable',
+  'under-armour-leggings', 'under-armour-tank', 'vulcan-alpha', 'vulcan-db', 'vulcan-kb', 'vulcan-pro',
+  'wod-nation-speed-rope', 'youngla-joggers', 'youngla-shorts', 'youngla-sports-bra', 'youngla-tank', 'yune-tohi',
+]);
+
 for (const [cat, list] of Object.entries(PRODUCTS)) {
   const image = CAT_IMAGE[cat] ? UNSPLASH(CAT_IMAGE[cat]) : DEFAULT_IMAGE;
   for (const p of list) {
     p.image = image;
-    if (!p.affiliateUrl) p.affiliateUrl = amazonAffiliate(p.name, p.brand);
+    // Buy link: the real product page when it resolves, otherwise an Amazon
+    // affiliate search. (The frontend's buyUrl() prefers affiliateUrl.)
+    p.affiliateUrl = p.url && !BROKEN_URL_IDS.has(p.id)
+      ? p.url
+      : amazonAffiliate(p.name, p.brand);
   }
 }
 
