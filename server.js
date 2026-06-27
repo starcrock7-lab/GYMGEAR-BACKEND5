@@ -1064,6 +1064,34 @@ async function groqCopy(answers,kits){
   return byType;
 }
 
+// ── Frequently-bought-together accessory recommender ──────────────
+// Research-backed priority of accessory categories for a home gym (flooring
+// first, then grip/support, then recovery/bag, then supplements). Filtered to
+// what is actually relevant to the kit (pairsWith ∩ the kit's categories),
+// best-rated product per category. Fully deterministic + owned — no Amazon API,
+// no per-request LLM. (// TODO: optional Groq re-rank of this pool when
+// GROQ_API_KEY is set — additive only, must stay constrained to pool ids.)
+// (fatburners deliberately excluded — won't push fat burners as a cross-sell.)
+const ACCESSORY_PRIORITY = ['yogamats', 'chalk', 'belts', 'sleeves', 'straps', 'wraps', 'foamrollers', 'jumpropes', 'gymbags', 'protein', 'creatine', 'preworkout', 'recovery', 'vitamins'];
+
+function accessoryPool(kits, ownedCats = new Set(), max = 8) {
+  const kitCats = new Set();
+  for (const k of kits) for (const p of k.products) kitCats.add(p.category);
+  if (!kitCats.size) return [];
+  const pool = [];
+  for (const cat of ACCESSORY_PRIORITY) {
+    if (pool.length >= max) break;
+    if (kitCats.has(cat) || ownedCats.has(cat)) continue; // already in the kit / owned
+    const list = PRODUCTS[cat];
+    if (!list || !list.length) continue;
+    const pw = list[0].pairsWith || [];
+    if (!pw.some(c => kitCats.has(c))) continue; // not relevant to this kit
+    const best = [...list].sort((a, b) => (b.rating - a.rating) || (b.quality - a.quality))[0];
+    if (best) pool.push({ ...best, category: cat });
+  }
+  return pool;
+}
+
 app.post('/api/kit',async(req,res)=>{
   const a=req.body||{};
   if(!a.goal||!a.budget) return res.status(400).json({error:'Send at least goal and budget.'});
@@ -1094,7 +1122,10 @@ app.post('/api/kit',async(req,res)=>{
     console.warn('Groq copy failed, using default copy:',err.message);
     kits=kits.map(k=>({...k,...defaultCopy(k,a)}));
   }
-  res.json({kits,generatedBy,generatedAt:new Date().toISOString()});
+  // "Frequently bought together" — the top complementary accessories for this
+  // exact kit (research-ranked, relevance-filtered). Frontend renders the panel.
+  const accessories = accessoryPool(kits, ownedCats).slice(0, 4);
+  res.json({kits,accessories,generatedBy,generatedAt:new Date().toISOString()});
 });
 
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
