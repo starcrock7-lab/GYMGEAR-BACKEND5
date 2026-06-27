@@ -753,8 +753,60 @@ const BROKEN_URL_IDS = new Set([
   'wod-nation-speed-rope', 'youngla-joggers', 'youngla-shorts', 'youngla-sports-bra', 'youngla-tank', 'yune-tohi',
 ]);
 
+/* ── Product taxonomy ─────────────────────────────────────────────
+   One source of truth powering BOTH the kit builder's cross-sell and the
+   "frequently bought together" recommendations (build the taxonomy once).
+   Stamped onto every product in the hydration loop below, so productType /
+   kitRole / pairsWith ride along in every API response.
+     productType "primary"  = something a kit is built around
+     productType "accessory" = a cross-sell add-on
+     kitRole core|recommended|optional
+     pairsWith = the PRIMARY categories an accessory completes; an empty list
+                 means it never surfaces in an equipment kit (e.g. clothing —
+                 too generic, per the cross-sell guardrail). */
+const EQUIPMENT_CATS = ['racks', 'barbells', 'benches', 'plates', 'dumbbells', 'kettlebells', 'cardio', 'bands'];
+const CATEGORY_TAGS = {
+  // Primary — the kit is built around these.
+  racks:       { productType: 'primary', kitRole: 'core',        pairsWith: [] },
+  barbells:    { productType: 'primary', kitRole: 'core',        pairsWith: [] },
+  benches:     { productType: 'primary', kitRole: 'core',        pairsWith: [] },
+  plates:      { productType: 'primary', kitRole: 'core',        pairsWith: [] },
+  dumbbells:   { productType: 'primary', kitRole: 'recommended', pairsWith: [] },
+  kettlebells: { productType: 'primary', kitRole: 'recommended', pairsWith: [] },
+  cardio:      { productType: 'primary', kitRole: 'recommended', pairsWith: [] },
+  bands:       { productType: 'primary', kitRole: 'recommended', pairsWith: [] },
+  // Accessory — lifting gear.
+  chalk:   { productType: 'accessory', kitRole: 'optional', pairsWith: ['barbells', 'racks', 'plates', 'kettlebells', 'dumbbells'] },
+  straps:  { productType: 'accessory', kitRole: 'optional', pairsWith: ['barbells', 'racks', 'dumbbells'] },
+  wraps:   { productType: 'accessory', kitRole: 'optional', pairsWith: ['barbells', 'racks', 'plates'] },
+  sleeves: { productType: 'accessory', kitRole: 'optional', pairsWith: ['racks', 'barbells', 'plates'] },
+  belts:   { productType: 'accessory', kitRole: 'optional', pairsWith: ['barbells', 'racks', 'plates'] },
+  // Accessory — training accessories.
+  foamrollers: { productType: 'accessory', kitRole: 'optional', pairsWith: ['racks', 'barbells', 'cardio', 'kettlebells', 'dumbbells'] },
+  yogamats:    { productType: 'accessory', kitRole: 'optional', pairsWith: EQUIPMENT_CATS }, // mats = universal flooring (floor protect, noise, grip) per research
+  jumpropes:   { productType: 'accessory', kitRole: 'optional', pairsWith: ['cardio', 'kettlebells'] },
+  gymbags:     { productType: 'accessory', kitRole: 'optional', pairsWith: EQUIPMENT_CATS },
+  // Accessory — supplements (universal "fuel your training").
+  protein:    { productType: 'accessory', kitRole: 'optional', pairsWith: EQUIPMENT_CATS },
+  creatine:   { productType: 'accessory', kitRole: 'optional', pairsWith: EQUIPMENT_CATS },
+  preworkout: { productType: 'accessory', kitRole: 'optional', pairsWith: EQUIPMENT_CATS },
+  recovery:   { productType: 'accessory', kitRole: 'optional', pairsWith: EQUIPMENT_CATS },
+  vitamins:   { productType: 'accessory', kitRole: 'optional', pairsWith: EQUIPMENT_CATS },
+  fatburners: { productType: 'accessory', kitRole: 'optional', pairsWith: EQUIPMENT_CATS },
+  // Clothing — tagged accessory, but pairsWith:[] so it never surfaces in an
+  // equipment kit. Still browsable in its own categories / the separate finder.
+  shorts:      { productType: 'accessory', kitRole: 'optional', pairsWith: [] },
+  compression: { productType: 'accessory', kitRole: 'optional', pairsWith: [] },
+  tanks:       { productType: 'accessory', kitRole: 'optional', pairsWith: [] },
+  hoodies:     { productType: 'accessory', kitRole: 'optional', pairsWith: [] },
+  footwear:    { productType: 'accessory', kitRole: 'optional', pairsWith: [] },
+  sportsbras:  { productType: 'accessory', kitRole: 'optional', pairsWith: [] },
+};
+const DEFAULT_TAGS = { productType: 'accessory', kitRole: 'optional', pairsWith: [] };
+
 for (const [cat, list] of Object.entries(PRODUCTS)) {
   const image = CAT_IMAGE[cat] ? UNSPLASH(CAT_IMAGE[cat]) : DEFAULT_IMAGE;
+  const tags = CATEGORY_TAGS[cat] || DEFAULT_TAGS;
   for (const p of list) {
     p.image = image;
     // Buy link: the real product page when it resolves, otherwise an Amazon
@@ -762,6 +814,10 @@ for (const [cat, list] of Object.entries(PRODUCTS)) {
     p.affiliateUrl = p.url && !BROKEN_URL_IDS.has(p.id)
       ? p.url
       : amazonAffiliate(p.name, p.brand);
+    // Taxonomy for the kit cross-sell + recommendations (one source of truth).
+    p.productType = tags.productType;
+    p.kitRole = tags.kitRole;
+    p.pairsWith = tags.pairsWith;
   }
 }
 
