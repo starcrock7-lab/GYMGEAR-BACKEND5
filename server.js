@@ -821,6 +821,67 @@ for (const [cat, list] of Object.entries(PRODUCTS)) {
   }
 }
 
+// ── GymGear Score + segmented "best for X" awards ─────────────────
+// A transparent 0-100 score from the signals we can stand behind: expert
+// build quality, user rating, value-per-dollar, and review confidence. It is
+// data/spec-derived, NOT hands-on — the /methodology page says so plainly.
+// Per-category weights are tunable here; scoreBreakdown lets the UI show the
+// working (the RTINGS trust move). No external API, no hardcoded magic scores.
+const SCORE_WEIGHTS = {
+  // Quality-led so "Top Pick" = the genuinely best product; value is a facet
+  // (and gets its own "Best Value" award) but never dominates the overall score.
+  default:  { build: 0.42, rated: 0.30, value: 0.15, trust: 0.13 },
+  // Precision/heavy iron — build quality dominates.
+  barbells: { build: 0.55, rated: 0.25, value: 0.10, trust: 0.10 },
+  racks:    { build: 0.55, rated: 0.25, value: 0.10, trust: 0.10 },
+  benches:  { build: 0.50, rated: 0.25, value: 0.15, trust: 0.10 },
+  // Commodity iron — value weighs a bit more, but build still leads.
+  plates:   { build: 0.38, rated: 0.27, value: 0.25, trust: 0.10 },
+  dumbbells:{ build: 0.40, rated: 0.27, value: 0.23, trust: 0.10 },
+  // Consumables/apparel — the user verdict (rating + volume) leads.
+  protein:    { build: 0.20, rated: 0.45, value: 0.15, trust: 0.20 },
+  preworkout: { build: 0.20, rated: 0.45, value: 0.15, trust: 0.20 },
+  creatine:   { build: 0.20, rated: 0.45, value: 0.15, trust: 0.20 },
+  footwear:   { build: 0.25, rated: 0.45, value: 0.15, trust: 0.15 },
+};
+const SCORE_FACETS = { build: 'Build quality', rated: 'User rating', value: 'Value for money', trust: 'Review confidence' };
+const clamp01 = (x) => Math.max(0, Math.min(1, x));
+const norm = (v, lo, hi) => (hi > lo ? (v - lo) / (hi - lo) : 0.5);
+
+for (const [cat, list] of Object.entries(PRODUCTS)) {
+  if (!list.length) continue;
+  const w = SCORE_WEIGHTS[cat] || SCORE_WEIGHTS.default;
+  const valOf = (p) => p.quality / (p.salePrice || p.price);   // quality per $
+  const trustOf = (p) => Math.log10((p.reviewCount || 0) + 1); // diminishing returns
+  const vs = list.map(valOf), ts = list.map(trustOf);
+  const vLo = Math.min(...vs), vHi = Math.max(...vs), tLo = Math.min(...ts), tHi = Math.max(...ts);
+
+  for (const p of list) {
+    const f = {
+      build: clamp01(p.quality / 10),
+      rated: clamp01(p.rating / 5),
+      value: clamp01(norm(valOf(p), vLo, vHi)),
+      trust: clamp01(norm(trustOf(p), tLo, tHi)),
+    };
+    p.gymgearScore = Math.round(100 * (w.build * f.build + w.rated * f.rated + w.value * f.value + w.trust * f.trust));
+    // Breakdown for "how we score": each facet's 0-100 strength + its weight.
+    p.scoreBreakdown = Object.keys(SCORE_FACETS).map((k) => ({
+      key: k, label: SCORE_FACETS[k], score: Math.round(f[k] * 100), weight: w[k],
+    }));
+    p.awards = [];
+  }
+
+  // Segmented picks — each product collects the awards it wins in its category.
+  const decent = list.filter((p) => p.quality >= 7);
+  const pool = decent.length ? decent : list;
+  const best = (arr, fn) => (arr.length ? arr.reduce((a, b) => (fn(b) > fn(a) ? b : a)) : null);
+  const give = (winner, name) => { if (winner && !winner.awards.includes(name)) winner.awards.push(name); };
+  give(best(list, (p) => p.gymgearScore), 'Top Pick');
+  give(best(pool, valOf), 'Best Value');
+  give(best(pool, (p) => -(p.salePrice || p.price)), 'Best Budget');
+  give(best(list.filter((p) => (p.reviewCount || 0) >= 500), (p) => p.rating), 'Best Rated');
+}
+
 // ── ROUTES ────────────────────────────────────────────────────
 app.get('/health',(req,res)=>res.json({status:'ok',mode:'sample-data',categories:Object.keys(PRODUCTS).length}));
 
