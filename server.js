@@ -1153,6 +1153,54 @@ function accessoryPool(kits, ownedCats = new Set(), max = 8) {
   return pool;
 }
 
+// Short "why add this" line per accessory category. The deterministic base
+// (always present, no dash punctuation) that Groq enhances when a key is set.
+// Each names the gap the item fills in a strength setup and the payoff.
+const WHY_FALLBACK = {
+  yogamats: "Your setup is built for standing lifts with nothing for floor core, mobility, or stretching. The mat fills that gap, it is the cheapest piece here, and you will use it every session.",
+  chalk: "Heavy pulls and presses slip at the grip long before the muscle gives out. A little chalk keeps the bar locked in and adds clean reps to every working set.",
+  belts: "As your squat and deadlift climb, your lower back becomes the limit. A belt braces your core so you can load heavier with confidence and keep progressing.",
+  sleeves: "Heavy squats and leg work wear on the knees over time. Sleeves add warmth, support, and rebound out of the bottom so you train harder and recover faster.",
+  straps: "Your back and legs will outwork your grip on rows and pulls. Straps remove grip as the weak link so you can drive the target muscle all the way to failure.",
+  wraps: "Heavy pressing loads the wrists hard. Wraps keep the joint stacked and stable so you can push your bench and overhead work without holding back.",
+  foamrollers: "Hard sessions leave tight, sore muscles that drag into the next one. A few minutes on the roller restores range of motion and keeps you training pain free.",
+  jumpropes: "Your kit has no fast conditioning option. A rope packs high intensity cardio into almost no space and pairs cleanly with your strength work.",
+  gymbags: "Plates, belt, sleeves, and chalk add up quickly. A dedicated bag keeps your gear organized and ready so nothing slows your session down.",
+  protein: "Building muscle needs more protein than most meals deliver. One scoop after training hits your daily target and turns the work into real results.",
+  creatine: "Creatine is the most proven supplement for strength and size. A few grams a day buys extra reps, faster recovery, and lean mass for pocket change.",
+  preworkout: "Some days the drive just is not there. A single scoop sharpens focus and energy so even the flat days turn into productive sessions.",
+  recovery: "Your training is only as good as how well you recover from it. This keeps soreness down and gets you back under the bar sooner.",
+  vitamins: "Consistent training raises what your body needs to perform. Covering the basics keeps your energy, recovery, and immunity steady so you never miss a session.",
+};
+function defaultWhy(accessory) {
+  return WHY_FALLBACK[accessory.category] ||
+    "A smart, low cost addition that rounds out your setup and earns its place fast.";
+}
+
+// Groq writes a grounded one-line "why add this" for each FBT accessory, using
+// the buyer's actual kit as context. Same pattern as groqCopy: AI when a key is
+// present, deterministic WHY_FALLBACK otherwise. Returns a Map(id -> text).
+async function accessoryWhy(answers, kits, accessories) {
+  const key = process.env.GROQ_API_KEY;
+  if (!key || !accessories.length) return null;
+  const matchKit = kits.find(k => k.type === 'match') || kits[0];
+  const setup = matchKit.products.map(p => p.name).join(', ');
+  const items = accessories.map(a => `${a.id} = ${a.name}`).join('\n');
+  const sys = `You are a confident strength coach writing one punchy reason to add each accessory to a buyer's home gym order. Return strict JSON {"why":[{"id":string,"text":string}]} with an entry for every id provided. Each text is exactly one or two full sentences, 25 to 38 words, and follows this shape: first name the specific gap in THEIR listed setup that this item fills, then give the payoff such as it is the cheapest piece, you will use it every session, or it lets you lift heavier and safer. Be concrete and specific to the equipment they listed. Professional but plain everyday words, no fancy vocabulary. Never use a dash or hyphen character. Match the depth and style of this yoga mat example exactly: "Your setup is all standing barbell work with nothing for floor core, stretching, or mobility. The mat fixes that, it is the cheapest piece here, and you will use it every session." Only selling information, no filler.`;
+  const user = `Buyer goal: ${answers.goal}. Space: ${answers.space}. Their kit already includes: ${setup}.\n\nWrite a reason for each accessory id:\n${items}`;
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST', signal: AbortSignal.timeout(12000),
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+    body: JSON.stringify({ model: 'llama-3.3-70b-versatile', temperature: 0.6,
+      response_format: { type: 'json_object' },
+      messages: [{ role: 'system', content: sys }, { role: 'user', content: user }] }),
+  });
+  if (!r.ok) throw new Error(`Groq ${r.status}`);
+  const parsed = JSON.parse((await r.json()).choices[0].message.content);
+  if (!Array.isArray(parsed.why)) throw new Error('Groq: bad why shape');
+  return new Map(parsed.why.map(w => [w.id, (w.text || '').toString()]));
+}
+
 app.post('/api/kit',async(req,res)=>{
   const a=req.body||{};
   if(!a.goal||!a.budget) return res.status(400).json({error:'Send at least goal and budget.'});
@@ -1183,9 +1231,21 @@ app.post('/api/kit',async(req,res)=>{
     console.warn('Groq copy failed, using default copy:',err.message);
     kits=kits.map(k=>({...k,...defaultCopy(k,a)}));
   }
-  // "Frequently bought together" — the top complementary accessories for this
-  // exact kit (research-ranked, relevance-filtered). Frontend renders the panel.
-  const accessories = accessoryPool(kits, ownedCats).slice(0, 4);
+  // "Frequently bought together" — top complementary accessories for this kit,
+  // each with a short "why add this" line. Deterministic copy first (always
+  // present), then enhanced by Groq when available; AI dashes are stripped to
+  // honour the plain, dash-free house style. Frontend renders one add per item.
+  let accessories = accessoryPool(kits, ownedCats).slice(0, 4)
+    .map(x => ({ ...x, whyAdd: defaultWhy(x) }));
+  try {
+    const why = await accessoryWhy(a, kits, accessories);
+    if (why) accessories = accessories.map(x => {
+      const t = (why.get(x.id) || '').replace(/[-—–]/g, ' ').replace(/\s+/g, ' ').trim();
+      return t ? { ...x, whyAdd: t.slice(0, 240) } : x;
+    });
+  } catch (err) {
+    console.warn('Groq accessory why failed, using fallback:', err.message);
+  }
   res.json({kits,accessories,generatedBy,generatedAt:new Date().toISOString()});
 });
 
