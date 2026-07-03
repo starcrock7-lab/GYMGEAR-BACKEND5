@@ -704,22 +704,39 @@ for (const list of Object.values(PRODUCTS)) {
 // || url) always lands on a real, shoppable, commission-earning page.
 const UNSPLASH = (id) =>
   `https://images.unsplash.com/photo-${id}?w=600&q=80&auto=format&fit=crop`;
+// Each category gets a POOL of verified photo ids (every id below curl-checked
+// 200 + eyeballed for subject). Products hash onto a pool entry, so a category
+// grid shows varied photos instead of one image repeated on every card.
 const CAT_IMAGE = {
-  benches: '1581009146145-b5ef050c2e1e', barbells: '1534438327276-14e5300c3a48',
-  dumbbells: '1599058917765-a780eda07a3e', plates: '1526506118085-60ce8714f8c5',
-  racks: '1534258936925-c58bed479fcb', cardio: '1571019613454-1cb2f99b2d8b',
-  kettlebells: '1517344884509-a0c97ec11bcc', bands: '1591291621164-2c6367723315',
-  shorts: '1556906781-9a412961c28c', compression: '1556906781-9a412961c28c',
-  tanks: '1483721310020-03333e577078', hoodies: '1483721310020-03333e577078',
-  footwear: '1542291026-7eec264c27ff', sportsbras: '1556906781-9a412961c28c',
-  preworkout: '1693996045899-7cf0ac0229c7', protein: '1693996045899-7cf0ac0229c7',
-  creatine: '1693996045899-7cf0ac0229c7', recovery: '1584308666744-24d5c474f2ae',
-  vitamins: '1584308666744-24d5c474f2ae', fatburners: '1593095948071-474c5cc2989d',
-  belts: '1532382708467-d720b918f0da', straps: '1517963879433-6ad2b056d712',
-  wraps: '1517963879433-6ad2b056d712', sleeves: '1517963879433-6ad2b056d712',
-  chalk: '1661490845292-048d5b67755e', yogamats: '1592432678016-e910b452f9a2',
-  foamrollers: '1607962837359-5e7e89f86776', gymbags: '1708622833152-924c6e364138',
-  jumpropes: '1434608519344-49d77a699e1d',
+  benches: ['1558611848-73f7eb4001a1', '1579758629938-03607ccdbaba'],
+  barbells: ['1605296867304-46d5465a13f1', '1517836357463-d25dfeac3438', '1620188467120-5042ed1eb5da', '1549060279-7e168fcee0c2', '1517838277536-f5f99be501cd'],
+  dumbbells: ['1599058917765-a780eda07a3e', '1544033527-b192daee1f5b', '1576678927484-cc907957088c', '1638536532686-d610adfc8e5c', '1583454110551-21f2fa2afe61'],
+  plates: ['1526506118085-60ce8714f8c5', '1526401485004-46910ecc8e51', '1517964603305-11c0f6f66012'],
+  racks: ['1534258936925-c58bed479fcb', '1590487988256-9ed24133863e', '1541534741688-6078c6bfb5c5'],
+  cardio: ['1571019613454-1cb2f99b2d8b', '1571902943202-507ec2618e8f', '1593079831268-3381b0db4a77'],
+  kettlebells: ['1517344884509-a0c97ec11bcc', '1601422407692-ec4eeec1d9b3'],
+  bands: ['1591291621164-2c6367723315', '1517130038641-a774d04afb3c'],
+  shorts: ['1556906781-9a412961c28c'],
+  compression: ['1556906781-9a412961c28c', '1538805060514-97d9cc17730c'],
+  tanks: ['1483721310020-03333e577078'],
+  hoodies: ['1483721310020-03333e577078'],
+  footwear: ['1542291026-7eec264c27ff', '1595950653106-6c9ebd614d3a'],
+  sportsbras: ['1556906781-9a412961c28c', '1538805060514-97d9cc17730c'],
+  preworkout: ['1693996045899-7cf0ac0229c7'],
+  protein: ['1693996045899-7cf0ac0229c7'],
+  creatine: ['1693996045899-7cf0ac0229c7'],
+  recovery: ['1584308666744-24d5c474f2ae'],
+  vitamins: ['1584308666744-24d5c474f2ae'],
+  fatburners: ['1593095948071-474c5cc2989d'],
+  belts: ['1532382708467-d720b918f0da'],
+  straps: ['1517963879433-6ad2b056d712'],
+  wraps: ['1517963879433-6ad2b056d712'],
+  sleeves: ['1517963879433-6ad2b056d712'],
+  chalk: ['1595078475328-1ab05d0a6a0e'],
+  yogamats: ['1592432678016-e910b452f9a2', '1601925260368-ae2f83cf8b7f', '1518611012118-696072aa579a', '1575052814086-f385e2e2ad1b'],
+  foamrollers: ['1607962837359-5e7e89f86776'],
+  gymbags: ['1708622833152-924c6e364138', '1553062407-98eeb64c6a62'],
+  jumpropes: ['1434608519344-49d77a699e1d', '1584735935682-2f2b69dff9d2'],
 };
 const DEFAULT_IMAGE = UNSPLASH('1534438327276-14e5300c3a48');
 const AMAZON_TAG = 'gymgearcompar-20';
@@ -805,10 +822,15 @@ const CATEGORY_TAGS = {
 const DEFAULT_TAGS = { productType: 'accessory', kitRole: 'optional', pairsWith: [] };
 
 for (const [cat, list] of Object.entries(PRODUCTS)) {
-  const image = CAT_IMAGE[cat] ? UNSPLASH(CAT_IMAGE[cat]) : DEFAULT_IMAGE;
+  const pool = (CAT_IMAGE[cat] || []).map(UNSPLASH);
+  if (!pool.length) pool.push(DEFAULT_IMAGE);
   const tags = CATEGORY_TAGS[cat] || DEFAULT_TAGS;
   for (const p of list) {
-    p.image = image;
+    // Stable id hash → the same product always keeps the same photo, but a
+    // category grid spreads across the pool instead of repeating one image.
+    let h = 0;
+    for (const ch of p.id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    p.image = pool[h % pool.length];
     // Buy link: the real product page when it resolves, otherwise an Amazon
     // affiliate search. (The frontend's buyUrl() prefers affiliateUrl.)
     p.affiliateUrl = p.url && !BROKEN_URL_IDS.has(p.id)
