@@ -915,7 +915,8 @@ app.get('/api/products/:cat',(req,res)=>{
 });
 
 app.get('/api/categories',(req,res)=>res.json({
-  categories:Object.entries(CATEGORY_META).map(([key,meta])=>({key,label:meta.label,group:meta.group,loaded:true,count:PRODUCTS[key]?.length||0})),
+  // image = the category's lead pool photo, for browse-page thumbnails.
+  categories:Object.entries(CATEGORY_META).map(([key,meta])=>({key,label:meta.label,group:meta.group,loaded:true,count:PRODUCTS[key]?.length||0,image:CAT_IMAGE[key]?UNSPLASH(CAT_IMAGE[key][0]):DEFAULT_IMAGE})),
 }));
 
 app.post('/api/compare',(req,res)=>{
