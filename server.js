@@ -975,15 +975,6 @@ app.post('/api/compare',(req,res)=>{
   res.json({summary,winnerId:qw.id});
 });
 
-app.post('/api/reviews',(req,res)=>{
-  const {productName,brand}=req.body;
-  res.json({reviews:[
-    {author:`${brand} Customer`,text:`Really happy with the ${productName}. Exactly what I was looking for and the quality is excellent.`},
-    {author:'Verified Buyer',text:`Been using this for 3 months now. Solid build, no complaints. Would definitely recommend.`},
-    {author:'Fitness Enthusiast',text:`Great product overall. The price-to-quality ratio is hard to beat. Will be buying again.`},
-  ]});
-});
-
 // ── KIT BUILDER ───────────────────────────────────────────────
 // One request returns three kits (Best Value / Best Match / Best Quality)
 // from the quiz answers. Groq (Llama 3.3 70B) picks product IDs when a key

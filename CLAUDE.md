@@ -21,8 +21,7 @@ The frontend is a **Next.js 16 app** in `C:\Users\nirka\Documents\gymgear-fronte
 | `GET /api/products/:cat` | 8 products for one of 20 categories (`:910`) |
 | `GET /api/categories` | category metadata (`:917`) |
 | `POST /api/compare` | AI verdict comparing selected products — Anthropic Claude (`:922`) |
-| `POST /api/reviews` | sample reviews for a product (`:978`) |
-| `POST /api/kit` | quiz → kit builder (`:1227`): **deterministic cart builder** picks products (budget/space/owned-aware); Groq (Llama 3.3 70B) writes only the kit name/description; templated fallback copy if no key or API error. Server validates + hydrates product ids and owns all price data. |
+| `POST /api/kit` | quiz → kit builder (`:1218`): **deterministic cart builder** picks products (budget/space/owned-aware); Groq (Llama 3.3 70B) writes only the kit name/description; templated fallback copy if no key or API error. Server validates + hydrates product ids and owns all price data. |
 
 Catalog: 20 categories × 8 = 160 hardcoded products in `PRODUCTS`. Product shape: `{ id, name, brand, emoji, price, retailer, url, affiliateUrl, quality, rating, reviewCount, reviewSource, expertVerdict, expertSource, specs{}, aspects[], bestChoice?, salePrice?, discount? }`. Buy links resolve `affiliateUrl || url`; Amazon tag `gymgearcompar-20`.
 
