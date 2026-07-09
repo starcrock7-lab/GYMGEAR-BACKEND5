@@ -8,7 +8,7 @@ The frontend is a **Next.js 16 app** in `C:\Users\nirka\Documents\gymgear-fronte
 - GitHub: https://github.com/starcrock7-lab/GYMGEAR-BACKEND5 — **PUBLIC repo: nothing secret may ever be committed**
 
 ## The rules that prevent breakage
-1. **Never commit secrets.** `SITE_KEY`, `ANTHROPIC_API_KEY`, `GROQ_API_KEY` are Render env vars only — never in code, docs, or examples. (A previous CLAUDE.md leaked the SITE_KEY value into this public repo — if not rotated yet, rotate it in Render + the frontend's Vercel env.)
+1. **Never commit secrets.** `SITE_KEY`, `ANTHROPIC_API_KEY`, `GROQ_API_KEY` are Render env vars only — never in code, docs, or examples. `.env.example` holds **blank placeholders only** (a real SITE_KEY sat there until the 2026-07-09 security review; an older CLAUDE.md leaked it too — both scrubbed, key rotated, old key rejected by prod).
 2. **Verify after every edit:** `node --check server.js` must pass, then hit `GET /health` locally (`npm run dev`, port from `PORT` env). There is no test suite — the syntax check is the gate.
 3. **Smallest possible diff.** `server.js` is one large file (~1,300 lines, mostly hardcoded product data). Bad bulk edits have corrupted files in this project before. Never rewrite it wholesale.
 4. **Keep the security middleware intact:** CORS origin allowlist, 60 req/min rate limit, and `X-Site-Key` header validation. The frontend only calls through its `apiFetch()` wrapper which sends that header.

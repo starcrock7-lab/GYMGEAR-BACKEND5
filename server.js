@@ -3,6 +3,9 @@
 
 import express from 'express';
 const app = express();
+// Render sits behind a proxy: without this, req.ip is the LB address and every
+// visitor shares ONE rate-limit bucket (2026-07-09 security review).
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3001;
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
