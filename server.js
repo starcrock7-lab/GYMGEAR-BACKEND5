@@ -317,6 +317,11 @@ const IMGS = {
 function p(id,name,brand,price,retailer,url,quality,rating,reviewCount,reviewSource,expertVerdict,expertSource,specs,aspects,opts={}){
   const out={id,name,brand,price,retailer,url,affiliateUrl:'',image:IMGS[id]||null,quality,rating,reviewCount,reviewSource,expertVerdict,expertSource,specs,aspects,bestChoice:opts.bestChoice||false};
   if(opts.salePrice){out.salePrice=opts.salePrice;out.discount=Math.round((1-opts.salePrice/price)*100)}
+  // Deals v2: optional hand-curated sale end date (ISO string). Set it only
+  // when the real end date is known — never invented. The frontend drops the
+  // deal (and its countdown) once this passes; the LLM never sees or writes
+  // dates (deals-engine hard rule).
+  if(opts.saleEndsAt)out.saleEndsAt=opts.saleEndsAt;
   return out;
 }
 
