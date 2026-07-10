@@ -325,6 +325,10 @@ function p(id,name,brand,price,retailer,url,quality,rating,reviewCount,reviewSou
   // deal (and its countdown) once this passes; the LLM never sees or writes
   // dates (deals-engine hard rule).
   if(opts.saleEndsAt)out.saleEndsAt=opts.saleEndsAt;
+  // Machines/cardio only: compact=true marks units that physically fit a small
+  // room / apartment corner (cable tower, rod gyms, folding rowers, bikes).
+  // The kit builder gates the rest out of tight spaces at product level.
+  if(opts.compact)out.compact=true;
   return out;
 }
 
@@ -392,18 +396,41 @@ racks:[
   p('bells-squat','Squat Stand 2.0','Bells of Steel',449,'Bells of Steel','https://www.bellsofsteel.com/all-products/benches-and-racks/squat-stands/',8.8,4.8,195,'Bells of Steel','Premium squat stands with lifetime warranty.','Garage Gym Lab',{'Frame':'3×3" 11ga','Height':'84"','Hole Spacing':'1"','Weight':'130 lbs','Warranty':'Lifetime'},['Lifetime Warranty','1" Spacing','Premium Build']),
   p('rogue-squat','SQ-1 Squat Stand','Rogue Fitness',345,'Rogue Fitness','https://www.roguefitness.com/rogue-sq-1-squat-stand',8.6,4.8,340,'Rogue Fitness','Compact Rogue quality squat stand  --  American made.','Garage Gym Reviews',{'Frame':'2×3" 11ga','Height':'78"','Footprint':'Small','Weight':'80 lbs','Made In':'USA'},['American Made','Compact','Rogue Quality']),
   p('titan-t2','T-2 Short Power Rack','Titan Fitness',349,'Titan Fitness','https://www.titanfitness.com/products/t-2-series-short-power-rack',7.5,4.5,650,'Titan Fitness','Best entry-level power rack under $350.','Garage Gym Reviews',{'Frame':'2×2" 12ga','Height':'70"','Hole Spacing':'2"','Weight':'115 lbs','Warranty':'1 Year'},['Entry Level','Low Ceiling','Budget Pick']),
+  p('rogue-rml390f','RML-390F Flat Foot Rack','Rogue Fitness',935,'Rogue Fitness','https://www.roguefitness.com/rml-390f-flat-foot-monster-lite-rack',9.4,4.9,443,'Rogue Fitness','No-bolt-down Monster Lite  --  the garage gym default power rack.','Garage Gym Lab',{'Frame':'3×3" 11ga','Uprights':'90"','Hole Spacing':'5/8"','Weight':'313 lbs','Made In':'USA'},['No Bolting Needed','American Made','Monster Lite']),
+  p('rep-pr4000','PR-4000 Power Rack','Rep Fitness',800,'Rep Fitness','https://repfitness.com/products/pr-4000-power-rack-pre-selected',9.2,4.9,671,'Rep Fitness','Most customizable mid-price rack  --  1" bench-zone spacing, huge attachment ecosystem.','Garage Gym Reviews',{'Frame':'3×3" 11ga','Uprights':'80" or 93"','Hole Spacing':'1" bench zone','Weight':'250 lbs','Warranty':'Lifetime'},['Rack Builder','1" Spacing','Best Ecosystem']),
 ],
 
 cardio:[
-  p('concept2-rower','RowErg Rowing Machine','Concept2',990,'Concept2','https://www.concept2.com/ergs/rowerg',9.8,4.9,5200,'Concept2','The only rowing machine  --  used in every serious gym on earth.','Garage Gym Reviews',{'Resistance':'Air','Monitor':'PM5','Folds':'Yes','Weight':'57 lbs','Warranty':'5 Year'},['Industry Standard','PM5 Monitor','Foldable'],{bestChoice:true}),
+  p('concept2-rower','RowErg Rowing Machine','Concept2',990,'Concept2','https://www.concept2.com/ergs/rowerg',9.8,4.9,5200,'Concept2','The only rowing machine  --  used in every serious gym on earth.','Garage Gym Reviews',{'Resistance':'Air','Monitor':'PM5','Folds':'Yes','Weight':'57 lbs','Warranty':'5 Year'},['Industry Standard','PM5 Monitor','Foldable'],{bestChoice:true,compact:true}),
   p('assault-bike','AssaultBike Classic','Assault Fitness',699,'Assault Fitness','https://www.assaultfitness.com/assaultbike-classic',9.2,4.7,1800,'Assault Fitness','The original fan bike  --  brutally effective, built to last.','Barbend',{'Resistance':'Air','Display':'LCD','Weight':'95 lbs','Drive':'Chain','Warranty':'Lifetime Frame'},['Air Resistance','Fan Bike','Lifetime Frame']),
-  p('concept2-ski','SkiErg','Concept2',900,'Concept2','https://www.concept2.com/ergs/skierg',9.5,4.9,890,'Concept2','Best upper body cardio machine ever made.','Garage Gym Reviews',{'Resistance':'Air','Monitor':'PM5','Wall Mount':'Included','Weight':'53 lbs','Warranty':'5 Year'},['Upper Body','PM5 Monitor','Compact']),
+  p('concept2-ski','SkiErg','Concept2',900,'Concept2','https://www.concept2.com/ergs/skierg',9.5,4.9,890,'Concept2','Best upper body cardio machine ever made.','Garage Gym Reviews',{'Resistance':'Air','Monitor':'PM5','Wall Mount':'Included','Weight':'53 lbs','Warranty':'5 Year'},['Upper Body','PM5 Monitor','Compact'],{compact:true}),
   p('rogue-echo-bike','Echo Bike','Rogue Fitness',795,'Rogue Fitness','https://www.roguefitness.com/rogue-echo-bike',9.0,4.8,2100,'Rogue Fitness','Best built fan bike  --  smoother than Assault with Rogue quality.','Garage Gym Reviews',{'Resistance':'Air','Display':'LCD','Weight':'127 lbs','Drive':'Belt','Made In':'USA'},['Belt Drive','American Made','Smooth Ride']),
   p('nordictrack-1750','Commercial 1750 Treadmill','NordicTrack',1999,'NordicTrack','https://www.nordictrack.com/treadmills/nordictrack-commercial-1750-treadmill',8.5,4.6,4200,'NordicTrack','Best home treadmill with incline, iFit, and 10" screen.','Wirecutter',{'Speed':'0–12 mph','Incline':'-3% to 15%','Screen':'10"','Motor':'3.5 CHP','Warranty':'10 Year Frame'},['iFit Compatible','Auto Incline','10" Screen'],{salePrice:1699}),
-  p('peloton-bike','Peloton Bike+','Peloton',2695,'Peloton','https://www.onepeloton.com/bike-plus',8.8,4.7,12000,'Peloton','Best connected cycling experience  --  premium but worth it.','Wirecutter',{'Screen':'24"','Resistance':'Magnetic','Auto Follow':'Yes','Subscription':'$44/mo','Weight':'140 lbs'},['24" Screen','Auto Resistance','Live Classes']),
+  p('peloton-bike','Peloton Bike+','Peloton',2695,'Peloton','https://www.onepeloton.com/bike-plus',8.8,4.7,12000,'Peloton','Best connected cycling experience  --  premium but worth it.','Wirecutter',{'Screen':'24"','Resistance':'Magnetic','Auto Follow':'Yes','Subscription':'$44/mo','Weight':'140 lbs'},['24" Screen','Auto Resistance','Live Classes'],{compact:true}),
   p('assault-runner','AssaultRunner Pro','Assault Fitness',2999,'Assault Fitness','https://www.assaultfitness.com/assaultrunner-pro',9.3,4.8,620,'Assault Fitness','Best curved treadmill  --  no motor, self-powered, elite cardio.','Barbend',{'Type':'Curved Manual','Motor':'None','Weight':'287 lbs','Warranty':'10 Year Frame','Belt':'Slat'},['Self-Powered','Curved Belt','No Electricity']),
     p('hydrow-wave','Wave Rower','Hydrow',1495,'Hydrow','https://hydrow.com/products/hydrow-wave-rower',9.1,4.7,8400,'Wirecutter','Best-looking rower with live outdoor reality workouts and a 16" touchscreen.','Wirecutter',{'Resistance':'Electromagnetic','Screen':'16"','Folds':'Yes','Subscription':'$44/mo','Weight':'102 lbs'},['Live Workouts','16" Screen','Folds Upright']),
-  p('concept2-bikeerg','BikeErg','Concept2',990,'Concept2','https://www.concept2.com/bikes/bikeerg',9.3,4.8,760,'Concept2','Air-resistance bike from the makers of the best rower.','Garage Gym Reviews',{'Resistance':'Air','Monitor':'PM5','Seat':'Adjustable','Weight':'68 lbs','Warranty':'5 Year'},['PM5 Monitor','Air Resistance','Concept2 Quality']),
+  p('concept2-bikeerg','BikeErg','Concept2',990,'Concept2','https://www.concept2.com/bikes/bikeerg',9.3,4.8,760,'Concept2','Air-resistance bike from the makers of the best rower.','Garage Gym Reviews',{'Resistance':'Air','Monitor':'PM5','Seat':'Adjustable','Weight':'68 lbs','Warranty':'5 Year'},['PM5 Monitor','Air Resistance','Concept2 Quality'],{compact:true}),
+  p('schwinn-ic4','IC4 Indoor Cycling Bike','Schwinn',999,'Schwinn','https://www.schwinnfitness.com/ic4/100873.html',8.4,4.7,5100,'Amazon','The Peloton-app bike without the Peloton price  --  100 magnetic levels.','Wirecutter',{'Resistance':'Magnetic','Display':'Backlit LCD','Pedals':'Dual SPD + Cage','Weight':'106 lbs','Warranty':'10 Year Frame'},['App Compatible','Quiet Magnetic','Value Pick'],{salePrice:799,compact:true}),
+  p('sunny-rower','SF-RW5515 Magnetic Rower','Sunny Health & Fitness',299,'Amazon','https://www.amazon.com/dp/B0DQ6QTLJH?tag=gymgearcompar-20',6.8,4.5,13400,'Amazon','The best-selling budget rower  --  quiet magnetic resistance under $300.','Garage Gym Reviews',{'Resistance':'Magnetic','Display':'LCD','Folds':'Yes','Weight':'59 lbs','Warranty':'3 Year Frame'},['Under $300','Best Seller','Quiet'],{compact:true}),
+  p('lifefitness-t3','T3 Treadmill','Life Fitness',3499,'Life Fitness','https://shop.lifefitness.com/products/t3-treadmill',9.1,4.8,64,'Life Fitness','Health-club belt feel at home  --  the treadmill brand gyms actually buy.','Life Fitness',{'Speed':'0.5–12 mph','Incline':'0–15%','Motor':'3.0 CHP','Weight':'254 lbs','Warranty':'Lifetime Frame'},['Club Quality','FlexDeck Shock','Commercial Brand']),
+],
+
+// All-in-one trainers, functional trainers and cable machines. The efficient
+// path for small setups (one machine = rack + smith + cables) and the anchor
+// option the kit builder trades off against separate iron. Prices/URLs
+// researched live 2026-07-09; compact:true = fits a small room.
+machines:[
+  p('rep-arcadia','Arcadia Functional Trainer','REP Fitness',2199,'REP Fitness','https://repfitness.com/products/arcadia-functional-trainer',9.3,4.9,111,'REP Fitness','Best functional trainer for most home gyms  --  commercial build in two-thirds the usual space.','Garage Gym Reviews',{'Type':'Functional Trainer','Resistance':'Dual 170 lb Stacks','Cable Ratio':'2:1','Footprint':'55×36"','Warranty':'Lifetime Frame'},['32 Cable Positions','Compact Build','Pre-Assembled Uprights'],{bestChoice:true}),
+  p('force-usa-g3','G3 All-In-One Trainer','Force USA',1999,'Force USA','https://www.forceusa.com/products/g3',8.7,4.8,540,'Force USA','Rack, smith machine and cables in one footprint  --  the best-value all-in-one.','Barbend',{'Type':'All-In-One','Resistance':'Plate-Loaded','Cable Ratio':'2:1','Footprint':'78×61"','Warranty':'Lifetime Frame'},['3-in-1 Machine','Plate Loaded','Best Value']),
+  p('force-usa-g6','G6 All-In-One Trainer','Force USA',3499,'Force USA','https://www.forceusa.com/products/g6',9.0,4.8,310,'Force USA','Selectorized stacks plus smith, rack, leg press and low row  --  the mid-tier sweet spot.','King of the Gym',{'Type':'All-In-One','Resistance':'Dual 220 lb Stacks','Cable Ratio':'2:1','Footprint':'72×64"','Warranty':'Lifetime Frame'},['Leg Press Built In','8 Stations','Selectorized Stacks']),
+  p('force-usa-g20','G20 Pro All-In-One Trainer','Force USA',5999,'Force USA','https://www.forceusa.com/products/g20',9.6,4.9,150,'Force USA','The ultimate all-in-one gym  --  selectorized stacks, smith, rack and cables.','King of the Gym',{'Type':'All-In-One','Resistance':'Dual Weight Stacks','Cable Ratio':'2:1','Footprint':'80×65"','Warranty':'Lifetime Frame'},['Flagship','Selectorized Stacks','Every Station']),
+  p('bells-ft','Functional Trainer','Bells of Steel',2145,'Bells of Steel','https://bellsofsteel.us/products/functional-trainer',9.0,4.9,47,'Bells of Steel','Same features as trainers twice the price, with a lifetime frame warranty.','Garage Gym Reviews',{'Type':'Functional Trainer','Resistance':'Dual 160 lb Stacks','Cable Ratio':'2:1','Footprint':'11 sq ft','Warranty':'Lifetime Frame'},['16 Height Settings','Smooth Pulleys','Value Pick']),
+  p('bells-cable-tower','Plate-Loaded Cable Tower 2.0','Bells of Steel',420,'Bells of Steel','https://bellsofsteel.us/products/cable-tower',8.0,4.7,210,'Bells of Steel','A real cable machine in 6 square feet  --  the budget pick to beat.','Garage Gym Reviews',{'Type':'Cable Tower','Resistance':'Plate-Loaded','Cable Ratio':'2:1 + 1:1','Footprint':'6.1 sq ft','Warranty':'Limited'},['Tiny Footprint','Budget Pick','550 lb Capacity'],{compact:true}),
+  p('titan-ft','Plate-Loaded Functional Trainer','Titan Fitness',1265,'Titan Fitness','https://titan.fitness/products/plate-loaded-functional-trainer',7.7,4.5,180,'Titan Fitness','Most machine for the money  --  660 lb capacity and every attachment in the box.','Garage Gym Reviews',{'Type':'Functional Trainer','Resistance':'Plate-Loaded','Cable Ratio':'2:1 + 1:1','Footprint':'61×53"','Warranty':'1 Year'},['Attachments Included','660 lb Capacity','Budget Pick'],{salePrice:820}),
+  p('lifefitness-g7','G7 Home Gym','Life Fitness',3999,'Life Fitness','https://shop.lifefitness.com/products/g7-home-gym',9.2,4.8,89,'Life Fitness','Commercial-club cable motion for the home  --  the brand every gym floor trusts.','Life Fitness',{'Type':'Functional Trainer','Resistance':'Dual 160 lb Stacks','Cable Ratio':'2:1','Footprint':'60×54"','Warranty':'10 Year Frame'},['Commercial Grade','Bench Included','Club Standard']),
+  p('bodysolid-exm2500','EXM2500S Home Gym','Body-Solid',1995,'Amazon','https://www.amazon.com/dp/B00332ARK0?tag=gymgearcompar-20',8.4,4.6,1100,'Amazon','The classic single-stack home gym  --  210 lb stack and a true lifetime warranty.','Garage Gym Reviews',{'Type':'Multi-Station','Resistance':'210 lb Stack','Stations':'Press / Pec / Lat / Leg','Footprint':'83×51"','Warranty':'Lifetime'},['Lifetime Warranty','No Plate Loading','Multi-Station']),
+  p('bowflex-x2se','Xtreme 2 SE Home Gym','Bowflex',1499,'Bowflex','https://www.bowflex.com/product/x2se-home-gym/100334.html',7.3,4.5,3400,'Amazon','70+ exercises from folding resistance rods  --  apartment-friendly strength.','Barbend',{'Type':'Home Gym','Resistance':'210 lb Power Rods','Exercises':'70+','Footprint':'53×49"','Warranty':'7 Year'},['Apartment Friendly','No Spotter Needed','70+ Exercises'],{salePrice:999,compact:true}),
+  p('marcy-mwm990','MWM-990 150 lb Stack Home Gym','Marcy',399,'Amazon','https://www.amazon.com/dp/B00JGRBSS6?tag=gymgearcompar-20',6.5,4.4,6900,'Amazon','The best-selling budget home gym  --  30+ exercises for under $400.','Barbend',{'Type':'Multi-Station','Resistance':'150 lb Stack','Exercises':'30+','Footprint':'68×42"','Warranty':'2 Year'},['Under $400','Best Seller','Compact Stack'],{compact:true}),
 ],
 
 kettlebells:[
@@ -676,7 +703,7 @@ jumpropes:[
 };
 
 const CATEGORY_META = {
-  benches:{group:'equipment',label:'Weight Benches'},barbells:{group:'equipment',label:'Barbells'},dumbbells:{group:'equipment',label:'Dumbbells'},plates:{group:'equipment',label:'Weight Plates'},racks:{group:'equipment',label:'Racks & Rigs'},cardio:{group:'equipment',label:'Cardio'},kettlebells:{group:'equipment',label:'Kettlebells'},bands:{group:'equipment',label:'Resistance Bands'},
+  benches:{group:'equipment',label:'Weight Benches'},machines:{group:'equipment',label:'All-in-One Machines'},barbells:{group:'equipment',label:'Barbells'},dumbbells:{group:'equipment',label:'Dumbbells'},plates:{group:'equipment',label:'Weight Plates'},racks:{group:'equipment',label:'Racks & Rigs'},cardio:{group:'equipment',label:'Cardio'},kettlebells:{group:'equipment',label:'Kettlebells'},bands:{group:'equipment',label:'Resistance Bands'},
   shorts:{group:'clothing',label:'Gym Shorts'},compression:{group:'clothing',label:'Compression'},tanks:{group:'clothing',label:'Tank Tops'},hoodies:{group:'clothing',label:'Hoodies'},footwear:{group:'clothing',label:'Footwear'},sportsbras:{group:'clothing',label:'Sports Bras'},
   preworkout:{group:'supplements',label:'Pre-Workout'},protein:{group:'supplements',label:'Protein'},creatine:{group:'supplements',label:'Creatine'},recovery:{group:'supplements',label:'Recovery'},vitamins:{group:'supplements',label:'Vitamins'},fatburners:{group:'supplements',label:'Fat Burners'},
   belts:{group:'gear',label:'Lifting Belts'},straps:{group:'gear',label:'Lifting Straps'},wraps:{group:'gear',label:'Wrist Wraps'},sleeves:{group:'gear',label:'Knee Sleeves'},chalk:{group:'gear',label:'Chalk'},
@@ -721,6 +748,8 @@ const CAT_IMAGE = {
   dumbbells: ['1599058917765-a780eda07a3e', '1544033527-b192daee1f5b', '1576678927484-cc907957088c', '1638536532686-d610adfc8e5c', '1583454110551-21f2fa2afe61'],
   plates: ['1526506118085-60ce8714f8c5', '1526401485004-46910ecc8e51', '1517964603305-11c0f6f66012'],
   racks: ['1534258936925-c58bed479fcb', '1590487988256-9ed24133863e', '1541534741688-6078c6bfb5c5'],
+  // Reuses already-verified rack/cardio photo ids (machines look the part).
+  machines: ['1534258936925-c58bed479fcb', '1590487988256-9ed24133863e', '1571902943202-507ec2618e8f'],
   cardio: ['1571019613454-1cb2f99b2d8b', '1571902943202-507ec2618e8f', '1593079831268-3381b0db4a77'],
   kettlebells: ['1517344884509-a0c97ec11bcc', '1601422407692-ec4eeec1d9b3'],
   bands: ['1591291621164-2c6367723315', '1517130038641-a774d04afb3c'],
@@ -789,10 +818,11 @@ const BROKEN_URL_IDS = new Set([
      pairsWith = the PRIMARY categories an accessory completes; an empty list
                  means it never surfaces in an equipment kit (e.g. clothing —
                  too generic, per the cross-sell guardrail). */
-const EQUIPMENT_CATS = ['racks', 'barbells', 'benches', 'plates', 'dumbbells', 'kettlebells', 'cardio', 'bands'];
+const EQUIPMENT_CATS = ['racks', 'machines', 'barbells', 'benches', 'plates', 'dumbbells', 'kettlebells', 'cardio', 'bands'];
 const CATEGORY_TAGS = {
   // Primary — the kit is built around these.
   racks:       { productType: 'primary', kitRole: 'core',        pairsWith: [] },
+  machines:    { productType: 'primary', kitRole: 'core',        pairsWith: [] },
   barbells:    { productType: 'primary', kitRole: 'core',        pairsWith: [] },
   benches:     { productType: 'primary', kitRole: 'core',        pairsWith: [] },
   plates:      { productType: 'primary', kitRole: 'core',        pairsWith: [] },
@@ -864,6 +894,7 @@ const SCORE_WEIGHTS = {
   // Precision/heavy iron — build quality dominates.
   barbells: { build: 0.55, rated: 0.25, value: 0.10, trust: 0.10 },
   racks:    { build: 0.55, rated: 0.25, value: 0.10, trust: 0.10 },
+  machines: { build: 0.50, rated: 0.28, value: 0.12, trust: 0.10 },
   benches:  { build: 0.50, rated: 0.25, value: 0.15, trust: 0.10 },
   // Commodity iron — value weighs a bit more, but build still leads.
   plates:   { build: 0.38, rated: 0.27, value: 0.25, trust: 0.10 },
@@ -990,13 +1021,15 @@ app.post('/api/compare',(req,res)=>{
 // owns the product data — the model only ever selects IDs, never prices.
 
 // Categories that belong in a home-gym kit, in build-priority order.
-const KIT_CATEGORIES = ['racks','barbells','plates','benches','dumbbells','kettlebells','cardio','bands','jumpropes','yogamats','foamrollers'];
+const KIT_CATEGORIES = ['racks','machines','barbells','plates','benches','dumbbells','kettlebells','cardio','bands','jumpropes','yogamats','foamrollers'];
 
 // Flat lookup of every kit-eligible product, trimmed to what selection needs.
+// gs = gymgearScore (computed above), compact = fits a tight space (machines).
 const KIT_CATALOG = KIT_CATEGORIES.flatMap(cat =>
   (PRODUCTS[cat]||[]).map(p => ({
     id:p.id, name:p.name, brand:p.brand, cat,
     price:p.salePrice||p.price, quality:p.quality, rating:p.rating,
+    gs:p.gymgearScore||0, compact:!!p.compact,
   }))
 );
 const KIT_BY_ID = new Map(KIT_CATALOG.map(p=>[p.id,p]));
@@ -1010,46 +1043,83 @@ const OWNED_TO_CAT = {barbell:'barbells',dumbbells:'dumbbells',bench:'benches',r
 const TIER_CAP_MULT = {value:1, match:1.15, quality:1.8};
 const capFor = (type,cap) => Math.round(cap*(TIER_CAP_MULT[type]||1));
 
-// Bias the category order so the kit reflects goal + space.
-function categoryOrder(goal,space){
+// Bias the category order so the kit reflects goal + space + kit size.
+// Machines placement is the small-vs-big trade: a small setup leads with one
+// efficient all-in-one; a full home gym prefers the variety of separates and
+// only reaches a machine after the core iron is in.
+function categoryOrder(goal,space,pieces){
   let order=[...KIT_CATEGORIES];
   const bump=(cats)=>{order=[...cats,...order.filter(c=>!cats.includes(c))]};
   if(goal==='lose-weight'||goal==='get-fit') bump(['cardio','kettlebells','bands','dumbbells']);
   if(goal==='build-strength') bump(['racks','barbells','plates','benches']);
-  // Tight spaces can't host a rack or a treadmill-class machine.
+  if(goal==='home-gym-setup') bump(['machines','racks','barbells','benches']);
+  // Few pieces + strength-ish goal → the all-in-one anchors the whole kit.
+  if(pieces<=4 && (goal==='build-strength'||goal==='home-gym-setup')) bump(['machines']);
+  // Big builds: machine drops to the back — separates give the variety.
+  if(pieces>=6 && goal!=='home-gym-setup'){
+    order=order.filter(c=>c!=='machines'); order.push('machines');
+  }
+  // Tight spaces can't host a rack or a treadmill-class machine. Compact
+  // machines (cable tower, rod gyms) still qualify — buildKit gates the rest.
   if(space==='apartment-corner'||space==='small-room'){
-    const tight=['dumbbells','kettlebells','bands','jumpropes','yogamats','foamrollers','benches'];
-    order=[...tight,...order.filter(c=>!tight.includes(c))].filter(c=>c!=='racks');
+    const strengthy=goal==='build-strength'||goal==='home-gym-setup';
+    const tight=strengthy
+      ? ['machines','dumbbells','kettlebells','bands','benches','jumpropes','yogamats','foamrollers']
+      : ['dumbbells','kettlebells','cardio','bands','machines','jumpropes','yogamats','foamrollers','benches'];
+    order=[...tight.filter(c=>order.includes(c)),...order.filter(c=>!tight.includes(c))].filter(c=>c!=='racks');
   }
   return order;
 }
 
+// A machine already IS a rack + cables (and vice versa isn't true, but a kit
+// holding both is redundant) — whichever lands first blocks the other.
+const EXCLUSIVE_WITH={machines:['racks'],racks:['machines']};
+
+// How much of the per-slot budget a category deserves. Anchors (machine,
+// rack, cardio) soak up multiples of an even share; small accessories a
+// fraction. This is what lets a $300 kit and a $2,000 kit pick DIFFERENT
+// products in the same category instead of always the same list-topper.
+const CAT_SHARE={machines:2.6,racks:2.2,cardio:2.2,plates:1.6,barbells:1.4,dumbbells:1.4,benches:1.2,kettlebells:0.6,yogamats:0.3,bands:0.25,foamrollers:0.25,jumpropes:0.2};
+
 // Greedy one-per-category pick for a tier. Three distinct strategies so the
 // kits never collapse into each other: value = cheapest decent option,
-// match = best-loved (rating), quality = best built (quality score).
-function buildKit(strategy,{cap,target,ownedCats,order}){
+// match = personalised (GymGear Score + rating + budget fit), quality = best
+// built. `tight` gates non-compact machines out of small spaces at product
+// level (a cable tower fits an apartment corner; a G20 does not).
+function buildKit(strategy,{cap,target,ownedCats,order,tight}){
+  const perSlot=cap/Math.max(target,1);
+  // 1.0 when the price sits at the category's ideal share of budget, falling
+  // off above (over budget hurts fast) and below (a $10 item isn't an anchor).
+  const fit=p=>{
+    const ideal=perSlot*(CAT_SHARE[p.cat]||1);
+    const r=p.price/Math.max(ideal,1);
+    return r>1?Math.max(0,2-r):0.4+0.6*r;
+  };
   const score={
-    value:p=>-p.price,                  // cheapest first
-    match:p=>p.rating+p.quality/100,    // highest rated, quality breaks ties
-    quality:p=>p.quality,               // best built regardless
+    value:p=>-p.price,                            // cheapest first
+    match:p=>(p.gs/100)*2+p.rating/5+fit(p)*1.5,  // score+rating+budget fit
+    quality:p=>p.quality+fit(p)*0.5,              // best built, fit breaks ties
   }[strategy];
-  const picks=[]; let spent=0;
+  const picks=[]; let spent=0; const blocked=new Set();
+  const pickable=p=>!blocked.has(p.cat)&&!ownedCats.has(p.cat)&&spent+p.price<=cap
+    &&!(tight&&(p.cat==='machines'||p.cat==='cardio')&&!p.compact);
+  const take=p=>{picks.push(p);spent+=p.price;blocked.add(p.cat);
+    for(const c of EXCLUSIVE_WITH[p.cat]||[])blocked.add(c);};
   for(const cat of order){
     if(picks.length>=target) break;
-    if(ownedCats.has(cat)) continue;
-    let cands=KIT_CATALOG.filter(p=>p.cat===cat && spent+p.price<=cap);
+    if(blocked.has(cat)||ownedCats.has(cat)) continue;
+    let cands=KIT_CATALOG.filter(p=>p.cat===cat&&pickable(p));
     // Value still wants decent gear — gate to quality ≥7 unless nothing fits.
     if(strategy==='value'){ const decent=cands.filter(p=>p.quality>=7); if(decent.length) cands=decent; }
     const best=cands.sort((a,b)=>score(b)-score(a))[0];
-    if(best){ picks.push(best); spent+=best.price; }
+    if(best) take(best);
   }
   // Budget left and slots left → add value picks from any remaining category.
   if(picks.length<target){
-    const used=new Set(picks.map(p=>p.cat));
     const extra=KIT_CATALOG
-      .filter(p=>!used.has(p.cat)&&!ownedCats.has(p.cat)&&spent+p.price<=cap)
+      .filter(pickable)
       .sort((a,b)=>(b.quality/b.price)-(a.quality/a.price));
-    for(const p of extra){ if(picks.length>=target)break; picks.push(p); spent+=p.price; used.add(p.cat); }
+    for(const p of extra){ if(picks.length>=target)break; if(!pickable(p))continue; take(p); }
   }
   return picks.map(p=>p.id);
 }
@@ -1064,10 +1134,11 @@ function fallbackKits(answers){
   const cap=BUDGET_CAP[answers.budget]||2000;
   const target=PIECE_TARGET[answers.equipmentCount]||4;
   const ownedCats=new Set((answers.owned||[]).map(id=>OWNED_TO_CAT[id]).filter(Boolean));
-  const order=categoryOrder(answers.goal,answers.space);
+  const order=categoryOrder(answers.goal,answers.space,target);
+  const tight=answers.space==='apartment-corner'||answers.space==='small-room';
   return KIT_TIERS.map(t=>({
     type:t.type, name:t.name,
-    productIds:buildKit(t.strategy,{cap:capFor(t.type,cap),target,ownedCats,order}),
+    productIds:buildKit(t.strategy,{cap:capFor(t.type,cap),target,ownedCats,order,tight}),
   }));
 }
 
@@ -1083,16 +1154,24 @@ function forbiddenCats(space){
 // enforce the hard constraints the model can't be trusted with: drop unknown
 // IDs (no hallucinated pick reaches the client), drop space-forbidden and
 // owned categories, dedupe by category, and trim to the tier budget.
-function hydrateKits(rawKits,budgetCap,forbidden,ownedCats){
+function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight){
   return rawKits.map(k=>{
     let products=(k.productIds||[])
       .map(id=>{const lite=KIT_BY_ID.get(id);if(!lite)return null;
         const full=(PRODUCTS[lite.cat]||[]).find(p=>p.id===id);return full?{...full,category:lite.cat}:null;})
       .filter(Boolean)
-      .filter(p=>!forbidden.has(p.category)&&!ownedCats.has(p.category));
-    // Dedupe by category so a kit never lists two benches.
+      .filter(p=>!forbidden.has(p.category)&&!ownedCats.has(p.category))
+      // Full-size machines / treadmill-class cardio can't live in a tight
+      // space (compact units — cable tower, folding rower, bike — can).
+      .filter(p=>!(tight&&(p.category==='machines'||p.category==='cardio')&&!p.compact));
+    // Dedupe by category so a kit never lists two benches — and never a
+    // machine AND a rack (the machine already is one).
     const seen=new Set();
-    products=products.filter(p=>seen.has(p.category)?false:seen.add(p.category));
+    products=products.filter(p=>{
+      if(seen.has(p.category))return false;
+      for(const c of EXCLUSIVE_WITH[p.category]||[]) if(seen.has(c)) return false;
+      seen.add(p.category); return true;
+    });
     // Trim to the tier's budget, dropping the priciest first. Honour budget
     // over piece count — a single in-budget item beats two over budget.
     const cap=capFor(k.type,budgetCap);
@@ -1232,7 +1311,8 @@ app.post('/api/kit',async(req,res)=>{
 
   // Deterministic selection owns the cart — always budget-, space-, and
   // owned-aware. Groq only dresses it with names and descriptions.
-  let kits=hydrateKits(fallbackKits(a),cap,forbidden,ownedCats);
+  const tight=a.space==='apartment-corner'||a.space==='small-room';
+  let kits=hydrateKits(fallbackKits(a),cap,forbidden,ownedCats,tight);
 
   let generatedBy='fallback';
   try{
