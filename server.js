@@ -325,9 +325,10 @@ function p(id,name,brand,price,retailer,url,quality,rating,reviewCount,reviewSou
   // deal (and its countdown) once this passes; the LLM never sees or writes
   // dates (deals-engine hard rule).
   if(opts.saleEndsAt)out.saleEndsAt=opts.saleEndsAt;
-  // Machines/cardio only: compact=true marks units that physically fit a small
-  // room / apartment corner (cable tower, rod gyms, folding rowers, bikes).
-  // The kit builder gates the rest out of tight spaces at product level.
+  // Machines/cardio/racks only: compact=true marks units that physically fit
+  // a small room / apartment corner (cable tower, rod gyms, folding rowers,
+  // bikes, wall-folding racks). The kit builder gates the rest out of tight
+  // spaces at product level.
   if(opts.compact)out.compact=true;
   return out;
 }
@@ -345,6 +346,7 @@ benches:[
   p('rep-ab3000','AB-3000 FID Bench','REP Fitness',329,'REP Fitness','https://repfitness.com/products/ab-3000-fid-bench',9.1,4.8,4200,'Garage Gym Reviews','Best mid-range adjustable bench  --  11 back positions, rock solid, no wobble.',"Garage Gym Reviews",{'Back Positions':'11','Max Weight':'1000 lbs','Width':'12"','Upholstery':'3" Vinyl','Made In':'Taiwan'},['11 Positions','Rock Solid','Best Mid-Range']),
     p('rogue-adj-bench','Adjustable Bench 2.0','Rogue Fitness',795,'Rogue Fitness','https://www.roguefitness.com/rogue-adjustable-bench-2-0',9.3,4.9,560,'Rogue Fitness','Best adjustable bench from the best brand  --  7 positions, 1,000 lb capacity.','Garage Gym Reviews',{'Capacity':'1,000 lbs','Positions':'7','Pad':'Polyurethane','Weight':'72 lbs','Made In':'USA'},['American Made','7 Positions','Overbuilt']),
   p('rogue-fold','Fold Up Utility Bench','Rogue Fitness',335,'Rogue Fitness','https://www.roguefitness.com/rogue-fold-up-utility-benches',8.5,4.6,78,'Rogue Fitness','Foldable Rogue durability, wall-mountable between sessions.','YourWorkoutBook',{'Capacity':'1,000 lbs','Type':'Foldable','Pad':'Polyurethane','Weight':'48 lbs','Made In':'USA'},['Wall-Mountable','Space Saving','American Made']),
+  p('ironmaster-superbench','Super Bench Pro V2','Ironmaster',449,'Ironmaster','https://www.ironmaster.com/products/super-bench-pro/',8.9,4.9,340,'Ironmaster','The most versatile adjustable bench  --  11 angles and a whole attachment ecosystem.','Garage Gym Reviews',{'Capacity':'1,000 lbs','Positions':'11 (0–85°)','Pad':'Firm Vinyl','Attachments':'Dip/Crunch/Leg','Warranty':'10 Years'},['11 Angles','Attachment Ecosystem','Space Efficient']),
 ],
 
 barbells:[
@@ -362,6 +364,7 @@ barbells:[
   p('bells-power-bar','Powerlifting Bar 2.0','Bells of Steel',299,'Bells of Steel','https://www.bellsofsteel.com/all-products/barbells/powerlifting-bar-2-0/',9.2,4.9,1800,'Bells of Steel','Best Rogue alternative  --  Canadian made, aggressive knurl, great for powerlifting.',"Garage Gym Reviews",{'Weight':'20 kg','Shaft':'29mm','PSI':'190,000','Knurl':'Aggressive','Made In':'Canada'},['Canadian Made','Rogue Alternative','190k PSI']),
   p('kabuki-power-bar','Kadillac Bar','Kabuki Strength',549,'Kabuki Strength','https://kabukistrength.com/products/kadillac-bar',9.8,5.0,320,'Garage Gym Reviews','The most versatile powerlifting bar ever made  --  adjustable camber, wrist saver.',"Garage Gym Reviews",{'Weight':'25 kg','Shaft':'32mm','Adjustable Camber':'Yes','PSI':'210,000','Made In':'USA'},['Adjustable Camber','Most Versatile','Ultra Premium']),
   p('cap-ob86b','OB-86B Olympic Bar','CAP Barbell',109,'Amazon','https://www.amazon.com/dp/B00JP6LKRY?tag=gymgearcompar-20',6.8,4.2,18000,'Amazon','The most affordable Olympic bar  --  fine for beginners, not for heavy loads.','Barbend',{'Weight':'44 lbs','Shaft':'28mm','PSI':'98,000','Finish':'Chrome','Warranty':'1 Year'},['Budget Entry','Widely Available','Beginner Friendly']),
+  p('rogue-opb','Ohio Power Bar 45LB','Rogue Fitness',315,'Rogue Fitness','https://www.roguefitness.com/rogue-45lb-ohio-power-bar-black-zinc',9.6,4.9,732,'Rogue Fitness','The default powerlifting bar in home gyms everywhere  --  stiff, aggressive, lifetime warranty.','Garage Gym Reviews',{'Weight':'45 lbs','Shaft':'29mm','PSI':'205,000','Knurl':'Aggressive + Center','Made In':'USA'},['Powerlifting Default','Center Knurl','American Made']),
 ],
 
 dumbbells:[
@@ -374,6 +377,7 @@ dumbbells:[
   p('vulcan-db','Urethane Hex Dumbbells','Vulcan Strength',320,'Vulcan Strength','https://www.vulcanstrength.com/products/vulcan-urethane-dumbbells',9.0,4.8,142,'Vulcan Strength','Commercial quality urethane at competitive home gym price.','Barbend',{'Handle':'Chrome','Head':'Urethane Hex','Floor Safe':'Yes','Warranty':'2 Years','Grade':'Commercial'},['Commercial Grade','Urethane','Precise Weight']),
   p('titan-adj','Adjustable Dumbbell Set','Titan Fitness',349,'Titan Fitness','https://www.titanfitness.com/products/adjustable-dumbbell-set',7.6,4.4,265,'Titan Fitness','Best budget adjustable dumbbell set.','Garage Gym Reviews',{'Range':'5–50 lbs','System':'Pin Select','Material':'Steel + Rubber','Increments':'5 lbs','Warranty':'1 Year'},['Budget Pick','Pin System','Good Value']),
   p('cap-hex','Rubber Coated Hex DB','CAP Barbell',89,'Amazon','https://www.amazon.com/dp/B07D4DJ6M8?tag=gymgearcompar-20',6.0,4.3,14200,'Amazon','Cheapest entry-level option  --  fine for casual use.','Barbend',{'Handle':'Knurled Steel','Head':'Rubber Hex','Range':'3–50 lbs','Ships':'Prime','Smell':'Initially'},['Lowest Price','Amazon Prime','Entry Level']),
+  p('powerblock-elite','Elite USA 50 Adjustable Dumbbells','PowerBlock',469,'PowerBlock','https://powerblock.com/products/elite-usa-90-adjustable-dumbbells',8.8,4.7,10200,'Amazon','The iconic adjustable dumbbell  --  expandable to 90 lb per hand as you grow.','Garage Gym Reviews',{'Range':'5–50 lbs','Increments':'2.5/5 lbs','Expandable':'To 90 lbs','Replaces':'28 dumbbells','Warranty':'5 Years'},['Expandable','Iconic Design','Made In USA']),
 ],
 
 plates:[
@@ -398,6 +402,8 @@ racks:[
   p('titan-t2','T-2 Short Power Rack','Titan Fitness',349,'Titan Fitness','https://www.titanfitness.com/products/t-2-series-short-power-rack',7.5,4.5,650,'Titan Fitness','Best entry-level power rack under $350.','Garage Gym Reviews',{'Frame':'2×2" 12ga','Height':'70"','Hole Spacing':'2"','Weight':'115 lbs','Warranty':'1 Year'},['Entry Level','Low Ceiling','Budget Pick']),
   p('rogue-rml390f','RML-390F Flat Foot Rack','Rogue Fitness',935,'Rogue Fitness','https://www.roguefitness.com/rml-390f-flat-foot-monster-lite-rack',9.4,4.9,443,'Rogue Fitness','No-bolt-down Monster Lite  --  the garage gym default power rack.','Garage Gym Lab',{'Frame':'3×3" 11ga','Uprights':'90"','Hole Spacing':'5/8"','Weight':'313 lbs','Made In':'USA'},['No Bolting Needed','American Made','Monster Lite']),
   p('rep-pr4000','PR-4000 Power Rack','Rep Fitness',800,'Rep Fitness','https://repfitness.com/products/pr-4000-power-rack-pre-selected',9.2,4.9,671,'Rep Fitness','Most customizable mid-price rack  --  1" bench-zone spacing, huge attachment ecosystem.','Garage Gym Reviews',{'Frame':'3×3" 11ga','Uprights':'80" or 93"','Hole Spacing':'1" bench zone','Weight':'250 lbs','Warranty':'Lifetime'},['Rack Builder','1" Spacing','Best Ecosystem']),
+  p('rogue-sml2','SML-2 Monster Lite Squat Stand','Rogue Fitness',525,'Rogue Fitness','https://www.roguefitness.com/sml-2-rogue-90-monster-lite-squat-stand',9.1,4.9,954,'Rogue Fitness','The garage classic squat stand  --  3×3" Monster Lite steel with a pull-up bar.','Garage Gym Reviews',{'Frame':'3×3" 11ga','Uprights':'92"','Hole Spacing':'Westside','Footprint':'49×48"','Made In':'USA'},['Garage Classic','Pull-Up Bar','American Made']),
+  p('prx-profile-pro','Profile PRO Folding Squat Rack','PRx Performance',1050,'PRx Performance','https://prxperformance.com/collections/profile-pro-racks',9.0,4.9,419,'PRx Performance','Folds to 4 inches off the wall  --  the Shark Tank rack for garages that still park cars.','Garage Gym Reviews',{'Frame':'3×3" 11ga','Capacity':'1,000 lbs','Folded Depth':'4" From Wall','Mount':'Wall (Stud)','Made In':'USA'},['Folds To Wall','Shark Tank Famous','Small Space King'],{compact:true}),
 ],
 
 cardio:[
@@ -413,6 +419,7 @@ cardio:[
   p('schwinn-ic4','IC4 Indoor Cycling Bike','Schwinn',999,'Schwinn','https://www.schwinnfitness.com/ic4/100873.html',8.4,4.7,5100,'Amazon','The Peloton-app bike without the Peloton price  --  100 magnetic levels.','Wirecutter',{'Resistance':'Magnetic','Display':'Backlit LCD','Pedals':'Dual SPD + Cage','Weight':'106 lbs','Warranty':'10 Year Frame'},['App Compatible','Quiet Magnetic','Value Pick'],{salePrice:799,compact:true}),
   p('sunny-rower','SF-RW5515 Magnetic Rower','Sunny Health & Fitness',299,'Amazon','https://www.amazon.com/dp/B0DQ6QTLJH?tag=gymgearcompar-20',6.8,4.5,13400,'Amazon','The best-selling budget rower  --  quiet magnetic resistance under $300.','Garage Gym Reviews',{'Resistance':'Magnetic','Display':'LCD','Folds':'Yes','Weight':'59 lbs','Warranty':'3 Year Frame'},['Under $300','Best Seller','Quiet'],{compact:true}),
   p('lifefitness-t3','T3 Treadmill','Life Fitness',3499,'Life Fitness','https://shop.lifefitness.com/products/t3-treadmill',9.1,4.8,64,'Life Fitness','Health-club belt feel at home  --  the treadmill brand gyms actually buy.','Life Fitness',{'Speed':'0.5–12 mph','Incline':'0–15%','Motor':'3.0 CHP','Weight':'254 lbs','Warranty':'Lifetime Frame'},['Club Quality','FlexDeck Shock','Commercial Brand']),
+  p('waterrower-oak','Original Oak Rowing Machine','WaterRower',1199,'WaterRower','https://www.waterrower.com/us/products/waterrower-oak-rowing-machine-with-s4-monitor',9.0,4.8,640,'WaterRower','Furniture-grade oak and real water resistance  --  stores upright against the wall.','Garage Gym Reviews',{'Resistance':'Water','Monitor':'S4','Stores':'Upright','Material':'Solid Oak','Made In':'USA'},['Real Water Feel','Stores Upright','Furniture Grade'],{compact:true}),
 ],
 
 // All-in-one trainers, functional trainers and cable machines. The efficient
@@ -431,6 +438,7 @@ machines:[
   p('bodysolid-exm2500','EXM2500S Home Gym','Body-Solid',1995,'Amazon','https://www.amazon.com/dp/B00332ARK0?tag=gymgearcompar-20',8.4,4.6,1100,'Amazon','The classic single-stack home gym  --  210 lb stack and a true lifetime warranty.','Garage Gym Reviews',{'Type':'Multi-Station','Resistance':'210 lb Stack','Stations':'Press / Pec / Lat / Leg','Footprint':'83×51"','Warranty':'Lifetime'},['Lifetime Warranty','No Plate Loading','Multi-Station']),
   p('bowflex-x2se','Xtreme 2 SE Home Gym','Bowflex',1499,'Bowflex','https://www.bowflex.com/product/x2se-home-gym/100334.html',7.3,4.5,3400,'Amazon','70+ exercises from folding resistance rods  --  apartment-friendly strength.','Barbend',{'Type':'Home Gym','Resistance':'210 lb Power Rods','Exercises':'70+','Footprint':'53×49"','Warranty':'7 Year'},['Apartment Friendly','No Spotter Needed','70+ Exercises'],{salePrice:999,compact:true}),
   p('marcy-mwm990','MWM-990 150 lb Stack Home Gym','Marcy',399,'Amazon','https://www.amazon.com/dp/B00JGRBSS6?tag=gymgearcompar-20',6.5,4.4,6900,'Amazon','The best-selling budget home gym  --  30+ exercises for under $400.','Barbend',{'Type':'Multi-Station','Resistance':'150 lb Stack','Exercises':'30+','Footprint':'68×42"','Warranty':'2 Year'},['Under $400','Best Seller','Compact Stack'],{compact:true}),
+  p('tonal-2','Tonal 2 Smart Home Gym','Tonal',4295,'Tonal','https://tonal.com/products/tonal-2',9.4,4.8,2100,'Tonal','The wall-mounted smart gym  --  250 lb of digital resistance and an AI coach in a screen.','Garage Gym Reviews',{'Type':'Smart Gym','Resistance':'250 lb Digital','Mount':'Wall','Subscription':'$59.95/mo','Footprint':'Zero Floor Space'},['Wall Mounted','AI Coaching','Digital Weight'],{compact:true}),
 ],
 
 kettlebells:[
@@ -441,6 +449,7 @@ kettlebells:[
   p('titan-kb','Titan Kettlebell','Titan Fitness',29,'Titan Fitness','https://www.titanfitness.com/products/cast-iron-kettlebell',7.5,4.5,1800,'Titan Fitness','Budget-friendly kettlebell  --  solid for home training.','Garage Gym Reviews',{'Material':'Cast Iron','Coating':'Powder Coat','Handle':'Standard','Range':'5–100 lbs','Warranty':'1 Year'},['Budget Pick','Wide Range','Ships Fast']),
   p('vulcan-kb','Elite Kettlebell','Vulcan Strength',58,'Vulcan Strength','https://www.vulcanstrength.com/products/vulcan-elite-kettlebell',9.0,4.8,340,'Vulcan Strength','Competition-spec kettlebell with smooth enamel finish.','Garage Gym Reviews',{'Material':'Cast Iron','Coating':'Enamel','Style':'Competition','Range':'9–203 lbs','Warranty':'Lifetime'},['Competition Spec','Enamel Finish','Lifetime Warranty']),
   p('cap-kb','Vinyl Coated Kettlebell','CAP Barbell',28,'Amazon','https://www.amazon.com/dp/B07JZR1PBQ?tag=gymgearcompar-20',6.0,4.2,8900,'Amazon','Most affordable entry-level kettlebell  --  fine for beginners.','Barbend',{'Material':'Cast Iron','Coating':'Vinyl','Floor Protection':'Yes','Range':'5–80 lbs','Ships':'Prime'},['Lowest Price','Floor Friendly','Amazon Prime']),
+  p('kbkings-powder','Powder Coat Kettlebell 53 lb','Kettlebell Kings',145,'Kettlebell Kings','https://www.kettlebellkings.com/products/powder-coat-kettlebell-in-lb',9.2,4.9,2900,'Kettlebell Kings','The best powder coat kettlebell  --  single-piece cast, chip-proof finish, lifetime warranty.','Garage Gym Reviews',{'Weight':'53 lbs','Cast':'Single Piece','Finish':'Powder Coat','Handle':'Smooth Wide','Warranty':'Lifetime'},['Best Powder Coat','Lifetime Warranty','Single-Piece Cast']),
   p('yes4all-kb','Adjustable Kettlebell','Yes4All',129,'Amazon','https://www.amazon.com/dp/B07NPLY4CT?tag=gymgearcompar-20',7.8,4.5,3200,'Amazon','Best adjustable kettlebell  --  6 weights in one.','Barbend',{'Material':'Cast Iron','Range':'12–25 lbs','Weights':'6 in 1','System':'Plate Stack','Ships':'Prime'},['Adjustable','Space Saving','6-in-1']),
 ],
 
@@ -452,6 +461,7 @@ bands:[
   p('fit-simplify-bands','Resistance Loop Bands','Fit Simplify',12,'Amazon','https://www.amazon.com/dp/B09MJKJYLQ?tag=gymgearcompar-20',7.5,4.6,85000,'Amazon','Most popular loop bands  --  perfect for glute work and rehab.','Wirecutter',{'Material':'Natural Latex','Set':'5 bands','Type':'Loop','Uses':'Glutes, Rehab, Warm-up','Ships':'Prime'},['Best Seller','5 Levels','Loop Design'],{salePrice:9}),
   p('ironbull-bands','Strength Bands','Iron Bull Strength',35,'Amazon','https://www.amazon.com/dp/B0732TCYMY?tag=gymgearcompar-20',8.5,4.7,2800,'Amazon','Heavy-duty bands for accommodating resistance training.','Barbend',{'Material':'Natural Latex','Set':'5 bands','Resistance':'Up to 200 lbs','Uses':'Deadlift, Squat, Bench','Grade':'Heavy Duty'},['Heavy Duty','Up to 200 lbs','Accommodating Resistance']),
   p('perform-better-mini','Mini Bands','Perform Better',18,'Perform Better','https://www.performbetter.com/Mini-Exercise-Band',8.0,4.6,1200,'Perform Better','Physical therapist favorite for warm-up and hip activation.','PT-recommended',{'Material':'Natural Latex','Type':'Mini Loop','Resistance':'3 levels','Uses':'Warm-up, Hips, Rehab','Length':'9"'},['PT Favorite','Hip Activation','Warm-up Essential']),
+  p('trx-pro4','PRO4 Suspension Trainer System','TRX',290,'TRX','https://www.trxtraining.com/products/pro',8.9,4.9,1216,'TRX','The original suspension trainer  --  a full-body gym that packs into a mesh bag.','Garage Gym Reviews',{'Type':'Suspension Trainer','Anchors':'Door + Suspension','Handles':'Rubber','Capacity':'350 lbs','Warranty':'1 Year'},['Original Suspension','Packs Tiny','Full Body']),
   p('amazon-bands','Resistance Bands Set','Amazon Basics',10,'Amazon','https://www.amazon.com/dp/B07NY82DX4?tag=gymgearcompar-20',6.5,4.4,45000,'Amazon','Cheapest option  --  acceptable for light exercise and mobility.','Barbend',{'Material':'Latex','Set':'5 bands','Type':'Loop','Uses':'Light Exercise','Ships':'Prime'},['Lowest Price','Amazon Prime','Beginner']),
 ],
 
@@ -1059,14 +1069,15 @@ function categoryOrder(goal,space,pieces){
   if(pieces>=6 && goal!=='home-gym-setup'){
     order=order.filter(c=>c!=='machines'); order.push('machines');
   }
-  // Tight spaces can't host a rack or a treadmill-class machine. Compact
-  // machines (cable tower, rod gyms) still qualify — buildKit gates the rest.
+  // Tight spaces can't host a normal rack or a treadmill-class machine, but
+  // compact units (cable tower, rod gyms, wall-folding rack, folding rower)
+  // still qualify — buildKit gates non-compact ones at product level.
   if(space==='apartment-corner'||space==='small-room'){
     const strengthy=goal==='build-strength'||goal==='home-gym-setup';
     const tight=strengthy
-      ? ['machines','dumbbells','kettlebells','bands','benches','jumpropes','yogamats','foamrollers']
-      : ['dumbbells','kettlebells','cardio','bands','machines','jumpropes','yogamats','foamrollers','benches'];
-    order=[...tight.filter(c=>order.includes(c)),...order.filter(c=>!tight.includes(c))].filter(c=>c!=='racks');
+      ? ['machines','racks','dumbbells','kettlebells','bands','benches','jumpropes','yogamats','foamrollers']
+      : ['dumbbells','kettlebells','cardio','bands','machines','racks','jumpropes','yogamats','foamrollers','benches'];
+    order=[...tight.filter(c=>order.includes(c)),...order.filter(c=>!tight.includes(c))];
   }
   return order;
 }
@@ -1102,7 +1113,7 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight}){
   }[strategy];
   const picks=[]; let spent=0; const blocked=new Set();
   const pickable=p=>!blocked.has(p.cat)&&!ownedCats.has(p.cat)&&spent+p.price<=cap
-    &&!(tight&&(p.cat==='machines'||p.cat==='cardio')&&!p.compact);
+    &&!(tight&&(p.cat==='machines'||p.cat==='cardio'||p.cat==='racks')&&!p.compact);
   const take=p=>{picks.push(p);spent+=p.price;blocked.add(p.cat);
     for(const c of EXCLUSIVE_WITH[p.cat]||[])blocked.add(c);};
   for(const cat of order){
@@ -1144,10 +1155,11 @@ function fallbackKits(answers){
 
 const priceOf = p => p.salePrice||p.price;
 
-// Categories that don't physically fit a space — enforced even if the model
-// ignores the hint. A rack (or rig) can't live in an apartment corner.
+// Space fit is enforced per-product via the compact flag (see hydrateKits) —
+// a wall-folding rack IS apartment-friendly, so no category is banned
+// wholesale anymore. Kept as a hook for future hard category bans.
 function forbiddenCats(space){
-  return space==='apartment-corner'||space==='small-room' ? new Set(['racks']) : new Set();
+  return new Set();
 }
 
 // Hydrate the model/fallback's chosen IDs into full product objects, then
@@ -1161,9 +1173,10 @@ function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight){
         const full=(PRODUCTS[lite.cat]||[]).find(p=>p.id===id);return full?{...full,category:lite.cat}:null;})
       .filter(Boolean)
       .filter(p=>!forbidden.has(p.category)&&!ownedCats.has(p.category))
-      // Full-size machines / treadmill-class cardio can't live in a tight
-      // space (compact units — cable tower, folding rower, bike — can).
-      .filter(p=>!(tight&&(p.category==='machines'||p.category==='cardio')&&!p.compact));
+      // Full-size machines, treadmill-class cardio and normal racks can't
+      // live in a tight space (compact units — cable tower, folding rower,
+      // wall-folding rack — can).
+      .filter(p=>!(tight&&(p.category==='machines'||p.category==='cardio'||p.category==='racks')&&!p.compact));
     // Dedupe by category so a kit never lists two benches — and never a
     // machine AND a rack (the machine already is one).
     const seen=new Set();
