@@ -1111,12 +1111,16 @@ const capFor = (type,cap) => Math.round(cap*(TIER_CAP_MULT[type]||1));
 // Machines placement is the small-vs-big trade: a small setup leads with one
 // efficient all-in-one; a full home gym prefers the variety of separates and
 // only reaches a machine after the core iron is in.
-function categoryOrder(goal,space,pieces){
+function categoryOrder(goal,space,pieces,experience){
   let order=[...KIT_CATEGORIES];
   const bump=(cats)=>{order=[...cats,...order.filter(c=>!cats.includes(c))]};
   if(goal==='lose-weight'||goal==='get-fit') bump(['cardio','kettlebells','bands','dumbbells']);
   if(goal==='build-strength') bump(['racks','barbells','plates','benches']);
   if(goal==='home-gym-setup') bump(['machines','racks','barbells','benches']);
+  // Experience shapes the path: beginners get guided, adjustable, machine-led
+  // gear; advanced lifters get the barbell + rack path reinforced.
+  if(experience==='beginner') bump(['machines','dumbbells','kettlebells','bands']);
+  if(experience==='advanced'&&goal!=='lose-weight') bump(['racks','barbells','plates','benches']);
   // Few pieces + strength-ish goal → the all-in-one anchors the whole kit.
   if(pieces<=4 && (goal==='build-strength'||goal==='home-gym-setup')) bump(['machines']);
   // Big builds: machine drops to the back — separates give the variety.
@@ -1140,6 +1144,12 @@ function categoryOrder(goal,space,pieces){
 // holding both is redundant) — whichever lands first blocks the other.
 const EXCLUSIVE_WITH={machines:['racks'],racks:['machines']};
 
+// Ceiling gate (quiz: ceiling === 'under-8ft'). Full racks and most
+// all-in-ones stand 86-91" — they don't clear an 8 ft (96") ceiling once
+// flooring and pull-up clearance are in. Only these fit a low room.
+const LOW_CEIL_RACKS=new Set(['titan-t2','rogue-squat','rep-hr100','bells-squat']);
+const LOW_CEIL_MACHINES=new Set(['marcy-mwm990','bowflex-x2se','bells-cable-tower','tonal-2','bodysolid-exm2500']);
+
 // How much of the per-slot budget a category deserves. Anchors (machine,
 // rack, cardio) soak up multiples of an even share; small accessories a
 // fraction. This is what lets a $300 kit and a $2,000 kit pick DIFFERENT
@@ -1151,7 +1161,7 @@ const CAT_SHARE={machines:2.6,racks:2.2,cardio:2.2,plates:1.6,barbells:1.4,dumbb
 // match = personalised (GymGear Score + rating + budget fit), quality = best
 // built. `tight` gates non-compact machines out of small spaces at product
 // level (a cable tower fits an apartment corner; a G20 does not).
-function buildKit(strategy,{cap,target,ownedCats,order,tight}){
+function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil}){
   const perSlot=cap/Math.max(target,1);
   // 1.0 when the price sits at the category's ideal share of budget, falling
   // off above (over budget hurts fast) and below (a $10 item isn't an anchor).
@@ -1167,7 +1177,9 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight}){
   }[strategy];
   const picks=[]; let spent=0; const blocked=new Set();
   const pickable=p=>!blocked.has(p.cat)&&!ownedCats.has(p.cat)&&spent+p.price<=cap
-    &&!(tight&&(p.cat==='machines'||p.cat==='cardio'||p.cat==='racks')&&!p.compact);
+    &&!(tight&&(p.cat==='machines'||p.cat==='cardio'||p.cat==='racks')&&!p.compact)
+    &&!(lowCeil&&p.cat==='racks'&&!LOW_CEIL_RACKS.has(p.id))
+    &&!(lowCeil&&p.cat==='machines'&&!LOW_CEIL_MACHINES.has(p.id));
   const take=p=>{picks.push(p);spent+=p.price;blocked.add(p.cat);
     for(const c of EXCLUSIVE_WITH[p.cat]||[])blocked.add(c);};
   for(const cat of order){
@@ -1199,11 +1211,12 @@ function fallbackKits(answers){
   const cap=BUDGET_CAP[answers.budget]||2000;
   const target=PIECE_TARGET[answers.equipmentCount]||4;
   const ownedCats=new Set((answers.owned||[]).map(id=>OWNED_TO_CAT[id]).filter(Boolean));
-  const order=categoryOrder(answers.goal,answers.space,target);
+  const order=categoryOrder(answers.goal,answers.space,target,answers.experience);
   const tight=answers.space==='apartment-corner'||answers.space==='small-room';
+  const lowCeil=answers.ceiling==='under-8ft';
   return KIT_TIERS.map(t=>({
     type:t.type, name:t.name,
-    productIds:buildKit(t.strategy,{cap:capFor(t.type,cap),target,ownedCats,order,tight}),
+    productIds:buildKit(t.strategy,{cap:capFor(t.type,cap),target,ownedCats,order,tight,lowCeil}),
   }));
 }
 
@@ -1220,7 +1233,7 @@ function forbiddenCats(space){
 // enforce the hard constraints the model can't be trusted with: drop unknown
 // IDs (no hallucinated pick reaches the client), drop space-forbidden and
 // owned categories, dedupe by category, and trim to the tier budget.
-function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight){
+function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight,lowCeil){
   return rawKits.map(k=>{
     let products=(k.productIds||[])
       .map(id=>{const lite=KIT_BY_ID.get(id);if(!lite)return null;
@@ -1229,8 +1242,10 @@ function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight){
       .filter(p=>!forbidden.has(p.category)&&!ownedCats.has(p.category))
       // Full-size machines, treadmill-class cardio and normal racks can't
       // live in a tight space (compact units — cable tower, folding rower,
-      // wall-folding rack — can).
-      .filter(p=>!(tight&&(p.category==='machines'||p.category==='cardio'||p.category==='racks')&&!p.compact));
+      // wall-folding rack — can). Low ceilings gate tall racks/machines too.
+      .filter(p=>!(tight&&(p.category==='machines'||p.category==='cardio'||p.category==='racks')&&!p.compact))
+      .filter(p=>!(lowCeil&&p.category==='racks'&&!LOW_CEIL_RACKS.has(p.id)))
+      .filter(p=>!(lowCeil&&p.category==='machines'&&!LOW_CEIL_MACHINES.has(p.id)));
     // Dedupe by category so a kit never lists two benches — and never a
     // machine AND a rack (the machine already is one).
     const seen=new Set();
@@ -1379,7 +1394,8 @@ app.post('/api/kit',async(req,res)=>{
   // Deterministic selection owns the cart — always budget-, space-, and
   // owned-aware. Groq only dresses it with names and descriptions.
   const tight=a.space==='apartment-corner'||a.space==='small-room';
-  let kits=hydrateKits(fallbackKits(a),cap,forbidden,ownedCats,tight);
+  const lowCeil=a.ceiling==='under-8ft';
+  let kits=hydrateKits(fallbackKits(a),cap,forbidden,ownedCats,tight,lowCeil);
 
   let generatedBy='fallback';
   try{
@@ -1460,6 +1476,7 @@ function buildGymPlan(a){
   const budget=GYM_BUDGET[a.budget]||75000;
   const area=GYM_AREA[a.space]||2200;
   const peak=GYM_PEAK[a.capacity]||25;
+  const lowCeil=a.ceilingHeight==='under-9ft';
   const type=ZONE_SPLIT[a.gymType]?a.gymType:'general-fitness';
   const split={...ZONE_SPLIT[type]};
   // Renovation: zones the owner already has get zeroed; their share flows
@@ -1480,7 +1497,9 @@ function buildGymPlan(a){
   if(split.strength>0){
     const z=mkZone('strength');
     const racks=clampN(Math.min(area/450,peak/3),2,14);
-    const rackId=budget>=200000?'rogue-rm6':budget>=75000?'rogue-rml390f':'rep-pr4000';
+    // Under a 9 ft slab, 90"+ uprights leave no pull-up clearance — spec the
+    // PR-4000 in its 80" configuration regardless of budget.
+    const rackId=lowCeil?'rep-pr4000':budget>=200000?'rogue-rm6':budget>=75000?'rogue-rml390f':'rep-pr4000';
     gpAdd(z,rackId,racks);
     gpAdd(z,'rogue-opb',racks);                                  // a power bar per rack
     if((club||box)&&budget>=75000){gpAdd(z,'rogue-deadlift',1);gpAdd(z,'rogue-squat-bar',1);}
@@ -1548,7 +1567,7 @@ function buildGymPlan(a){
 
   const totalPrice=zones.reduce((s,z)=>s+z.subtotal,0);
   return {zones:zones.filter(z=>z.items.length),totalPrice,budgetCap:budget,
-    areaSqFt:area,peakCapacity:peak,gymType:type,
+    areaSqFt:area,peakCapacity:peak,gymType:type,lowCeiling:lowCeil,
     contingency:Math.max(0,budget-totalPrice)};
 }
 
@@ -1563,6 +1582,7 @@ function defaultGymCopy(a,plan){
   if(z('cardio')) lines.push(`Cardio sits at the front by natural light where possible; leave 3 ft between units and a 6 ft walkway behind treadmill-class machines.`);
   if(z('machines')) lines.push(`The machine row runs the opposite wall from free weights — beginners get a clear lane that never crosses the barbell area.`);
   if(z('flooring')) lines.push(`Flooring covers ~${(z('flooring').coverageSqFt||0).toLocaleString()} of the ~${(z('flooring').coverageTarget||0).toLocaleString()} sq ft target; floor the strength and functional zones first, cardio row last.`);
+  if(plan.lowCeiling) lines.push(`Your ceiling is under 9 ft: the plan specs 80-inch uprights, and you should skip wall balls, jump-rope stations and overhead-press platforms near beams.`);
   lines.push(`BUYING ORDER: flooring first (everything sits on it), racks and bars second, cardio third, machines last — they have the longest lead times (5-7 weeks on commercial pieces).`);
   return lines.join('\n\n');
 }
@@ -1575,7 +1595,7 @@ async function groqGymPlan(a,plan){
     `${z.label} ($${z.subtotal.toLocaleString()}): ${z.items.map(i=>`${i.qty}x ${i.name} (${i.brand})`).join(', ')}`
   ).join('\n');
   const sys=`You are a gym facility planner. Return strict JSON {"plan": string}. The plan is 4 short sections with UPPERCASE headers on their own lines: LAYOUT, BUYING ORDER, WHY THIS GEAR, WATCH OUT. Max 320 words total, plain text (no markdown symbols, no dashes as bullets — write sentences). Ground every claim in the provided equipment list and numbers; never invent products, prices or brands not listed.`;
-  const user=`Project: ${a.projectType==='renovation'?'renovation of an existing facility':'brand-new gym build'}. Facility type: ${a.gymType}. Floor area: ~${plan.areaSqFt} sq ft. Peak concurrent members: ~${plan.peakCapacity}. Equipment budget: $${plan.budgetCap.toLocaleString()} (plan spends $${plan.totalPrice.toLocaleString()}, leaving $${plan.contingency.toLocaleString()} contingency).\n\nZones and equipment:\n${summary}`;
+  const user=`Project: ${a.projectType==='renovation'?'renovation of an existing facility':'brand-new gym build'}. Facility type: ${a.gymType}. Floor area: ~${plan.areaSqFt} sq ft. Peak concurrent members: ~${plan.peakCapacity}.${plan.lowCeiling?' Ceiling is UNDER 9 FT — mention low-ceiling constraints (80-inch uprights are specced; no overhead wall-ball or jump-rope zones).':''} Equipment budget: $${plan.budgetCap.toLocaleString()} (plan spends $${plan.totalPrice.toLocaleString()}, leaving $${plan.contingency.toLocaleString()} contingency).\n\nZones and equipment:\n${summary}`;
   const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',signal:AbortSignal.timeout(15000),
     headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
