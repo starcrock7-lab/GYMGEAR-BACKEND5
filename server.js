@@ -330,6 +330,11 @@ function p(id,name,brand,price,retailer,url,quality,rating,reviewCount,reviewSou
   // bikes, wall-folding racks). The kit builder gates the rest out of tight
   // spaces at product level.
   if(opts.compact)out.compact=true;
+  // pro=true marks full/light-commercial gear the GYM PLANNER may spec for a
+  // real facility (also stamped in bulk via PRO_IDS below). coverage = sq ft
+  // a flooring product covers, so the planner can size an order to a room.
+  if(opts.pro)out.pro=true;
+  if(opts.coverage)out.coverageSqFt=opts.coverage;
   return out;
 }
 
@@ -378,6 +383,7 @@ dumbbells:[
   p('titan-adj','Adjustable Dumbbell Set','Titan Fitness',349,'Titan Fitness','https://www.titanfitness.com/products/adjustable-dumbbell-set',7.6,4.4,265,'Titan Fitness','Best budget adjustable dumbbell set.','Garage Gym Reviews',{'Range':'5–50 lbs','System':'Pin Select','Material':'Steel + Rubber','Increments':'5 lbs','Warranty':'1 Year'},['Budget Pick','Pin System','Good Value']),
   p('cap-hex','Rubber Coated Hex DB','CAP Barbell',89,'Amazon','https://www.amazon.com/dp/B07D4DJ6M8?tag=gymgearcompar-20',6.0,4.3,14200,'Amazon','Cheapest entry-level option  --  fine for casual use.','Barbend',{'Handle':'Knurled Steel','Head':'Rubber Hex','Range':'3–50 lbs','Ships':'Prime','Smell':'Initially'},['Lowest Price','Amazon Prime','Entry Level']),
   p('powerblock-elite','Elite USA 50 Adjustable Dumbbells','PowerBlock',469,'PowerBlock','https://powerblock.com/products/elite-usa-90-adjustable-dumbbells',8.8,4.7,10200,'Amazon','The iconic adjustable dumbbell  --  expandable to 90 lb per hand as you grow.','Garage Gym Reviews',{'Range':'5–50 lbs','Increments':'2.5/5 lbs','Expandable':'To 90 lbs','Replaces':'28 dumbbells','Warranty':'5 Years'},['Expandable','Iconic Design','Made In USA']),
+  p('rep-hex-set','Rubber Hex Dumbbell Set 5-50 lb','REP Fitness',1100,'REP Fitness','https://repfitness.com/products/rubber-hex-dumbbell-sets',8.9,4.9,135,'REP Fitness','A full 5-50 dumbbell run in one order  --  commercial-quality hex at home-gym price.','Garage Gym Reviews',{'Range':'5–50 lbs (10 Pairs)','Head':'Rubber Hex','Handle':'Knurled','Grade':'Light Commercial','Warranty':'Lifetime (Home)'},['Full Run','10 Pairs','Gym Staple'],{pro:true}),
 ],
 
 plates:[
@@ -420,6 +426,8 @@ cardio:[
   p('sunny-rower','SF-RW5515 Magnetic Rower','Sunny Health & Fitness',299,'Amazon','https://www.amazon.com/dp/B0DQ6QTLJH?tag=gymgearcompar-20',6.8,4.5,13400,'Amazon','The best-selling budget rower  --  quiet magnetic resistance under $300.','Garage Gym Reviews',{'Resistance':'Magnetic','Display':'LCD','Folds':'Yes','Weight':'59 lbs','Warranty':'3 Year Frame'},['Under $300','Best Seller','Quiet'],{compact:true}),
   p('lifefitness-t3','T3 Treadmill','Life Fitness',3499,'Life Fitness','https://shop.lifefitness.com/products/t3-treadmill',9.1,4.8,64,'Life Fitness','Health-club belt feel at home  --  the treadmill brand gyms actually buy.','Life Fitness',{'Speed':'0.5–12 mph','Incline':'0–15%','Motor':'3.0 CHP','Weight':'254 lbs','Warranty':'Lifetime Frame'},['Club Quality','FlexDeck Shock','Commercial Brand']),
   p('waterrower-oak','Original Oak Rowing Machine','WaterRower',1199,'WaterRower','https://www.waterrower.com/us/products/waterrower-oak-rowing-machine-with-s4-monitor',9.0,4.8,640,'WaterRower','Furniture-grade oak and real water resistance  --  stores upright against the wall.','Garage Gym Reviews',{'Resistance':'Water','Monitor':'S4','Stores':'Upright','Material':'Solid Oak','Made In':'USA'},['Real Water Feel','Stores Upright','Furniture Grade'],{compact:true}),
+  p('lf-club-treadmill','Club Series+ Treadmill','Life Fitness',10999,'Life Fitness','https://shop.lifefitness.com/products/club-series-plus-treadmill',9.5,3.8,33,'Life Fitness','The exact treadmill on big-box gym floors  --  4 HP AC motor, lifetime frame.','Garage Gym Reviews',{'Motor':'4.0 HP AC','Deck':'60×22"','Incline':'0–15%','Grade':'Full Commercial','Warranty':'Lifetime Frame'},['Club Standard','AC Motor','Full Commercial'],{pro:true}),
+  p('lf-club-elliptical','Club Series+ Elliptical','Life Fitness',6499,'Life Fitness','https://shop.lifefitness.com/collections/ellipticals',9.3,4.5,48,'Life Fitness','Club-floor elliptical with a 20-inch stride  --  the cardio-row workhorse.','Life Fitness',{'Stride':'20"','Resistance':'25 Levels','Step-Up':'9.5"','Grade':'Full Commercial','Warranty':'Lifetime Frame'},['Club Standard','WhisperStride','Full Commercial'],{pro:true}),
 ],
 
 // All-in-one trainers, functional trainers and cable machines. The efficient
@@ -439,6 +447,18 @@ machines:[
   p('bowflex-x2se','Xtreme 2 SE Home Gym','Bowflex',1499,'Bowflex','https://www.bowflex.com/product/x2se-home-gym/100334.html',7.3,4.5,3400,'Amazon','70+ exercises from folding resistance rods  --  apartment-friendly strength.','Barbend',{'Type':'Home Gym','Resistance':'210 lb Power Rods','Exercises':'70+','Footprint':'53×49"','Warranty':'7 Year'},['Apartment Friendly','No Spotter Needed','70+ Exercises'],{salePrice:999,compact:true}),
   p('marcy-mwm990','MWM-990 150 lb Stack Home Gym','Marcy',399,'Amazon','https://www.amazon.com/dp/B00JGRBSS6?tag=gymgearcompar-20',6.5,4.4,6900,'Amazon','The best-selling budget home gym  --  30+ exercises for under $400.','Barbend',{'Type':'Multi-Station','Resistance':'150 lb Stack','Exercises':'30+','Footprint':'68×42"','Warranty':'2 Year'},['Under $400','Best Seller','Compact Stack'],{compact:true}),
   p('tonal-2','Tonal 2 Smart Home Gym','Tonal',4295,'Tonal','https://tonal.com/products/tonal-2',9.4,4.8,2100,'Tonal','The wall-mounted smart gym  --  250 lb of digital resistance and an AI coach in a screen.','Garage Gym Reviews',{'Type':'Smart Gym','Resistance':'250 lb Digital','Mount':'Wall','Subscription':'$59.95/mo','Footprint':'Zero Floor Space'},['Wall Mounted','AI Coaching','Digital Weight'],{compact:true}),
+  // Full-commercial machines below are gym-planner stock (pro:true) — they
+  // still browse/compare like any product but never enter the home kit.
+  p('hs-iso-row','Iso-Lateral Row','Hammer Strength',4135,'Life Fitness','https://shop.lifefitness.com/products/hammer-strength-plate-loaded-iso-lateral-row',9.5,4.9,41,'Life Fitness','The gym-floor standard plate-loaded row  --  independent arms, built like a tank.','Garage Gym Reviews',{'Type':'Plate-Loaded','Movement':'Row','Arms':'Iso-Lateral','Grade':'Full Commercial','Warranty':'10 Year Frame'},['Club Standard','Iso-Lateral','Plate Loaded'],{pro:true}),
+  p('hs-leg-press','Linear Leg Press','Hammer Strength',7883,'Life Fitness','https://shop.lifefitness.com/products/hammer-strength-plate-loaded-linear-leg-press',9.4,4.8,28,'Life Fitness','The leg press serious gyms buy  --  1,800 lb of plate capacity on linear bearings.','Garage Gym Reviews',{'Type':'Plate-Loaded','Movement':'Leg Press','Capacity':'40 × 45 lb Plates','Grade':'Full Commercial','Warranty':'10 Year Frame'},['Club Standard','Linear Bearings','Made In USA'],{pro:true}),
+  p('bodysolid-slp500','Pro Clubline SGLP500 Leg Press','Body-Solid',4060,'Strength Warehouse USA','https://strengthwarehouseusa.com/products/body-solid-sglp500-pro-clubline-leg-press',8.6,4.7,60,'Strength Warehouse USA','Commercial-rated 45-degree leg press at half the big-brand price  --  lifetime commercial warranty.','Garage Gym Reviews',{'Type':'Plate-Loaded 45°','Movement':'Leg Press','Capacity':'1,500 lbs','Grade':'Full Commercial','Warranty':'Lifetime Frame'},['Commercial Rated','Value Pick','Lifetime Warranty'],{pro:true,salePrice:3420}),
+  p('rogue-ghd','Abram GHD 2.0','Rogue Fitness',775,'Rogue Fitness','https://www.roguefitness.com/rogue-abram-glute-ham-developer-2-0',9.2,4.9,180,'Rogue Fitness','The benchmark glute-ham developer  --  every serious strength room has one.','Garage Gym Reviews',{'Type':'GHD','Movement':'Posterior Chain','Adjustment':'Precision Pin','Grade':'Full Commercial','Made In':'USA'},['Strength Room Staple','American Made','Portable'],{pro:true}),
+],
+
+// Rubber flooring — the planner sizes an order to the room via coverageSqFt.
+flooring:[
+  p('rogue-mat-bundle','Gym Mats 25-Pack','Rogue Fitness',1495,'Rogue Fitness','https://www.roguefitness.com/rogue-gym-mat-25-piece-bundle-black',8.5,3.2,5,'Rogue Fitness','600 square feet of 3/4-inch rubber in one order  --  the fastest way to floor a gym.','Rogue Fitness',{'Coverage':'~600 sq ft','Thickness':'3/4"','Mat Size':'6×4 ft','Count':'25 Mats','Material':'Recycled Rubber'},['Bulk Coverage','3/4" Thick','Facility Grade'],{pro:true,coverage:600}),
+  p('rep-floor-mat','4×6 Floor Mat','REP Fitness',77,'REP Fitness','https://repfitness.com/products/4x6-floor-mats',8.8,4.8,38,'REP Fitness','Dense 3/4-inch USA-made rubber that will not curl  --  quiet, stable, bacteria-resistant.','Garage Gym Reviews',{'Coverage':'~23 sq ft','Thickness':'3/4"','Size':'4×6 ft','Weight':'88 lbs','Made In':'USA'},['No Curl','Low Odor','American Made'],{pro:true,coverage:23}),
 ],
 
 kettlebells:[
@@ -713,7 +733,7 @@ jumpropes:[
 };
 
 const CATEGORY_META = {
-  benches:{group:'equipment',label:'Weight Benches'},machines:{group:'equipment',label:'All-in-One Machines'},barbells:{group:'equipment',label:'Barbells'},dumbbells:{group:'equipment',label:'Dumbbells'},plates:{group:'equipment',label:'Weight Plates'},racks:{group:'equipment',label:'Racks & Rigs'},cardio:{group:'equipment',label:'Cardio'},kettlebells:{group:'equipment',label:'Kettlebells'},bands:{group:'equipment',label:'Resistance Bands'},
+  benches:{group:'equipment',label:'Weight Benches'},machines:{group:'equipment',label:'All-in-One Machines'},flooring:{group:'equipment',label:'Gym Flooring'},barbells:{group:'equipment',label:'Barbells'},dumbbells:{group:'equipment',label:'Dumbbells'},plates:{group:'equipment',label:'Weight Plates'},racks:{group:'equipment',label:'Racks & Rigs'},cardio:{group:'equipment',label:'Cardio'},kettlebells:{group:'equipment',label:'Kettlebells'},bands:{group:'equipment',label:'Resistance Bands'},
   shorts:{group:'clothing',label:'Gym Shorts'},compression:{group:'clothing',label:'Compression'},tanks:{group:'clothing',label:'Tank Tops'},hoodies:{group:'clothing',label:'Hoodies'},footwear:{group:'clothing',label:'Footwear'},sportsbras:{group:'clothing',label:'Sports Bras'},
   preworkout:{group:'supplements',label:'Pre-Workout'},protein:{group:'supplements',label:'Protein'},creatine:{group:'supplements',label:'Creatine'},recovery:{group:'supplements',label:'Recovery'},vitamins:{group:'supplements',label:'Vitamins'},fatburners:{group:'supplements',label:'Fat Burners'},
   belts:{group:'gear',label:'Lifting Belts'},straps:{group:'gear',label:'Lifting Straps'},wraps:{group:'gear',label:'Wrist Wraps'},sleeves:{group:'gear',label:'Knee Sleeves'},chalk:{group:'gear',label:'Chalk'},
@@ -760,6 +780,7 @@ const CAT_IMAGE = {
   racks: ['1534258936925-c58bed479fcb', '1590487988256-9ed24133863e', '1541534741688-6078c6bfb5c5'],
   // Reuses already-verified rack/cardio photo ids (machines look the part).
   machines: ['1534258936925-c58bed479fcb', '1590487988256-9ed24133863e', '1571902943202-507ec2618e8f'],
+  flooring: ['1534258936925-c58bed479fcb', '1541534741688-6078c6bfb5c5'],
   cardio: ['1571019613454-1cb2f99b2d8b', '1571902943202-507ec2618e8f', '1593079831268-3381b0db4a77'],
   kettlebells: ['1517344884509-a0c97ec11bcc', '1601422407692-ec4eeec1d9b3'],
   bands: ['1591291621164-2c6367723315', '1517130038641-a774d04afb3c'],
@@ -833,6 +854,9 @@ const CATEGORY_TAGS = {
   // Primary — the kit is built around these.
   racks:       { productType: 'primary', kitRole: 'core',        pairsWith: [] },
   machines:    { productType: 'primary', kitRole: 'core',        pairsWith: [] },
+  // Facility-only: browsable/comparable, but never in the HOME kit builder
+  // (not in KIT_CATEGORIES) — the gym planner is what specs flooring.
+  flooring:    { productType: 'primary', kitRole: 'core',        pairsWith: [] },
   barbells:    { productType: 'primary', kitRole: 'core',        pairsWith: [] },
   benches:     { productType: 'primary', kitRole: 'core',        pairsWith: [] },
   plates:      { productType: 'primary', kitRole: 'core',        pairsWith: [] },
@@ -869,6 +893,34 @@ const CATEGORY_TAGS = {
 };
 const DEFAULT_TAGS = { productType: 'accessory', kitRole: 'optional', pairsWith: [] };
 
+// Existing catalog items that are genuinely commercial-suitable (full or
+// light commercial build) — the GYM PLANNER only specs pro gear. New
+// commercial SKUs set {pro:true} directly in p(); this set upgrades the
+// home-catalog crossovers without touching 30 product lines.
+const PRO_IDS = new Set([
+  // racks & rigs
+  'rogue-rm6', 'rogue-r3', 'rogue-rml390f', 'rep-pr5000', 'rep-pr4000', 'rogue-sml2',
+  // barbells
+  'rogue-ohio', 'rogue-opb', 'rogue-deadlift', 'rogue-squat-bar', 'texas-power-bar',
+  'eleiko-iwf', 'american-ss', 'kabuki-power-bar', 'bells-power-bar', 'rep-alpine-bar', 'vulcan-pro',
+  // plates
+  'rogue-hg2', 'rep-comp', 'rep-black', 'rogue-echo', 'vulcan-alpha',
+  // benches
+  'rogue-mb2', 'rogue-flat2', 'rep-fb5000', 'rep-ab5200', 'rogue-adj-bench', 'bells-bench',
+  // dumbbells & kettlebells
+  'rogue-hex', 'rep-hex', 'fringe-urethane', 'vulcan-db',
+  'rogue-kb', 'rep-kb', 'dragon-door-kb', 'kbkings-powder', 'vulcan-kb',
+  // cardio
+  'concept2-rower', 'concept2-ski', 'concept2-bikeerg', 'assault-bike', 'assault-runner',
+  'rogue-echo-bike', 'lifefitness-t3',
+  // machines & functional
+  'lifefitness-g7', 'force-usa-g20', 'rep-arcadia', 'bells-ft',
+  // bands / straps-adjacent functional kit
+  'rogue-bands', 'elitefts-bands', 'trx-pro4',
+  // accessories the planner stocks
+  'manduka-pro', 'frictionlabs-loose', 'trigger-point-grid', 'rogue-sr-1c',
+]);
+
 for (const [cat, list] of Object.entries(PRODUCTS)) {
   const pool = (CAT_IMAGE[cat] || []).map(UNSPLASH);
   if (!pool.length) pool.push(DEFAULT_IMAGE);
@@ -888,6 +940,8 @@ for (const [cat, list] of Object.entries(PRODUCTS)) {
     p.productType = tags.productType;
     p.kitRole = tags.kitRole;
     p.pairsWith = tags.pairsWith;
+    // Commercial-suitability stamp for the gym planner (see PRO_IDS above).
+    p.pro = !!p.pro || PRO_IDS.has(p.id);
   }
 }
 
@@ -1362,6 +1416,192 @@ app.post('/api/kit',async(req,res)=>{
     console.warn('Groq accessory why failed, using fallback:', err.message);
   }
   res.json({kits,accessories,generatedBy,generatedAt:new Date().toISOString()});
+});
+
+// ── GYM PLANNER (/api/gym-plan) ───────────────────────────────────
+// Commercial track: outfit a real facility (new build or renovation).
+// Same trust model as the home kit builder — this code owns every product,
+// quantity and price deterministically; Groq only writes the prose plan.
+const GYM_BUDGET={'10-25k':25000,'25-75k':75000,'75-200k':200000,'200k-plus':400000};
+const GYM_AREA={'under-1500':1200,'1500-3000':2200,'3000-6000':4500,'6000-plus':8000};
+const GYM_PEAK={'under-15':12,'15-30':25,'30-60':45,'60-plus':80};
+const ZONE_LABEL={strength:'Strength Zone',machines:'Machine Row',cardio:'Cardio Row',functional:'Functional Zone',flooring:'Flooring',accessories:'Accessories'};
+// Budget share per zone by facility type. Rows sum to 1.
+const ZONE_SPLIT={
+  'strength-club':   {strength:.50,machines:.20,cardio:.10,functional:.07,flooring:.10,accessories:.03},
+  'crossfit-box':    {strength:.45,machines:.05,cardio:.22,functional:.15,flooring:.10,accessories:.03},
+  'boutique-studio': {strength:.28,machines:.12,cardio:.22,functional:.22,flooring:.12,accessories:.04},
+  'general-fitness': {strength:.30,machines:.22,cardio:.30,functional:.08,flooring:.08,accessories:.02},
+};
+const clampN=(x,lo,hi)=>Math.max(lo,Math.min(hi,Math.round(x)));
+const GP_BY_ID=(()=>{const m=new Map();for(const [cat,list] of Object.entries(PRODUCTS))for(const p of list)if(!m.has(p.id))m.set(p.id,{...p,category:cat});return m;})();
+const gpPrice=p=>p.salePrice||p.price;
+
+// Push qty × product into a zone (no budget check — callers size the qty).
+function gpAdd(zone,id,qty){
+  const p=GP_BY_ID.get(id); if(!p||qty<1) return 0;
+  const cost=gpPrice(p)*qty;
+  zone.items.push({id:p.id,name:p.name,brand:p.brand,category:p.category,qty,
+    unitPrice:gpPrice(p),subtotal:cost,url:p.url,affiliateUrl:p.affiliateUrl,image:p.image});
+  zone.subtotal+=cost;
+  return cost;
+}
+// Greedy fill: walk candidates in order, buying up to maxQty of each while
+// the zone budget holds. cands = [[id, maxQty], ...] — order = priority.
+function gpFill(zone,cands){
+  for(const [id,max] of cands){
+    const p=GP_BY_ID.get(id); if(!p||max<1) continue;
+    const can=Math.min(max,Math.floor((zone.budget-zone.subtotal)/gpPrice(p)));
+    if(can>0) gpAdd(zone,id,can);
+  }
+}
+
+function buildGymPlan(a){
+  const budget=GYM_BUDGET[a.budget]||75000;
+  const area=GYM_AREA[a.space]||2200;
+  const peak=GYM_PEAK[a.capacity]||25;
+  const type=ZONE_SPLIT[a.gymType]?a.gymType:'general-fitness';
+  const split={...ZONE_SPLIT[type]};
+  // Renovation: zones the owner already has get zeroed; their share flows
+  // proportionally into the zones being (re)built.
+  const keep=new Set((Array.isArray(a.keepZones)?a.keepZones:[]).filter(z=>z in split));
+  let freed=0;
+  for(const z of keep){freed+=split[z];split[z]=0;}
+  const live=Object.keys(split).filter(z=>split[z]>0);
+  if(freed>0&&freed<1&&live.length)
+    for(const z of live) split[z]+=freed*(split[z]/(1-freed));
+
+  const zones=[];
+  const mkZone=key=>{const z={key,label:ZONE_LABEL[key],budget:Math.round(budget*split[key]),items:[],subtotal:0};zones.push(z);return z;};
+  const box=type==='crossfit-box', club=type==='strength-club', studio=type==='boutique-studio';
+
+  // Strength — racks anchor everything: sized by floor area, capped by peak
+  // load (one lifter per rack, ~1 rack per 3 concurrent members).
+  if(split.strength>0){
+    const z=mkZone('strength');
+    const racks=clampN(Math.min(area/450,peak/3),2,14);
+    const rackId=budget>=200000?'rogue-rm6':budget>=75000?'rogue-rml390f':'rep-pr4000';
+    gpAdd(z,rackId,racks);
+    gpAdd(z,'rogue-opb',racks);                                  // a power bar per rack
+    if((club||box)&&budget>=75000){gpAdd(z,'rogue-deadlift',1);gpAdd(z,'rogue-squat-bar',1);}
+    gpAdd(z,box?'rogue-hg2':'rep-black',racks);                  // a bumper set per rack
+    gpAdd(z,'rep-fb5000',Math.max(1,Math.ceil(racks*0.5)));
+    gpAdd(z,'rep-ab5200',Math.max(1,Math.ceil(racks*0.25)));
+    gpAdd(z,'rep-hex-set',clampN(area/1500,1,4));                // dumbbell runs
+    // Leftover strength budget → depth: more bumpers, premium bars.
+    gpFill(z,[['rep-comp',Math.ceil(racks/2)],['eleiko-iwf',club?2:1],['kabuki-power-bar',club?2:0]]);
+  }
+
+  // Machine row — plate-loaded/selectorized floor pieces, priority by type.
+  if(split.machines>0){
+    const z=mkZone('machines');
+    const order=studio
+      ? [['lifefitness-g7',2],['rep-arcadia',2],['bodysolid-slp500',1],['hs-iso-row',1]]
+      : [['hs-iso-row',2],['hs-leg-press',1],['lifefitness-g7',2],['bodysolid-slp500',2],['rep-arcadia',2],['bells-ft',1]];
+    gpFill(z,order);
+  }
+
+  // Cardio row — box floors run ergs and air bikes; club floors run
+  // treadmill-class units. Unit counts scale with peak occupancy.
+  if(split.cardio>0){
+    const z=mkZone('cardio');
+    const order=box
+      ? [['concept2-rower',clampN(peak/5,2,10)],['rogue-echo-bike',clampN(peak/6,2,8)],['concept2-ski',2],['assault-runner',2]]
+      : studio
+      ? [['concept2-rower',clampN(peak/6,2,8)],['schwinn-ic4',clampN(peak/6,2,8)],['lf-club-treadmill',2],['waterrower-oak',2]]
+      : [['lf-club-treadmill',clampN(peak/8,1,6)],['lf-club-elliptical',clampN(peak/10,1,4)],['schwinn-ic4',clampN(peak/8,2,8)],['concept2-rower',clampN(peak/8,1,6)]];
+    gpFill(z,order);
+  }
+
+  // Functional zone — GHD, kettlebell rack-fill, suspension, bands.
+  if(split.functional>0){
+    const z=mkZone('functional');
+    gpFill(z,[
+      ['rogue-ghd',box||club?2:1],
+      ['kbkings-powder',clampN(peak/2,6,24)],
+      ['trx-pro4',clampN(peak/6,2,8)],
+      ['rogue-bands',clampN(peak/4,4,12)],
+      ...(studio?[['manduka-pro',clampN(peak,10,30)]]:[]),
+    ]);
+  }
+
+  // Flooring — need-driven: cover ~65% of the floor plate, bundles first,
+  // singles for the remainder, clipped to the zone budget.
+  if(split.flooring>0){
+    const z=mkZone('flooring');
+    const need=Math.round(area*0.65);
+    const bundle=GP_BY_ID.get('rogue-mat-bundle'), single=GP_BY_ID.get('rep-floor-mat');
+    const bundles=Math.min(Math.floor(need/bundle.coverageSqFt),Math.floor(z.budget/gpPrice(bundle)));
+    if(bundles>0) gpAdd(z,'rogue-mat-bundle',bundles);
+    const remainder=need-bundles*bundle.coverageSqFt;
+    const singles=Math.min(Math.ceil(remainder/single.coverageSqFt),Math.floor((z.budget-z.subtotal)/gpPrice(single)));
+    if(singles>0) gpAdd(z,'rep-floor-mat',singles);
+    z.coverageSqFt=bundles*bundle.coverageSqFt+singles*single.coverageSqFt;
+    z.coverageTarget=need;
+  }
+
+  // Accessories — chalk, recovery, ropes in member-count quantities.
+  if(split.accessories>0){
+    const z=mkZone('accessories');
+    gpFill(z,[['frictionlabs-loose',clampN(peak/3,4,12)],['trigger-point-grid',clampN(peak/5,3,10)],['rogue-sr-1c',clampN(peak/5,3,10)]]);
+  }
+
+  const totalPrice=zones.reduce((s,z)=>s+z.subtotal,0);
+  return {zones:zones.filter(z=>z.items.length),totalPrice,budgetCap:budget,
+    areaSqFt:area,peakCapacity:peak,gymType:type,
+    contingency:Math.max(0,budget-totalPrice)};
+}
+
+// Deterministic written plan — never blank, used when Groq is absent/fails.
+function defaultGymCopy(a,plan){
+  const reno=a.projectType==='renovation';
+  const z=k=>plan.zones.find(x=>x.key===k);
+  const lines=[];
+  lines.push(`THE SHAPE OF YOUR ${reno?'RENOVATION':'BUILD'}`);
+  lines.push(`Across ~${plan.areaSqFt.toLocaleString()} sq ft with a $${plan.budgetCap.toLocaleString()} budget, this plan allocates $${plan.totalPrice.toLocaleString()} of equipment and keeps $${plan.contingency.toLocaleString()} back for delivery, install and first repairs — real facilities should hold 10-15% for exactly that.`);
+  if(z('strength')) lines.push(`Anchor the room with the strength zone: ${z('strength').items[0].qty}× ${z('strength').items[0].name} along a wall, bars and bumpers racked between stations so plates never cross walkways.`);
+  if(z('cardio')) lines.push(`Cardio sits at the front by natural light where possible; leave 3 ft between units and a 6 ft walkway behind treadmill-class machines.`);
+  if(z('machines')) lines.push(`The machine row runs the opposite wall from free weights — beginners get a clear lane that never crosses the barbell area.`);
+  if(z('flooring')) lines.push(`Flooring covers ~${(z('flooring').coverageSqFt||0).toLocaleString()} of the ~${(z('flooring').coverageTarget||0).toLocaleString()} sq ft target; floor the strength and functional zones first, cardio row last.`);
+  lines.push(`BUYING ORDER: flooring first (everything sits on it), racks and bars second, cardio third, machines last — they have the longest lead times (5-7 weeks on commercial pieces).`);
+  return lines.join('\n\n');
+}
+
+// Groq writes ONLY the prose plan around the already-chosen equipment.
+async function groqGymPlan(a,plan){
+  const key=process.env.GROQ_API_KEY;
+  if(!key) return null;
+  const summary=plan.zones.map(z=>
+    `${z.label} ($${z.subtotal.toLocaleString()}): ${z.items.map(i=>`${i.qty}x ${i.name} (${i.brand})`).join(', ')}`
+  ).join('\n');
+  const sys=`You are a gym facility planner. Return strict JSON {"plan": string}. The plan is 4 short sections with UPPERCASE headers on their own lines: LAYOUT, BUYING ORDER, WHY THIS GEAR, WATCH OUT. Max 320 words total, plain text (no markdown symbols, no dashes as bullets — write sentences). Ground every claim in the provided equipment list and numbers; never invent products, prices or brands not listed.`;
+  const user=`Project: ${a.projectType==='renovation'?'renovation of an existing facility':'brand-new gym build'}. Facility type: ${a.gymType}. Floor area: ~${plan.areaSqFt} sq ft. Peak concurrent members: ~${plan.peakCapacity}. Equipment budget: $${plan.budgetCap.toLocaleString()} (plan spends $${plan.totalPrice.toLocaleString()}, leaving $${plan.contingency.toLocaleString()} contingency).\n\nZones and equipment:\n${summary}`;
+  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',signal:AbortSignal.timeout(15000),
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+    body:JSON.stringify({model:'llama-3.3-70b-versatile',temperature:0.6,
+      response_format:{type:'json_object'},
+      messages:[{role:'system',content:sys},{role:'user',content:user}]}),
+  });
+  if(!r.ok) throw new Error(`Groq ${r.status}`);
+  const parsed=JSON.parse((await r.json()).choices[0].message.content);
+  return typeof parsed.plan==='string'&&parsed.plan.trim()?parsed.plan.trim().slice(0,2400):null;
+}
+
+app.post('/api/gym-plan',async(req,res)=>{
+  const a=req.body||{};
+  if(!a.gymType||!a.budget||!a.space)
+    return res.status(400).json({error:'Send at least gymType, budget and space.'});
+  const plan=buildGymPlan(a);
+  let writtenPlan='',generatedBy='fallback';
+  try{
+    const w=await groqGymPlan(a,plan);
+    if(w){writtenPlan=w;generatedBy='groq';}
+  }catch(err){
+    console.warn('Groq gym plan failed, using default copy:',err.message);
+  }
+  if(!writtenPlan) writtenPlan=defaultGymCopy(a,plan);
+  res.json({...plan,writtenPlan,generatedBy,generatedAt:new Date().toISOString()});
 });
 
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
