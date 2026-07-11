@@ -1449,6 +1449,14 @@ const ZONE_SPLIT={
   'boutique-studio': {strength:.28,machines:.12,cardio:.22,functional:.22,flooring:.12,accessories:.04},
   'general-fitness': {strength:.30,machines:.22,cardio:.30,functional:.08,flooring:.08,accessories:.02},
 };
+// Renovation drivers → which zones lean heavier before reallocation.
+const RENO_SCOPE_BIAS={
+  'replace-gear': {},                                   // like-for-like, no lean
+  'add-capacity': {strength:1.3, machines:1.2, cardio:1.2},
+  'add-training': {functional:1.7, machines:1.2},
+  'reconfigure':  {flooring:1.5, functional:1.15},
+  'modernize':    {cardio:1.3, machines:1.25},
+};
 const clampN=(x,lo,hi)=>Math.max(lo,Math.min(hi,Math.round(x)));
 const GP_BY_ID=(()=>{const m=new Map();for(const [cat,list] of Object.entries(PRODUCTS))for(const p of list)if(!m.has(p.id))m.set(p.id,{...p,category:cat});return m;})();
 const gpPrice=p=>p.salePrice||p.price;
@@ -1478,10 +1486,26 @@ function buildGymPlan(a){
   const peak=GYM_PEAK[a.capacity]||25;
   const lowCeil=a.ceilingHeight==='under-9ft';
   const type=ZONE_SPLIT[a.gymType]?a.gymType:'general-fitness';
-  const split={...ZONE_SPLIT[type]};
-  // Renovation: zones the owner already has get zeroed; their share flows
-  // proportionally into the zones being (re)built.
-  const keep=new Set((Array.isArray(a.keepZones)?a.keepZones:[]).filter(z=>z in split));
+  let split={...ZONE_SPLIT[type]};
+  // renoScope (what's driving the reno) nudges where the budget leans, before
+  // anything is zeroed. Multi-select: every chosen driver stacks.
+  if(a.projectType==='renovation'&&Array.isArray(a.renoScope)){
+    for(const s of a.renoScope){const b=RENO_SCOPE_BIAS[s];if(b)for(const [z,m] of Object.entries(b))if(z in split)split[z]*=m;}
+    const sum=Object.values(split).reduce((x,y)=>x+y,0)||1;
+    for(const k of Object.keys(split))split[k]/=sum;   // renormalise to 1
+  }
+  // Renovation: the owner picks which zones to (re)do (renoTargets); every
+  // other zone is left as-is and its budget flows into the chosen ones.
+  // Accessories always stay in. Falls back to the legacy keepZones field.
+  const renoTargets=Array.isArray(a.renoTargets)?a.renoTargets.filter(z=>z in split):[];
+  let keepList;
+  if(a.projectType==='renovation'&&renoTargets.length){
+    const build=new Set([...renoTargets,'accessories']);
+    keepList=Object.keys(split).filter(z=>!build.has(z));
+  }else{
+    keepList=(Array.isArray(a.keepZones)?a.keepZones:[]).filter(z=>z in split);
+  }
+  const keep=new Set(keepList);
   let freed=0;
   for(const z of keep){freed+=split[z];split[z]=0;}
   const live=Object.keys(split).filter(z=>split[z]>0);
@@ -1566,8 +1590,12 @@ function buildGymPlan(a){
   }
 
   const totalPrice=zones.reduce((s,z)=>s+z.subtotal,0);
+  const reno=a.projectType==='renovation';
+  const MAIN=['strength','machines','cardio','functional','flooring'];
   return {zones:zones.filter(z=>z.items.length),totalPrice,budgetCap:budget,
     areaSqFt:area,peakCapacity:peak,gymType:type,lowCeiling:lowCeil,
+    renovatedZones: reno ? MAIN.filter(z=>!keep.has(z)).map(z=>ZONE_LABEL[z]) : [],
+    keptZones: reno ? [...keep].map(z=>ZONE_LABEL[z]) : [],
     contingency:Math.max(0,budget-totalPrice)};
 }
 
@@ -1577,7 +1605,8 @@ function defaultGymCopy(a,plan){
   const z=k=>plan.zones.find(x=>x.key===k);
   const lines=[];
   lines.push(`THE SHAPE OF YOUR ${reno?'RENOVATION':'BUILD'}`);
-  lines.push(`Across ~${plan.areaSqFt.toLocaleString()} sq ft with a $${plan.budgetCap.toLocaleString()} budget, this plan allocates $${plan.totalPrice.toLocaleString()} of equipment and keeps $${plan.contingency.toLocaleString()} back for delivery, install and first repairs — real facilities should hold 10-15% for exactly that.`);
+  lines.push(`Across ~${plan.areaSqFt.toLocaleString()} sq ft ${reno?'of renovated floor':'of floor'} with a $${plan.budgetCap.toLocaleString()} budget, this plan allocates $${plan.totalPrice.toLocaleString()} of equipment and keeps $${plan.contingency.toLocaleString()} back for delivery, install and first repairs — real facilities should hold 10-15% for exactly that.`);
+  if(reno&&plan.renovatedZones&&plan.renovatedZones.length) lines.push(`You're redoing the ${plan.renovatedZones.join(', ')} — everything else stays put, so the whole budget lands on those areas.${plan.keptZones&&plan.keptZones.length?` Kept as-is: ${plan.keptZones.join(', ')}.`:''}`);
   if(z('strength')) lines.push(`Anchor the room with the strength zone: ${z('strength').items[0].qty}× ${z('strength').items[0].name} along a wall, bars and bumpers racked between stations so plates never cross walkways.`);
   if(z('cardio')) lines.push(`Cardio sits at the front by natural light where possible; leave 3 ft between units and a 6 ft walkway behind treadmill-class machines.`);
   if(z('machines')) lines.push(`The machine row runs the opposite wall from free weights — beginners get a clear lane that never crosses the barbell area.`);
@@ -1595,7 +1624,10 @@ async function groqGymPlan(a,plan){
     `${z.label} ($${z.subtotal.toLocaleString()}): ${z.items.map(i=>`${i.qty}x ${i.name} (${i.brand})`).join(', ')}`
   ).join('\n');
   const sys=`You are a gym facility planner. Return strict JSON {"plan": string}. The plan is 4 short sections with UPPERCASE headers on their own lines: LAYOUT, BUYING ORDER, WHY THIS GEAR, WATCH OUT. Max 320 words total, plain text (no markdown symbols, no dashes as bullets — write sentences). Ground every claim in the provided equipment list and numbers; never invent products, prices or brands not listed.`;
-  const user=`Project: ${a.projectType==='renovation'?'renovation of an existing facility':'brand-new gym build'}. Facility type: ${a.gymType}. Floor area: ~${plan.areaSqFt} sq ft. Peak concurrent members: ~${plan.peakCapacity}.${plan.lowCeiling?' Ceiling is UNDER 9 FT — mention low-ceiling constraints (80-inch uprights are specced; no overhead wall-ball or jump-rope zones).':''} Equipment budget: $${plan.budgetCap.toLocaleString()} (plan spends $${plan.totalPrice.toLocaleString()}, leaving $${plan.contingency.toLocaleString()} contingency).\n\nZones and equipment:\n${summary}`;
+  const renoBits=a.projectType==='renovation'
+    ? ` This is a RENOVATION: the owner is redoing ${(plan.renovatedZones||[]).join(', ')||'selected areas'} and keeping ${(plan.keptZones||[]).join(', ')||'the rest'} as-is (so the whole budget lands on the redone areas — do not spec or re-plan the kept areas).${Array.isArray(a.renoScope)&&a.renoScope.length?` Drivers: ${a.renoScope.join(', ')}.`:''} The floor area given is the RENOVATED section, not the whole building.`
+    : '';
+  const user=`Project: ${a.projectType==='renovation'?'renovation of an existing facility':'brand-new gym build'}. Facility type: ${a.gymType}. Floor area: ~${plan.areaSqFt} sq ft. Peak concurrent members: ~${plan.peakCapacity}.${renoBits}${plan.lowCeiling?' Ceiling is UNDER 9 FT — mention low-ceiling constraints (80-inch uprights are specced; no overhead wall-ball or jump-rope zones).':''} Equipment budget: $${plan.budgetCap.toLocaleString()} (plan spends $${plan.totalPrice.toLocaleString()}, leaving $${plan.contingency.toLocaleString()} contingency).\n\nZones and equipment:\n${summary}`;
   const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',signal:AbortSignal.timeout(15000),
     headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
