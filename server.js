@@ -30,6 +30,11 @@ app.use((req,res,next)=>{
   next();
 });
 const ratemap=new Map();
+// Evict idle IPs so the map can't grow unbounded on a public endpoint.
+setInterval(()=>{
+  const cut=Date.now()-60000;
+  for(const [ip,hits] of ratemap){const live=hits.filter(t=>t>cut);if(live.length)ratemap.set(ip,live);else ratemap.delete(ip);}
+},5*60000).unref();
 app.use((req,res,next)=>{
   if(req.path==='/health')return next();
   const ip=req.ip||'x',now=Date.now();
@@ -1657,6 +1662,16 @@ app.post('/api/gym-plan',async(req,res)=>{
 });
 
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
+
+// JSON error handler — without this, a malformed JSON body falls through to
+// Express's default handler, which answers in HTML (with a stack trace unless
+// NODE_ENV=production). Never echo err.message to the client.
+app.use((err,req,res,next)=>{
+  if(res.headersSent)return next(err);
+  const status=err.status||err.statusCode||500;
+  if(status>=500)console.error('Unhandled error:',err.message);
+  res.status(status).json({error:status<500?'Bad request.':'Server error.'});
+});
 
 app.listen(PORT,()=>{
   const total=Object.values(PRODUCTS).reduce((s,p)=>s+p.length,0);
