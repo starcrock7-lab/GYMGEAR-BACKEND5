@@ -1484,13 +1484,62 @@ function gpFill(zone,cands){
     if(can>0) gpAdd(zone,id,can);
   }
 }
+// Score-ranked pool of eligible catalog products across categories (pro/full-
+// commercial only by default). Ranked by GymGear Score, then value per dollar —
+// so "how the site comes up with machines" is data-driven: a new high-scoring
+// machine in the catalog flows in automatically, no hardcoded list to edit.
+function gpPool(cats,{proOnly=true,exclude=new Set()}={}){
+  const out=[];
+  for(const cat of cats) for(const p of (PRODUCTS[cat]||[]))
+    if((!proOnly||p.pro)&&!exclude.has(p.id)) out.push({...p,category:cat});
+  return out.sort((x,y)=>
+    ((y.gymgearScore||0)-(x.gymgearScore||0)) ||
+    ((y.gymgearScore||0)/gpPrice(y)-(x.gymgearScore||0)/gpPrice(x)));
+}
+// Fill a zone from a ranked pool, up to perMax of each, while budget holds.
+function gpFillPool(zone,pool,perMax){
+  for(const p of pool){
+    const can=Math.min(perMax,Math.floor((zone.budget-zone.subtotal)/gpPrice(p)));
+    if(can>0) gpAdd(zone,p.id,can);
+  }
+}
+// Which plan zone a product belongs to (mirrors how the zones add gear) — used
+// to pin must-have machines into the right zone.
+const GP_ZONE_OF=id=>{
+  if(id==='rogue-ghd') return 'functional';
+  const p=GP_BY_ID.get(id); if(!p) return null;
+  const c=p.category;
+  if(['racks','barbells','plates','benches','dumbbells'].includes(c)) return 'strength';
+  if(c==='machines') return 'machines';
+  if(c==='cardio') return 'cardio';
+  if(['kettlebells','bands'].includes(c)) return 'functional';
+  if(c==='flooring') return 'flooring';
+  return null;
+};
 
 function buildGymPlan(a){
   const budget=GYM_BUDGET[a.budget]||75000;
-  const area=GYM_AREA[a.space]||2200;
   const peak=GYM_PEAK[a.capacity]||25;
   const lowCeil=a.ceilingHeight==='under-9ft';
   const type=ZONE_SPLIT[a.gymType]?a.gymType:'general-fitness';
+  // Per-zone sizes (renovation): each redone area gets its own floor size, so
+  // quantities are sized off THAT room, not one total. Falls back to the single
+  // `space` figure (new build / legacy). ZONE_DEFAULT_SQFT covers a targeted
+  // zone the user left unsized.
+  const ZONE_DEFAULT_SQFT=800;
+  // Empty {} (new build) counts as "no per-zone sizes" → total-area behaviour.
+  const zs=(a.zoneSizes&&typeof a.zoneSizes==='object'&&Object.keys(a.zoneSizes).length)?a.zoneSizes:null;
+  const area=zs
+    ? (Object.values(zs).map(Number).filter(v=>v>0).reduce((s,v)=>s+v,0)||2200)
+    : (GYM_AREA[a.space]||2200);
+  const za=z=>{ if(!zs) return area; const v=Number(zs[z]); return v>0?v:ZONE_DEFAULT_SQFT; };
+  // Must-have machines the owner named (specific models, incl. matching what
+  // they already run). Reserve their cost up front so the heuristics leave
+  // room, then pin them in after — guaranteed in the plan when budget allows.
+  const mustHave=(Array.isArray(a.mustHave)?a.mustHave:[]).filter(id=>GP_BY_ID.get(id));
+  let reserve=0; for(const id of mustHave) reserve+=gpPrice(GP_BY_ID.get(id));
+  reserve=Math.min(reserve,Math.round(budget*0.6));
+  const buildBudget=Math.max(0,budget-reserve);
   let split={...ZONE_SPLIT[type]};
   // renoScope (what's driving the reno) nudges where the budget leans, before
   // anything is zeroed. Multi-select: every chosen driver stacks.
@@ -1518,14 +1567,14 @@ function buildGymPlan(a){
     for(const z of live) split[z]+=freed*(split[z]/(1-freed));
 
   const zones=[];
-  const mkZone=key=>{const z={key,label:ZONE_LABEL[key],budget:Math.round(budget*split[key]),items:[],subtotal:0};zones.push(z);return z;};
+  const mkZone=key=>{const z={key,label:ZONE_LABEL[key],budget:Math.round(buildBudget*split[key]),items:[],subtotal:0};zones.push(z);return z;};
   const box=type==='crossfit-box', club=type==='strength-club', studio=type==='boutique-studio';
 
-  // Strength — racks anchor everything: sized by floor area, capped by peak
-  // load (one lifter per rack, ~1 rack per 3 concurrent members).
+  // Strength — racks anchor everything: sized by the STRENGTH area (za), capped
+  // by peak load (one lifter per rack, ~1 rack per 3 concurrent members).
   if(split.strength>0){
     const z=mkZone('strength');
-    const racks=clampN(Math.min(area/450,peak/3),2,14);
+    const racks=clampN(Math.min(za('strength')/450,peak/3),2,14);
     // Under a 9 ft slab, 90"+ uprights leave no pull-up clearance — spec the
     // PR-4000 in its 80" configuration regardless of budget.
     const rackId=lowCeil?'rep-pr4000':budget>=200000?'rogue-rm6':budget>=75000?'rogue-rml390f':'rep-pr4000';
@@ -1535,18 +1584,20 @@ function buildGymPlan(a){
     gpAdd(z,box?'rogue-hg2':'rep-black',racks);                  // a bumper set per rack
     gpAdd(z,'rep-fb5000',Math.max(1,Math.ceil(racks*0.5)));
     gpAdd(z,'rep-ab5200',Math.max(1,Math.ceil(racks*0.25)));
-    gpAdd(z,'rep-hex-set',clampN(area/1500,1,4));                // dumbbell runs
+    gpAdd(z,'rep-hex-set',clampN(za('strength')/1500,1,4));      // dumbbell runs
     // Leftover strength budget → depth: more bumpers, premium bars.
     gpFill(z,[['rep-comp',Math.ceil(racks/2)],['eleiko-iwf',club?2:1],['kabuki-power-bar',club?2:0]]);
   }
 
-  // Machine row — plate-loaded/selectorized floor pieces, priority by type.
+  // Machine row — drawn from a GymGear-Score-ranked pool of full-commercial
+  // machines (gpPool), so the best pieces float up and new catalog machines
+  // flow in automatically. GHD is functional, not a machine-row unit. The
+  // number of distinct machines scales with the machine-zone area.
   if(split.machines>0){
     const z=mkZone('machines');
-    const order=studio
-      ? [['lifefitness-g7',2],['rep-arcadia',2],['bodysolid-slp500',1],['hs-iso-row',1]]
-      : [['hs-iso-row',2],['hs-leg-press',1],['lifefitness-g7',2],['bodysolid-slp500',2],['rep-arcadia',2],['bells-ft',1]];
-    gpFill(z,order);
+    const pool=gpPool(['machines'],{exclude:new Set(['rogue-ghd'])});
+    const distinct=clampN(za('machines')/220,3,pool.length);
+    gpFillPool(z,pool.slice(0,distinct),studio?1:2);
   }
 
   // Cardio row — box floors run ergs and air bikes; club floors run
@@ -1594,6 +1645,25 @@ function buildGymPlan(a){
     gpFill(z,[['frictionlabs-loose',clampN(peak/3,4,12)],['trigger-point-grid',clampN(peak/5,3,10)],['rogue-sr-1c',clampN(peak/5,3,10)]]);
   }
 
+  // Pin the owner's must-have machines into their zones — if that zone is being
+  // built and the overall budget still allows (their cost was reserved up
+  // front, so there's room). Skips ones already chosen by the heuristics.
+  const present=new Set(zones.flatMap(z=>z.items.map(i=>i.id)));
+  let running=zones.reduce((s,z)=>s+z.subtotal,0);
+  const mustHavePinned=[];
+  for(const id of mustHave){
+    if(present.has(id)) continue;
+    const z=zones.find(x=>x.key===GP_ZONE_OF(id));
+    if(!z) continue;                                   // that area isn't being redone
+    const price=gpPrice(GP_BY_ID.get(id));
+    if(running+price>budget) continue;
+    gpAdd(z,id,1); present.add(id); running+=price;
+    // A must-have can exceed its zone's soft allocation (it's user-demanded and
+    // funded from the reserve) — grow the shown zone budget so it reads sanely.
+    z.budget=Math.max(z.budget,z.subtotal);
+    mustHavePinned.push(GP_BY_ID.get(id).name);
+  }
+
   const totalPrice=zones.reduce((s,z)=>s+z.subtotal,0);
   const reno=a.projectType==='renovation';
   const MAIN=['strength','machines','cardio','functional','flooring'];
@@ -1601,6 +1671,7 @@ function buildGymPlan(a){
     areaSqFt:area,peakCapacity:peak,gymType:type,lowCeiling:lowCeil,
     renovatedZones: reno ? MAIN.filter(z=>!keep.has(z)).map(z=>ZONE_LABEL[z]) : [],
     keptZones: reno ? [...keep].map(z=>ZONE_LABEL[z]) : [],
+    mustHavePinned,
     contingency:Math.max(0,budget-totalPrice)};
 }
 
@@ -1612,6 +1683,7 @@ function defaultGymCopy(a,plan){
   lines.push(`THE SHAPE OF YOUR ${reno?'RENOVATION':'BUILD'}`);
   lines.push(`Across ~${plan.areaSqFt.toLocaleString()} sq ft ${reno?'of renovated floor':'of floor'} with a $${plan.budgetCap.toLocaleString()} budget, this plan allocates $${plan.totalPrice.toLocaleString()} of equipment and keeps $${plan.contingency.toLocaleString()} back for delivery, install and first repairs — real facilities should hold 10-15% for exactly that.`);
   if(reno&&plan.renovatedZones&&plan.renovatedZones.length) lines.push(`You're redoing the ${plan.renovatedZones.join(', ')} — everything else stays put, so the whole budget lands on those areas.${plan.keptZones&&plan.keptZones.length?` Kept as-is: ${plan.keptZones.join(', ')}.`:''}`);
+  if(plan.mustHavePinned&&plan.mustHavePinned.length) lines.push(`Your must-have picks are locked in: ${plan.mustHavePinned.join(', ')}. The rest of the plan is built around them.`);
   if(z('strength')) lines.push(`Anchor the room with the strength zone: ${z('strength').items[0].qty}× ${z('strength').items[0].name} along a wall, bars and bumpers racked between stations so plates never cross walkways.`);
   if(z('cardio')) lines.push(`Cardio sits at the front by natural light where possible; leave 3 ft between units and a 6 ft walkway behind treadmill-class machines.`);
   if(z('machines')) lines.push(`The machine row runs the opposite wall from free weights — beginners get a clear lane that never crosses the barbell area.`);
@@ -1632,7 +1704,10 @@ async function groqGymPlan(a,plan){
   const renoBits=a.projectType==='renovation'
     ? ` This is a RENOVATION: the owner is redoing ${(plan.renovatedZones||[]).join(', ')||'selected areas'} and keeping ${(plan.keptZones||[]).join(', ')||'the rest'} as-is (so the whole budget lands on the redone areas — do not spec or re-plan the kept areas).${Array.isArray(a.renoScope)&&a.renoScope.length?` Drivers: ${a.renoScope.join(', ')}.`:''} The floor area given is the RENOVATED section, not the whole building.`
     : '';
-  const user=`Project: ${a.projectType==='renovation'?'renovation of an existing facility':'brand-new gym build'}. Facility type: ${a.gymType}. Floor area: ~${plan.areaSqFt} sq ft. Peak concurrent members: ~${plan.peakCapacity}.${renoBits}${plan.lowCeiling?' Ceiling is UNDER 9 FT — mention low-ceiling constraints (80-inch uprights are specced; no overhead wall-ball or jump-rope zones).':''} Equipment budget: $${plan.budgetCap.toLocaleString()} (plan spends $${plan.totalPrice.toLocaleString()}, leaving $${plan.contingency.toLocaleString()} contingency).\n\nZones and equipment:\n${summary}`;
+  const mustBits=plan.mustHavePinned&&plan.mustHavePinned.length
+    ? ` The owner specifically requested these machines and they ARE in the plan — call them out as chosen on purpose: ${plan.mustHavePinned.join(', ')}.`
+    : '';
+  const user=`Project: ${a.projectType==='renovation'?'renovation of an existing facility':'brand-new gym build'}. Facility type: ${a.gymType}. Floor area: ~${plan.areaSqFt} sq ft. Peak concurrent members: ~${plan.peakCapacity}.${renoBits}${mustBits}${plan.lowCeiling?' Ceiling is UNDER 9 FT — mention low-ceiling constraints (80-inch uprights are specced; no overhead wall-ball or jump-rope zones).':''} Equipment budget: $${plan.budgetCap.toLocaleString()} (plan spends $${plan.totalPrice.toLocaleString()}, leaving $${plan.contingency.toLocaleString()} contingency).\n\nZones and equipment:\n${summary}`;
   const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',signal:AbortSignal.timeout(15000),
     headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
@@ -1647,8 +1722,10 @@ async function groqGymPlan(a,plan){
 
 app.post('/api/gym-plan',async(req,res)=>{
   const a=req.body||{};
-  if(!a.gymType||!a.budget||!a.space)
-    return res.status(400).json({error:'Send at least gymType, budget and space.'});
+  // Renovation sizes each area with zoneSizes, so a single `space` isn't sent.
+  const hasSize=a.space||(a.zoneSizes&&typeof a.zoneSizes==='object'&&Object.values(a.zoneSizes).some(v=>Number(v)>0));
+  if(!a.gymType||!a.budget||!hasSize)
+    return res.status(400).json({error:'Send at least gymType, budget and a size (space or zoneSizes).'});
   const plan=buildGymPlan(a);
   let writtenPlan='',generatedBy='fallback';
   try{
