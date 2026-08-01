@@ -1078,7 +1078,9 @@ const KIT_CATEGORIES = ['racks','machines','barbells','plates','benches','dumbbe
 const KIT_CATALOG = KIT_CATEGORIES.flatMap(cat =>
   (PRODUCTS[cat]||[]).map(p => ({
     id:p.id, name:p.name, brand:p.brand, cat,
-    price:p.salePrice||p.price, quality:p.quality, rating:p.rating,
+    // price = what the kit is charged; list = undiscounted, so the builder can
+    // tell a real deal from a product that is merely cheap.
+    price:p.salePrice||p.price, list:p.price, quality:p.quality, rating:p.rating,
     gs:p.gymgearScore||0, compact:!!p.compact,
   }))
 );
@@ -1160,6 +1162,16 @@ const BENCH_USABLE_WITH=new Set([...NEEDS_BENCH,'kettlebells','machines']);
 const HARD_PAIRS={racks:['barbells','plates'],barbells:['plates'],plates:['barbells']};
 const DROP_FOR_BENCH=new Set(['jumpropes','foamrollers','yogamats','bands','kettlebells','plates','barbells']);
 
+// Discount preference. The site's promise is the best price, so a genuine sale
+// should win ties and beat marginal alternatives — but never drag in a
+// materially worse product, which would turn "best value" into "most stuff on
+// sale". Bounded by the discount itself: a 25% cut moves the quality score by
+// 0.5, so it decides between near-equals and nothing more.
+const DEAL_WEIGHT_MATCH=1.5;
+const DEAL_WEIGHT_QUALITY=2.0;
+// How much built-quality a same-category swap may give up to land a deal.
+const DEAL_SWAP_MAX_QUALITY_DROP=1;
+
 // Greedy one-per-category pick for a tier. Three distinct strategies so the
 // kits never collapse into each other: value = cheapest decent option,
 // match = personalised (GymGear Score + rating + budget fit), quality = best
@@ -1174,10 +1186,14 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil}){
     const r=p.price/Math.max(ideal,1);
     return r>1?Math.max(0,2-r):0.4+0.6*r;
   };
+  // Fraction off list, 0 when not on sale. Value already prefers a discount
+  // implicitly — its score IS the sale price — so only match and quality need
+  // it made explicit.
+  const dealBoost=p=>(p.list>0?Math.max(0,(p.list-p.price)/p.list):0);
   const score={
-    value:p=>-p.price,                            // cheapest first
-    match:p=>(p.gs/100)*2+p.rating/5+fit(p)*1.5,  // score+rating+budget fit
-    quality:p=>p.quality+fit(p)*0.5,              // best built, fit breaks ties
+    value:p=>-p.price,                            // cheapest first (sale price)
+    match:p=>(p.gs/100)*2+p.rating/5+fit(p)*1.5+dealBoost(p)*DEAL_WEIGHT_MATCH,
+    quality:p=>p.quality+fit(p)*0.5+dealBoost(p)*DEAL_WEIGHT_QUALITY,
   }[strategy];
   const picks=[]; let spent=0; const blocked=new Set();
   // Everything except the budget test — reused by the usability passes below.
@@ -1293,6 +1309,25 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil}){
   }
   // Composition is final — now decide the bench.
   seatBench();
+
+  // Last look: a kit with no deal in it, when a comparable discounted product
+  // was sitting right there, is a missed claim on a site that promises the best
+  // price. Swaps are same-category and same-slot, so composition — and with it
+  // every usability rule above — is untouched. The swap may never make the kit
+  // dearer: a "deal" that costs more than what it replaced is not a deal, and
+  // it was shuffling Best Value above Best Match on the results page.
+  if(!picks.some(p=>dealBoost(p)>0)){
+    for(let i=0;i<picks.length;i++){
+      const cur=picks[i];
+      const alt=KIT_CATALOG
+        .filter(p=>p.cat===cur.cat&&p.id!==cur.id&&dealBoost(p)>0
+          &&p.quality>=cur.quality-DEAL_SWAP_MAX_QUALITY_DROP
+          &&p.price<=cur.price
+          &&spent-cur.price+p.price<=stretch)
+        .sort((a,b)=>(b.quality+dealBoost(b)*2)-(a.quality+dealBoost(a)*2))[0];
+      if(alt){ spent+=alt.price-cur.price; picks[i]=alt; break; }
+    }
+  }
   return picks.map(p=>p.id);
 }
 
