@@ -1085,7 +1085,9 @@ const KIT_CATALOG = KIT_CATEGORIES.flatMap(cat =>
 const KIT_BY_ID = new Map(KIT_CATALOG.map(p=>[p.id,p]));
 
 const BUDGET_CAP   = {'under-300':300,'300-800':800,'800-2000':2000,'2000-plus':8000};
-const PIECE_TARGET = {'key-pieces':2,'small-setup':4,'full-home-gym':6};
+// 'key-pieces' still means a bench and something to lift — two slots could not
+// hold both an anchor and what makes it usable. (Lockstep: frontend route.ts.)
+const PIECE_TARGET = {'key-pieces':3,'small-setup':4,'full-home-gym':6};
 const OWNED_TO_CAT = {barbell:'barbells',dumbbells:'dumbbells',bench:'benches',rack:'racks',cardio:'cardio'};
 
 // Per-tier budget tolerance: Best Value stays at budget, Best Match flexes
@@ -1142,6 +1144,22 @@ const LOW_CEIL_MACHINES=new Set(['marcy-mwm990','bowflex-x2se','bells-cable-towe
 // products in the same category instead of always the same list-topper.
 const CAT_SHARE={machines:2.6,racks:2.2,cardio:2.2,plates:1.6,barbells:1.4,dumbbells:1.4,benches:1.2,kettlebells:0.6,yogamats:0.3,bands:0.25,foamrollers:0.25,jumpropes:0.2};
 
+// Usability floor. A kit has to be trainable, not merely affordable: free
+// weights with nowhere to press them, or a single $295 pile of dumbbells that
+// happened to fill the budget exactly, is not a gym. These rules may push a kit
+// modestly past its tier cap — a little over budget beats unusable.
+// (Lockstep: frontend src/app/api/kit/route.ts.)
+const MIN_PIECES=3;
+const ESSENTIAL_OVERFLOW=1.35;
+const RESERVE_PER_SLOT=45;            // held back per still-unfilled slot
+const NEEDS_BENCH=new Set(['dumbbells','barbells','plates','racks']);
+// Wider than NEEDS_BENCH: kettlebells don't oblige a bench but do use one.
+// Only a bench with no weight at all beside it is dead weight.
+const BENCH_USABLE_WITH=new Set([...NEEDS_BENCH,'kettlebells','machines']);
+// Useless without their partner — buy the partner or drop the orphan.
+const HARD_PAIRS={racks:['barbells','plates'],barbells:['plates'],plates:['barbells']};
+const DROP_FOR_BENCH=new Set(['jumpropes','foamrollers','yogamats','bands','kettlebells','plates','barbells']);
+
 // Greedy one-per-category pick for a tier. Three distinct strategies so the
 // kits never collapse into each other: value = cheapest decent option,
 // match = personalised (GymGear Score + rating + budget fit), quality = best
@@ -1162,21 +1180,100 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil}){
     quality:p=>p.quality+fit(p)*0.5,              // best built, fit breaks ties
   }[strategy];
   const picks=[]; let spent=0; const blocked=new Set();
-  const pickable=p=>!blocked.has(p.cat)&&!ownedCats.has(p.cat)&&spent+p.price<=cap
+  // Everything except the budget test — reused by the usability passes below.
+  const allowed=p=>!blocked.has(p.cat)&&!ownedCats.has(p.cat)
     &&!(tight&&(p.cat==='machines'||p.cat==='cardio'||p.cat==='racks')&&!p.compact)
     &&!(lowCeil&&p.cat==='racks'&&!LOW_CEIL_RACKS.has(p.id))
     &&!(lowCeil&&p.cat==='machines'&&!LOW_CEIL_MACHINES.has(p.id));
+  const fitsIn=(p,budget)=>spent+p.price<=budget;
+  // Hold budget back for the slots still to fill: one greedy anchor must not be
+  // able to eat the whole kit (a $295 dumbbell under a $300 cap left users
+  // looking at a one-item "kit").
+  const reserve=()=>Math.max(0,target-picks.length-1)*RESERVE_PER_SLOT;
+  const cheapestIn=cat=>{
+    const all=KIT_CATALOG.filter(q=>q.cat===cat);
+    const good=all.filter(q=>q.quality>=7);
+    return (good.length?good:all).reduce((m,q)=>(!m||q.price<m.price)?q:m,undefined);
+  };
+  // Cheapest bench the kit could seat, held back while shopping for anything
+  // that will need one — held once ANY pick needs a bench, or the accessories
+  // that follow quietly spend the bench money.
+  const cheapestBench=cheapestIn('benches');
+  const benchHeld=p=>{
+    if(!cheapestBench||p.cat==='benches')return 0;
+    if(ownedCats.has('benches')||picks.some(q=>q.cat==='benches'))return 0;
+    return (NEEDS_BENCH.has(p.cat)||picks.some(q=>NEEDS_BENCH.has(q.cat)))?cheapestBench.price:0;
+  };
+  // Same idea for hard pairs: don't buy a rack you can't afford a bar and
+  // plates for, or it just gets thrown away again later.
+  const cheapestByCat={};
+  for(const need of new Set(Object.values(HARD_PAIRS).flat())) cheapestByCat[need]=cheapestIn(need);
+  const pairHeld=p=>(HARD_PAIRS[p.cat]||[]).reduce((s,need)=>
+    (picks.some(q=>q.cat===need)||ownedCats.has(need))?s:s+((cheapestByCat[need]||{}).price||0),0);
+  const pickable=p=>allowed(p)&&fitsIn(p,cap-reserve()-benchHeld(p)-pairHeld(p));
   const take=p=>{picks.push(p);spent+=p.price;blocked.add(p.cat);
     for(const c of EXCLUSIVE_WITH[p.cat]||[])blocked.add(c);};
+  const drop=i=>{spent-=picks[i].price;blocked.delete(picks[i].cat);
+    for(const c of EXCLUSIVE_WITH[picks[i].cat]||[])blocked.delete(c); picks.splice(i,1);};
   for(const cat of order){
     if(picks.length>=target) break;
     if(blocked.has(cat)||ownedCats.has(cat)) continue;
     let cands=KIT_CATALOG.filter(p=>p.cat===cat&&pickable(p));
+    // Nothing clears the reserve? Fall back to the plain cap, so holding budget
+    // back can never silently drop a category entirely.
+    if(!cands.length) cands=KIT_CATALOG.filter(p=>p.cat===cat&&allowed(p)&&fitsIn(p,cap-benchHeld(p)-pairHeld(p)));
     // Value still wants decent gear — gate to quality ≥7 unless nothing fits.
     if(strategy==='value'){ const decent=cands.filter(p=>p.quality>=7); if(decent.length) cands=decent; }
     const best=cands.sort((a,b)=>score(b)-score(a))[0];
     if(best) take(best);
   }
+
+  // Usability passes. benchHeld() reserved the money while picking, so
+  // seatBench() can afford itself even though it runs last — and running last
+  // is what lets it judge the FINAL composition.
+  const stretch=cap*ESSENTIAL_OVERFLOW;
+  const seatBench=()=>{
+    if(!picks.some(p=>NEEDS_BENCH.has(p.cat))||picks.some(p=>p.cat==='benches')||ownedCats.has('benches'))return;
+    const benches=KIT_CATALOG.filter(p=>p.cat==='benches'&&allowed(p));
+    const decent=benches.filter(p=>p.quality>=7);
+    const bench=(decent.length?decent:benches).sort((a,b)=>a.price-b.price)[0];
+    if(!bench)return;
+    // Plan the trades, then apply them only if the bench actually lands.
+    // Shedding as we went used to drop the very barbell that required the
+    // bench, then decline the bench because nothing needed it any more.
+    const cut=new Set(); let sim=spent;
+    while(sim+bench.price>stretch){
+      let worst=-1;
+      picks.forEach((p,i)=>{
+        if(cut.has(i)||!DROP_FOR_BENCH.has(p.cat))return;
+        if(NEEDS_BENCH.has(p.cat)&&!picks.some((q,j)=>j!==i&&!cut.has(j)&&NEEDS_BENCH.has(q.cat)))return;
+        if(worst<0||p.price>picks[worst].price)worst=i;
+      });
+      if(worst<0)break;
+      cut.add(worst); sim-=picks[worst].price;
+    }
+    if(sim+bench.price<=stretch){ [...cut].sort((a,b)=>b-a).forEach(drop); take(bench); }
+  };
+
+  // Barbell gear is all-or-nothing. A rack with no bar, or plates with no bar
+  // to load them on, is money spent on something you physically cannot use.
+  for(let pass=0;pass<6;pass++){
+    let changed=false;
+    for(const [cat,needs] of Object.entries(HARD_PAIRS)){
+      if(!picks.some(p=>p.cat===cat))continue;
+      for(const need of needs){
+        if(picks.some(p=>p.cat===need)||ownedCats.has(need))continue;
+        const cands=KIT_CATALOG.filter(p=>p.cat===need&&allowed(p)&&fitsIn(p,stretch));
+        const decent=cands.filter(p=>p.quality>=7);
+        const partner=(decent.length?decent:cands).sort((a,b)=>a.price-b.price)[0];
+        if(partner) take(partner);
+        else { const i=picks.findIndex(p=>p.cat===cat); if(i>=0) drop(i); }
+        changed=true; break;
+      }
+    }
+    if(!changed)break;
+  }
+
   // Budget left and slots left → add value picks from any remaining category.
   if(picks.length<target){
     const extra=KIT_CATALOG
@@ -1184,6 +1281,18 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil}){
       .sort((a,b)=>(b.quality/b.price)-(a.quality/a.price));
     for(const p of extra){ if(picks.length>=target)break; if(!pickable(p))continue; take(p); }
   }
+  // Filler only: standalone gear. Benches are seatBench()'s call, and barbell
+  // gear drags its partners along — topping up on pure value-per-dollar kept
+  // adding cheap plates with no bar, which the orphan prune then stripped.
+  while(picks.length<MIN_PIECES){
+    const next=KIT_CATALOG
+      .filter(p=>p.cat!=='benches'&&!HARD_PAIRS[p.cat]&&allowed(p)&&fitsIn(p,stretch))
+      .sort((a,b)=>(b.quality/b.price)-(a.quality/a.price))[0];
+    if(!next)break;
+    take(next);
+  }
+  // Composition is final — now decide the bench.
+  seatBench();
   return picks.map(p=>p.id);
 }
 
@@ -1240,12 +1349,32 @@ function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight,lowCeil){
       for(const c of EXCLUSIVE_WITH[p.category]||[]) if(seen.has(c)) return false;
       seen.add(p.category); return true;
     });
-    // Trim to the tier's budget, dropping the priciest first. Honour budget
-    // over piece count — a single in-budget item beats two over budget.
-    const cap=capFor(k.type,budgetCap);
+    // Trim against the same budget buildKit composed to. Trimming to the bare
+    // tier cap dismantled coherent kits from the outside: it dropped the
+    // barbell (dearest, and the bench is protected) and left a bench with
+    // nothing to lift. Never trim below a usable kit either — this loop used
+    // to happily strip a kit down to a single item.
+    const cap=capFor(k.type,budgetCap)*ESSENTIAL_OVERFLOW;
     let total=products.reduce((s,p)=>s+priceOf(p),0);
-    while(total>cap && products.length>1){
-      const i=products.reduce((mi,p,idx,a)=>priceOf(p)>priceOf(a[mi])?idx:mi,0);
+    const needsBench=products.some(p=>NEEDS_BENCH.has(p.category));
+    for(;;){
+      if(total<=cap||products.length<=MIN_PIECES)break;
+      const droppable=products.map((p,idx)=>({p,idx})).filter(({p})=>!(needsBench&&p.category==='benches'));
+      if(!droppable.length)break;
+      const worst=droppable.reduce((m,c)=>priceOf(c.p)>priceOf(m.p)?c:m);
+      total-=priceOf(worst.p); products.splice(worst.idx,1);
+    }
+    // The trim can orphan a hard pair — drop the bar and the plates are
+    // suddenly unusable. Prune whatever is left without its partner.
+    for(let pass=0;pass<3;pass++){
+      const cats=new Set(products.map(p=>p.category));
+      const orphan=products.findIndex(p=>(HARD_PAIRS[p.category]||[]).some(n=>!cats.has(n)&&!ownedCats.has(n)));
+      if(orphan<0)break;
+      total-=priceOf(products[orphan]); products.splice(orphan,1);
+    }
+    // A bench with no weight of any kind beside it is the same dead weight.
+    if(products.some(p=>p.category==='benches')&&!products.some(p=>BENCH_USABLE_WITH.has(p.category))){
+      const i=products.findIndex(p=>p.category==='benches');
       total-=priceOf(products[i]); products.splice(i,1);
     }
     return {
