@@ -129,4 +129,32 @@ function applyEdits(file, edits) {
   return patches.length;
 }
 
-export { readCatalog, applyEdits };
+/* Delist products the retailer no longer sells. A Buy button pointing at a
+ * discontinued item is worse than no listing, and relinking it to "something
+ * similar" would misrepresent what the review and rating belong to.
+ *
+ * Only the p(...) row goes. Ids left behind in lookup sets (LOW_CEIL_RACKS,
+ * PRO_IDS, FOOTPRINTS…) are keyed by product id, so they simply never match —
+ * inert, and still correct if the product is ever relisted. */
+function removeProducts(file, ids) {
+  const { src, rows } = readCatalog(file);
+  const cuts = [];
+  for (const id of ids) {
+    const row = rows.find((r) => r.id === id);
+    if (!row) throw new Error(`removeProducts: unknown product id ${id}`);
+    let start = row.span.call.start;
+    let end = row.span.call.end + 1; // past ')'
+    if (src[end] === ',') end++;
+    while (start > 0 && (src[start - 1] === ' ' || src[start - 1] === '\t')) start--;
+    if (src[end] === '\r') end++;
+    if (src[end] === '\n') end++;
+    cuts.push({ start, end });
+  }
+  cuts.sort((a, b) => b.start - a.start);
+  let out = src;
+  for (const c of cuts) out = out.slice(0, c.start) + out.slice(c.end);
+  fs.writeFileSync(file, out);
+  return cuts.length;
+}
+
+export { readCatalog, applyEdits, removeProducts };
