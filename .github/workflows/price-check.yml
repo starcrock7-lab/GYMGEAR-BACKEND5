@@ -71,18 +71,10 @@ jobs:
           git commit -m "chore: price check $(date -u +%Y-%m-%d)" -m "Prices read from the live listings. Every changed value is evidenced in the run log; review before merging."
           git push -u origin "$BRANCH"
 
+          node scripts/pr-body.js price-report.json > pr-body.md
           gh pr create \
             --title "Price check $(date -u +%Y-%m-%d)" \
-            --body "$(node -e "
-              const r=require('./price-report.json');
-              const c=r.results.filter(x=>x.edit);
-              console.log('Prices below were READ from the live listings — none are inferred or estimated.\n');
-              console.log('| product | catalog | read | class | source |');
-              console.log('|---|---|---|---|---|');
-              for(const x of c) console.log(\`| \${x.id} | \$\${x.catalog.salePrice ?? x.catalog.price} | \$\${x.read?.current ?? '?'} | \${x.cls} | \${x.read?.method ?? ''} |\`);
-              const u=r.results.filter(x=>x.cls==='UNREADABLE');
-              if(u.length) console.log(\`\n\${u.length} product(s) UNREADABLE and left untouched.\`);
-            ")" \
+            --body-file pr-body.md \
             --base main --head "$BRANCH"
 
       # The report is an artifact, not a commit: it carries URLs and timestamps
