@@ -1063,6 +1063,150 @@ app.post('/api/compare',(req,res)=>{
   res.json({summary,winnerId:qw.id});
 });
 
+// ── COVERAGE MODEL ────────────────────────────────────────────
+// Can you actually train every muscle group with this kit?
+//
+// A kit used to be judged on whether its pieces made sense together (a bar has
+// plates, free weights have a bench). That let genuinely useless kits pass: an
+// $8,548 "strength" kit anchored by a commercial leg press, with no rack, no
+// pull-up bar and nothing to train your back with.
+//
+// Trainability is a property of the COMBINATION, not of any product — a barbell
+// trains nothing without plates, and pressing needs a bench. So we model what
+// each piece unlocks, union it across the kit, and check the result against
+// what the goal requires. Levels: 2 = properly trainable, 1 = limited
+// (assistance bands, floor pressing), 0 = not at all.
+//
+// Everything here is derivable from what a product IS (its category, or the
+// type its own listing states) — we never claim a capability the equipment
+// doesn't plainly have.
+// LOCKSTEP: mirrored in the frontend's src/lib/coverage.ts.
+const PATTERNS=['push-h','push-v','pull-h','pull-v','squat','hinge','core','conditioning'];
+const PATTERN_LABEL={'push-h':'Chest press','push-v':'Overhead press','pull-h':'Rows',
+  'pull-v':'Pull-ups & pulldowns',squat:'Squats',hinge:'Deadlifts & hinges',core:'Core',conditioning:'Conditioning'};
+
+// What each category lets you train on its own, before enablers. Anything not
+// listed is 0 — plates, benches and foam rollers train nothing by themselves,
+// which is the point: they are enablers and recovery, not training.
+const CAT_TRAINS={
+  // Presses go to 2 once a bench is in the kit (see coverageFromTrains).
+  dumbbells:{'push-h':1,'push-v':2,'pull-h':2,squat:2,hinge:2,core:1},
+  // Squat is 1 without a rack — you can only train what you can clean to your
+  // shoulders, which caps a barbell squat well below a racked one.
+  barbells:{'push-h':1,'push-v':2,'pull-h':2,squat:1,hinge:2,core:1},
+  kettlebells:{'push-h':1,'push-v':2,'pull-h':1,squat:2,hinge:2,core:2,conditioning:2},
+  // A rack's own contribution is the pull-up bar; its real job is unlocking
+  // the barbell squat, handled as an enabler below.
+  racks:{'pull-v':2},
+  bands:{'push-h':1,'push-v':1,'pull-h':1,'pull-v':1,squat:1,hinge:1,core:1},
+  cardio:{conditioning:2,squat:1},
+  jumpropes:{conditioning:2},
+  yogamats:{core:1},
+};
+
+// Machines vary more than any other category — a functional trainer covers most
+// of a gym, a linear leg press covers one joint. Read what the listing itself
+// states rather than assuming the category means anything.
+function machineTrains(specs){
+  const type=String((specs||{}).Type||''), move=String((specs||{}).Movement||'');
+  if(/Leg Press/i.test(move)) return {squat:2};
+  if(/Row/i.test(move)) return {'pull-h':2};
+  if(/Posterior/i.test(move)||/GHD/i.test(type)) return {hinge:2,core:2};
+  if(/All-In-One/i.test(type)) return {'push-h':2,'push-v':2,'pull-h':2,'pull-v':2,squat:2,hinge:1,core:2};
+  if(/Functional Trainer|Cable Tower/i.test(type)) return {'push-h':2,'push-v':1,'pull-h':2,'pull-v':2,core:2,squat:1};
+  if(/Multi-Station|Home Gym|Smart Gym/i.test(type)) return {'push-h':2,'push-v':1,'pull-h':2,'pull-v':2,squat:1,core:1};
+  return {};
+}
+
+// Products the category default overstates. An EZ curl bar sits in `barbells`
+// but is a 47" accessory bar: it will not sit in a rack, will not bench and
+// will not squat. Treating it as the kit's barbell produced kits pairing a
+// squat stand and bumper plates with a curl bar.
+const PRODUCT_TRAINS={'rep-equalizer':{'pull-h':1}};
+// Bars that cannot anchor a barbell setup — excluded from the kit's barbell
+// slot entirely (they stay in the catalog as the accessory bars they are).
+const SPECIALTY_BARS=new Set(['rep-equalizer']);
+
+function trainsOf(id,category,specs){
+  return PRODUCT_TRAINS[id]||(category==='machines'?machineTrains(specs):(CAT_TRAINS[category]||{}));
+}
+
+// A machine only makes a rack redundant when it IS one: uprights plus cables.
+// A leg press, an iso-lateral row or a GHD is a single station — letting those
+// block the rack is what left $8k kits with nothing to squat in or pull from.
+function replacesRack(category,specs){
+  if(category!=='machines')return false;
+  const t=machineTrains(specs);
+  return (t['pull-v']||0)>=2 && (t['push-h']||0)>=2;
+}
+
+// Union of what the kit can train, with the enablers that only exist at kit
+// level: a bench turns floor pressing into real pressing, and a rack turns a
+// barbell into a squat you can unrack and bail out of.
+function coverageFromTrains(items){
+  const cats=new Set(items.map(p=>p.category));
+  const cov={}; for(const k of PATTERNS) cov[k]=0;
+  const put=(k,v)=>{if(v>cov[k])cov[k]=v};
+  for(const p of items){
+    // Barbell gear is inert without plates to load onto it.
+    if(p.category==='barbells'&&!cats.has('plates'))continue;
+    for(const k of Object.keys(p.trains||{})) put(k,p.trains[k]);
+  }
+  const hasWeight=['dumbbells','barbells','kettlebells'].some(c=>cats.has(c));
+  if(cats.has('benches')&&hasWeight) put('push-h',2);
+  if(cats.has('benches')&&cats.has('dumbbells')) put('pull-h',2);
+  if(cats.has('racks')&&cats.has('barbells')&&cats.has('plates')) put('squat',2);
+  return cov;
+}
+const coverageOf=products=>coverageFromTrains(
+  products.map(p=>({category:p.category,trains:trainsOf(p.id,p.category,p.specs)})));
+
+// What each goal has to be able to train before the kit is honest about
+// itself. Strength and a full home gym must cover the whole body; fat-loss and
+// general fitness lead with conditioning but still can't skip a muscle group.
+const GOAL_NEEDS={
+  'build-strength':{'push-h':2,'push-v':1,'pull-h':2,'pull-v':1,squat:2,hinge:2,core:1},
+  'home-gym-setup':{'push-h':2,'push-v':1,'pull-h':2,'pull-v':1,squat:2,hinge:2,core:1},
+  'get-fit':{'push-h':1,'push-v':1,'pull-h':1,'pull-v':1,squat:1,hinge:1,core:1,conditioning:2},
+  'lose-weight':{'push-h':1,'pull-h':1,squat:1,hinge:1,core:1,conditioning:2},
+};
+const needsFor=goal=>GOAL_NEEDS[goal]||GOAL_NEEDS['get-fit'];
+const coverageGaps=(products,goal)=>{
+  const cov=coverageOf(products), need=needsFor(goal);
+  return Object.keys(need).filter(k=>cov[k]<need[k]);
+};
+
+// Users think in muscles, not movement patterns. Each group lists the movements
+// that train it, so the UI can say WHY a group is covered ("Back — rows,
+// pulldowns") instead of asking anyone to trust a checkmark.
+const MUSCLE_GROUPS=[
+  {key:'chest',label:'Chest',patterns:['push-h']},
+  {key:'back',label:'Back',patterns:['pull-h','pull-v']},
+  {key:'shoulders',label:'Shoulders',patterns:['push-v','push-h']},
+  // Arms need a push AND a pull — triceps and biceps are not the same job.
+  {key:'arms',label:'Arms',patterns:['push-h','push-v','pull-h','pull-v'],needsBoth:[['push-h','push-v'],['pull-h','pull-v']]},
+  {key:'quads',label:'Quads',patterns:['squat']},
+  {key:'posterior',label:'Hamstrings & glutes',patterns:['hinge','squat']},
+  {key:'core',label:'Core',patterns:['core']},
+  {key:'conditioning',label:'Conditioning',patterns:['conditioning']},
+];
+function muscleCoverage(products){
+  const cov=coverageOf(products);
+  const maxOf=ps=>ps.reduce((m,p)=>Math.max(m,cov[p]),0);
+  return MUSCLE_GROUPS.map(g=>({
+    key:g.key, label:g.label,
+    level:g.needsBoth?Math.min(maxOf(g.needsBoth[0]),maxOf(g.needsBoth[1])):maxOf(g.patterns),
+    via:g.patterns.filter(p=>cov[p]>0).map(p=>PATTERN_LABEL[p]),
+  }));
+}
+function coverageSummary(products){
+  const groups=muscleCoverage(products), missing=groups.filter(g=>g.level===0);
+  if(!missing.length) return `Trains all ${groups.length} muscle groups.`;
+  const names=missing.map(g=>g.label.toLowerCase());
+  const list=names.length===1?names[0]:`${names.slice(0,-1).join(', ')} and ${names[names.length-1]}`;
+  return `Covers everything except ${list}.`;
+}
+
 // ── KIT BUILDER ───────────────────────────────────────────────
 // One request returns three kits (Best Value / Best Match / Best Quality)
 // from the quiz answers. Groq (Llama 3.3 70B) picks product IDs when a key
@@ -1081,6 +1225,9 @@ const KIT_CATALOG = KIT_CATEGORIES.flatMap(cat =>
     // tell a real deal from a product that is merely cheap.
     price:p.salePrice||p.price, list:p.price, quality:p.quality, rating:p.rating,
     gs:p.gymgearScore||0, compact:!!p.compact,
+    // What this piece lets you train, and whether it stands in for a rack.
+    // See COVERAGE MODEL — the kit is judged on the union of these.
+    trains:trainsOf(p.id,cat,p.specs), rackLike:replacesRack(cat,p.specs),
   }))
 );
 const KIT_BY_ID = new Map(KIT_CATALOG.map(p=>[p.id,p]));
@@ -1129,10 +1276,6 @@ function categoryOrder(goal,space,pieces,experience){
   return order;
 }
 
-// A machine already IS a rack + cables (and vice versa isn't true, but a kit
-// holding both is redundant) — whichever lands first blocks the other.
-const EXCLUSIVE_WITH={machines:['racks'],racks:['machines']};
-
 // Ceiling gate (quiz: ceiling === 'under-8ft'). Full racks and most
 // all-in-ones stand 86-91" — they don't clear an 8 ft (96") ceiling once
 // flooring and pull-up clearance are in. Only these fit a low room.
@@ -1176,7 +1319,7 @@ const DEAL_SWAP_MAX_QUALITY_DROP=1;
 // match = personalised (GymGear Score + rating + budget fit), quality = best
 // built. `tight` gates non-compact machines out of small spaces at product
 // level (a cable tower fits an apartment corner; a G20 does not).
-function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil}){
+function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
   const perSlot=cap/Math.max(target,1);
   // 1.0 when the price sits at the category's ideal share of budget, falling
   // off above (over budget hurts fast) and below (a $10 item isn't an anchor).
@@ -1198,8 +1341,16 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil}){
     quality:p=>p.quality+fit(p)*0.5+dealBoost(p)*DEAL_WEIGHT_QUALITY,
   }[strategy];
   const picks=[]; let spent=0; const blocked=new Set();
+  // A rack and the machine that IS one (uprights + cables) are redundant
+  // together — but only a genuine all-in-one replaces a rack. Deriving this per
+  // product instead of per category is what stops a single-station leg press
+  // from blocking the rack and gutting the kit.
+  const conflicted=p=>(p.cat==='racks'&&picks.some(q=>q.rackLike))
+    ||(p.rackLike&&picks.some(q=>q.cat==='racks'));
   // Everything except the budget test — reused by the usability passes below.
-  const allowed=p=>!blocked.has(p.cat)&&!ownedCats.has(p.cat)
+  const allowed=p=>!blocked.has(p.cat)&&!ownedCats.has(p.cat)&&!conflicted(p)
+    // An EZ curl bar is not a barbell you can rack, bench or squat.
+    &&!SPECIALTY_BARS.has(p.id)
     &&!(tight&&(p.cat==='machines'||p.cat==='cardio'||p.cat==='racks')&&!p.compact)
     &&!(lowCeil&&p.cat==='racks'&&!LOW_CEIL_RACKS.has(p.id))
     &&!(lowCeil&&p.cat==='machines'&&!LOW_CEIL_MACHINES.has(p.id));
@@ -1229,10 +1380,8 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil}){
   const pairHeld=p=>(HARD_PAIRS[p.cat]||[]).reduce((s,need)=>
     (picks.some(q=>q.cat===need)||ownedCats.has(need))?s:s+((cheapestByCat[need]||{}).price||0),0);
   const pickable=p=>allowed(p)&&fitsIn(p,cap-reserve()-benchHeld(p)-pairHeld(p));
-  const take=p=>{picks.push(p);spent+=p.price;blocked.add(p.cat);
-    for(const c of EXCLUSIVE_WITH[p.cat]||[])blocked.add(c);};
-  const drop=i=>{spent-=picks[i].price;blocked.delete(picks[i].cat);
-    for(const c of EXCLUSIVE_WITH[picks[i].cat]||[])blocked.delete(c); picks.splice(i,1);};
+  const take=p=>{picks.push(p);spent+=p.price;blocked.add(p.cat);};
+  const drop=i=>{spent-=picks[i].price;blocked.delete(picks[i].cat);picks.splice(i,1);};
   for(const cat of order){
     if(picks.length>=target) break;
     if(blocked.has(cat)||ownedCats.has(cat)) continue;
@@ -1309,15 +1458,52 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil}){
     if(!next)break;
     take(next);
   }
-  // Composition is final — now decide the bench.
+  seatBench();
+
+  // Coverage repair — the pass that makes a kit a gym rather than a coherent
+  // pile. Everything above only checks that the pieces work TOGETHER; a rack, a
+  // bar and plates pass every one of those rules and still cannot train your
+  // chest. So: for each movement the goal needs and the kit can't deliver, buy
+  // the cheapest piece that fixes it, spending against the same stretched cap
+  // the other usability rules use. Cheapest-that-fixes-it (not best) keeps the
+  // repair from quietly rebuilding the tier's character — a $54 kettlebell
+  // restores the hinge, it doesn't turn Best Value into Best Quality.
+  const coverNow=()=>coverageFromTrains(picks.map(p=>({category:p.cat,trains:p.trains})));
+  for(let pass=0;pass<PATTERNS.length;pass++){
+    const cov=coverNow();
+    // Deepest hole first: a pattern at 0 is a muscle group you cannot train at
+    // all, which beats topping a 1 up to a 2.
+    const missing=Object.keys(needs||{}).filter(k=>cov[k]<needs[k]).sort((a,b)=>cov[a]-cov[b]);
+    if(!missing.length)break;
+    const pat=missing[0], want=needs[pat];
+    // Simulate: only take a piece that genuinely moves this pattern once the
+    // kit's own enablers are applied — a bench "covers" chest press only
+    // alongside something to press.
+    const fixes=KIT_CATALOG
+      .filter(p=>allowed(p)&&!picks.some(q=>q.cat===p.cat)&&fitsIn(p,stretch))
+      .filter(p=>coverageFromTrains([...picks,p].map(q=>({category:q.cat,trains:q.trains})))[pat]>=want)
+      .sort((a,b)=>a.price-b.price);
+    if(!fixes.length)break;
+    take(fixes[0]);
+  }
+  // Repair can bring in the free weights that make a bench worth having.
   seatBench();
 
   // Last look: a kit with no deal in it, when a comparable discounted product
   // was sitting right there, is a missed claim on a site that promises the best
-  // price. Swaps are same-category and same-slot, so composition — and with it
-  // every usability rule above — is untouched. The swap may never make the kit
-  // dearer: a "deal" that costs more than what it replaced is not a deal, and
-  // it was shuffling Best Value above Best Match on the results page.
+  // price. Swaps are same-category and same-slot, so the kit's shape is
+  // untouched — but same CATEGORY is not the same FUNCTION. A leg press and an
+  // all-in-one trainer are both `machines`, and swapping one for the other on
+  // the strength of a 16% discount is what silently removed every pulling
+  // movement from the $4,549 "strength" kit. So the swap has to leave the kit
+  // able to train everything it could before. The swap may never make the kit
+  // dearer either: a "deal" that costs more than what it replaced is not a
+  // deal, and it was shuffling Best Value above Best Match on the results page.
+  const covBefore=coverNow();
+  const keepsCoverage=(i,alt)=>{
+    const after=coverageFromTrains(picks.map((q,j)=>({category:j===i?alt.cat:q.cat,trains:j===i?alt.trains:q.trains})));
+    return PATTERNS.every(k=>after[k]>=((needs||{})[k]||0)&&!(covBefore[k]>0&&after[k]===0));
+  };
   if(!picks.some(p=>dealBoost(p)>0)){
     for(let i=0;i<picks.length;i++){
       const cur=picks[i];
@@ -1325,7 +1511,8 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil}){
         .filter(p=>p.cat===cur.cat&&p.id!==cur.id&&dealBoost(p)>0
           &&p.quality>=cur.quality-DEAL_SWAP_MAX_QUALITY_DROP
           &&p.price<=cur.price
-          &&spent-cur.price+p.price<=stretch)
+          &&spent-cur.price+p.price<=stretch
+          &&keepsCoverage(i,p))
         .sort((a,b)=>(b.quality+dealBoost(b)*2)-(a.quality+dealBoost(a)*2))[0];
       if(alt){ spent+=alt.price-cur.price; picks[i]=alt; break; }
     }
@@ -1346,9 +1533,10 @@ function fallbackKits(answers){
   const order=categoryOrder(answers.goal,answers.space,target,answers.experience);
   const tight=answers.space==='apartment-corner'||answers.space==='small-room';
   const lowCeil=answers.ceiling==='under-8ft';
+  const needs=needsFor(answers.goal);
   return KIT_TIERS.map(t=>({
     type:t.type, name:t.name,
-    productIds:buildKit(t.strategy,{cap:capFor(t.type,cap),target,ownedCats,order,tight,lowCeil}),
+    productIds:buildKit(t.strategy,{cap:capFor(t.type,cap),target,ownedCats,order,tight,lowCeil,needs}),
   }));
 }
 
@@ -1365,7 +1553,7 @@ function forbiddenCats(space){
 // enforce the hard constraints the model can't be trusted with: drop unknown
 // IDs (no hallucinated pick reaches the client), drop space-forbidden and
 // owned categories, dedupe by category, and trim to the tier budget.
-function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight,lowCeil){
+function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight,lowCeil,goal){
   return rawKits.map(k=>{
     let products=(k.productIds||[])
       .map(id=>{const lite=KIT_BY_ID.get(id);if(!lite)return null;
@@ -1378,12 +1566,17 @@ function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight,lowCeil){
       .filter(p=>!(tight&&(p.category==='machines'||p.category==='cardio'||p.category==='racks')&&!p.compact))
       .filter(p=>!(lowCeil&&p.category==='racks'&&!LOW_CEIL_RACKS.has(p.id)))
       .filter(p=>!(lowCeil&&p.category==='machines'&&!LOW_CEIL_MACHINES.has(p.id)));
-    // Dedupe by category so a kit never lists two benches — and never a
-    // machine AND a rack (the machine already is one).
-    const seen=new Set();
+    // Dedupe by category so a kit never lists two benches — and never a rack
+    // AND the all-in-one that already is one (single-station machines like a
+    // leg press are not rack replacements and may sit beside a rack).
+    const seen=new Set(); let rackSeen=false, allInOneSeen=false;
     products=products.filter(p=>{
       if(seen.has(p.category))return false;
-      for(const c of EXCLUSIVE_WITH[p.category]||[]) if(seen.has(c)) return false;
+      const isRackLike=replacesRack(p.category,p.specs);
+      if(p.category==='racks'&&allInOneSeen)return false;
+      if(isRackLike&&rackSeen)return false;
+      if(p.category==='racks')rackSeen=true;
+      if(isRackLike)allInOneSeen=true;
       seen.add(p.category); return true;
     });
     // Trim against the same budget buildKit composed to. Trimming to the bare
@@ -1396,7 +1589,12 @@ function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight,lowCeil){
     const needsBench=products.some(p=>NEEDS_BENCH.has(p.category));
     for(;;){
       if(total<=cap||products.length<=MIN_PIECES)break;
-      const droppable=products.map((p,idx)=>({p,idx})).filter(({p})=>!(needsBench&&p.category==='benches'));
+      // Trimming for budget must never re-open a coverage gap: a cheaper kit
+      // that can no longer train your back isn't cheaper, it's broken.
+      const gapsNow=coverageGaps(products,goal).length;
+      const droppable=products.map((p,idx)=>({p,idx}))
+        .filter(({p})=>!(needsBench&&p.category==='benches'))
+        .filter(({idx})=>coverageGaps(products.filter((_,i)=>i!==idx),goal).length<=gapsNow);
       if(!droppable.length)break;
       const worst=droppable.reduce((m,c)=>priceOf(c.p)>priceOf(m.p)?c:m);
       total-=priceOf(worst.p); products.splice(worst.idx,1);
@@ -1432,7 +1630,11 @@ function defaultCopy(kit,answers){
     match:`Balanced for your space and budget — built around the ${lead}.`,
     quality:`Buy-once gear that lasts a lifetime, led by the ${lead}.`,
   }[kit.type]||`A ${goal} kit built around the ${lead}.`;
-  return {name:kit.name,description:blurb};
+  // State the coverage in the blurb — it is the strongest thing we can say
+  // about a kit, and saying it here keeps the claim honest when it isn't
+  // complete (coverageSummary names what's missing rather than hiding it).
+  // (Lockstep: frontend route.ts defaultCopy.)
+  return {name:kit.name,description:`${blurb} ${coverageSummary(kit.products)}`};
 }
 
 // Groq writes only the name + description for already-chosen kits. It cannot
@@ -1550,7 +1752,7 @@ app.post('/api/kit',async(req,res)=>{
   // owned-aware. Groq only dresses it with names and descriptions.
   const tight=a.space==='apartment-corner'||a.space==='small-room';
   const lowCeil=a.ceiling==='under-8ft';
-  let kits=hydrateKits(fallbackKits(a),cap,forbidden,ownedCats,tight,lowCeil);
+  let kits=hydrateKits(fallbackKits(a),cap,forbidden,ownedCats,tight,lowCeil,a.goal);
 
   let generatedBy='fallback';
   try{
@@ -1560,9 +1762,13 @@ app.post('/api/kit',async(req,res)=>{
       kits=kits.map(k=>{
         const c=copy.get(k.type);
         const fallbackCopy=defaultCopy(k,a);
+        const written=(c?.description||'').toString().trim().slice(0,300);
         return {...k,
           name:(c?.name||'').toString().trim().slice(0,40)||fallbackCopy.name,
-          description:(c?.description||'').toString().trim().slice(0,300)||fallbackCopy.description};
+          // The coverage sentence is measured, never written: append ours to
+          // whatever the model produced so the claim can't be hallucinated
+          // (and can't be dropped) by the copy pass.
+          description:written?`${written} ${coverageSummary(k.products)}`:fallbackCopy.description};
       });
     }else{
       kits=kits.map(k=>({...k,...defaultCopy(k,a)}));
@@ -1571,6 +1777,12 @@ app.post('/api/kit',async(req,res)=>{
     console.warn('Groq copy failed, using default copy:',err.message);
     kits=kits.map(k=>({...k,...defaultCopy(k,a)}));
   }
+  // What the kit can actually train — rendered as the coverage panel, and the
+  // site's proof that "complete" is a measurement, not a slogan.
+  kits=kits.map(k=>({...k,
+    coverage:coverageOf(k.products),
+    coverageGaps:coverageGaps(k.products,a.goal),
+    muscles:muscleCoverage(k.products)}));
   // "Frequently bought together" — top complementary accessories for this kit,
   // each with a short "why add this" line. Deterministic copy first (always
   // present), then enhanced by Groq when available; AI dashes are stripped to
