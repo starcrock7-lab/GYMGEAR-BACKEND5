@@ -32,5 +32,19 @@ Catalog: 31 categories, 290 hardcoded products in `PRODUCTS` (incl. `machines` a
 ## Deploy
 Push to `main` → Render deploy (manual deploy from dashboard if auto-deploy is off). Free tier **sleeps after 15 min**; first request takes 30–60 s — normal, not a bug.
 
+## Price truth check (`scripts/check-prices.js`)
+Weekly GitHub Action (`.github/workflows/price-check.yml`) that reads every product's price from its **live retailer listing** and opens a PR with the diff. A human merges it — the job never writes to `main`.
+
+- `npm run check:prices` — dry run, writes nothing, prints the classification table
+- `npm run check:prices:write` — applies edits (what CI runs before raising the PR)
+- Flags: `--limit N`, `--only id1,id2`, `--json out.json`, `--catalog file` (test against a copy)
+
+**The rule this exists to enforce:** a price is only ever *read*, never inferred, estimated or carried forward, and **no LLM authors a price**. Anything unreadable is reported `UNREADABLE` and left alone. Deliberate refusals you'll see in the output:
+- `amazon-tos` — Amazon (81 of 290 products) is never scraped; it needs PA-API via the Associates account
+- `ambiguous-variants` — a Shopify listing priced per variant, where the catalog row doesn't record which one. Guessing here turned a $295 dumbbell **set** into the $29.99 single, i.e. a fabricated 90% discount
+- `http-403` — Rogue and several others block bots at the product page; robots.txt is served fine, the page is not
+
+Edits go through `scripts/catalog-io.js`, which walks each `p(...)` call quote- and bracket-aware and replaces only the exact value span — never a whole-file regex, which is how the 15 positional args get silently swapped.
+
 ## Inactive-but-present
-`search.js` + `weekly-refresh.yml` — weekly AI price-refresh pipeline, **not active**. Don't wire it up as a side effect of another change.
+`search.js` + `weekly-refresh.yml` — weekly **AI** price-refresh pipeline, **not active**. Don't wire it up as a side effect of another change. Not the same thing as `check-prices.js` above: that pipeline puts an LLM in the pricing path, which is exactly what the deals rule forbids.

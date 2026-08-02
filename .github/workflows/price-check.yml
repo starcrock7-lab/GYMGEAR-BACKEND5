@@ -1,0 +1,97 @@
+# Weekly price truth check.
+#
+# Cadence is weekly, not daily: the catalog is hand-curated and its prices move
+# on the order of weeks, so a daily run would mostly spend requests on other
+# people's servers to confirm nothing changed. Revisit if saleEndsAt dates
+# start landing, since a countdown that outlives its sale is a false claim.
+#
+# This job NEVER writes to main. It opens a pull request and a human merges it.
+# That review is the control that stops a broken extractor silently rewriting
+# every price in the catalog.
+name: price-check
+
+on:
+  schedule:
+    - cron: '17 6 * * 1' # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: price-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Dry run first: the report is the evidence attached to the PR, and it is
+      # produced before anything is edited.
+      - name: Check listings (dry run)
+        id: check
+        run: |
+          set -o pipefail
+          node scripts/check-prices.js --json price-report.json | tee price-log.txt
+          echo "changes=$(node -e "const r=require('./price-report.json');console.log(r.results.filter(x=>x.edit).length)")" >> "$GITHUB_OUTPUT"
+
+      # Visible even when nothing changes, so a run that read 0 products is
+      # obvious instead of looking like a clean bill of health.
+      - name: Publish summary
+        if: always()
+        run: |
+          {
+            echo '## Price check'
+            echo '```'
+            tail -n 40 price-log.txt || echo 'no output — the run failed before reporting'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Apply changes and open PR
+        if: steps.check.outputs.changes != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          node scripts/check-prices.js --write --json price-report.json
+          node --check server.js   # a bad edit must never reach a PR
+
+          BRANCH="price-check/$(date -u +%Y-%m-%d)"
+          git config user.name  "gymgear price bot"
+          git config user.email "starcrock7@gmail.com"
+          git checkout -b "$BRANCH"
+          git add server.js
+          git commit -m "chore: price check $(date -u +%Y-%m-%d)" -m "Prices read from the live listings. Every changed value is evidenced in the run log; review before merging."
+          git push -u origin "$BRANCH"
+
+          gh pr create \
+            --title "Price check $(date -u +%Y-%m-%d)" \
+            --body "$(node -e "
+              const r=require('./price-report.json');
+              const c=r.results.filter(x=>x.edit);
+              console.log('Prices below were READ from the live listings — none are inferred or estimated.\n');
+              console.log('| product | catalog | read | class | source |');
+              console.log('|---|---|---|---|---|');
+              for(const x of c) console.log(\`| \${x.id} | \$\${x.catalog.salePrice ?? x.catalog.price} | \$\${x.read?.current ?? '?'} | \${x.cls} | \${x.read?.method ?? ''} |\`);
+              const u=r.results.filter(x=>x.cls==='UNREADABLE');
+              if(u.length) console.log(\`\n\${u.length} product(s) UNREADABLE and left untouched.\`);
+            ")" \
+            --base main --head "$BRANCH"
+
+      # The report is an artifact, not a commit: it carries URLs and timestamps
+      # that would otherwise churn the repo every week.
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: price-report
+          path: |
+            price-report.json
+            price-log.txt

@@ -6,7 +6,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "check:prices": "node scripts/check-prices.js",
+    "check:prices:write": "node scripts/check-prices.js --write"
   },
   "engines": {
     "node": ">=18.0.0"
