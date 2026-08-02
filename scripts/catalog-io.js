@@ -70,6 +70,7 @@ function readCatalog(file) {
       saleEndsAt: ends ? ends[1] : null,
       span: { call: { start: m.index, end: parsed.close } },
       priceSpan: { start: a[ARG.price].start, end: a[ARG.price].end },
+      urlSpan: { start: a[ARG.url].start, end: a[ARG.url].end },
       optsSpan: optsArg ? { start: optsArg.start, end: optsArg.end } : null,
       argCount: a.length,
     });
@@ -90,6 +91,9 @@ function applyEdits(file, edits) {
 
     if (e.price !== undefined && e.price !== row.price) {
       patches.push({ start: row.priceSpan.start, end: row.priceSpan.end, text: String(e.price) });
+    }
+    if (e.url !== undefined && e.url !== row.url) {
+      patches.push({ start: row.urlSpan.start, end: row.urlSpan.end, text: `'${e.url}'` });
     }
 
     const wantSale = e.salePrice !== undefined ? e.salePrice : row.salePrice;
