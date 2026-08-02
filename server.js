@@ -159,7 +159,8 @@ const IMGS = {
   // Sports Bras
   'lululemon-energy':   'https://images.lululemon.com/is/image/lululemon/LW1AHOS_064847_1',
   'nike-indy-bra':      'https://static.nike.com/a/images/t_default/womens-dri-fit-indy-bra.jpg',
-  'ua-infinity-bra':    'https://underarmour.scene7.com/is/image/Underarmour/V5-1376885-001_FC?rp=standard-0pad|pdpMainDesktop&scl=1&fmt=jpg&qlt=85',  'youngla-sports-bra': 'https://cdn.shopify.com/s/files/1/1775/6429/files/Noel___Maddie_BF_eComm_11_25_253999_7f07fe2d-e72f-4be3-960e-8b5f9e536fa4.jpg?v=1775509287',
+  'ua-infinity-bra':    'https://underarmour.scene7.com/is/image/Underarmour/V5-1376885-001_FC?rp=standard-0pad|pdpMainDesktop&scl=1&fmt=jpg&qlt=85',
+  'youngla-sports-bra': 'https://cdn.shopify.com/s/files/1/1775/6429/files/Noel___Maddie_BF_eComm_11_25_253999_7f07fe2d-e72f-4be3-960e-8b5f9e536fa4.jpg?v=1775509287',
 
   // Supplements  --  Pre-Workout
   'ghost-legend':       'https://cdn.shopify.com/s/files/1/2060/6331/files/LegendBlueRaspberry.webp?v=1739820789',
@@ -1158,8 +1159,20 @@ function coverageFromTrains(items){
   if(cats.has('racks')&&cats.has('barbells')&&cats.has('plates')) put('squat',2);
   return cov;
 }
-const coverageOf=products=>coverageFromTrains(
-  products.map(p=>({category:p.category,trains:trainsOf(p.id,p.category,p.specs)})));
+// Gear the buyer already owns counts. The kit deliberately doesn't re-sell you
+// a rack you have, so judging coverage on the kit alone would conclude you
+// can't do pull-ups and bolt a resistance band on to "fix" it. Owning a barbell
+// means owning a loaded one — nobody answers "I have a barbell" about a bare
+// shaft — so it brings its plates with it.
+function ownedTrains(ownedCats){
+  const cats=[...(ownedCats||[])];
+  const rows=cats.map(c=>({category:c,trains:CAT_TRAINS[c]||{}}));
+  if(cats.includes('barbells')&&!cats.includes('plates')) rows.push({category:'plates',trains:{}});
+  return rows;
+}
+const coverageOf=(products,ownedCats)=>coverageFromTrains([
+  ...products.map(p=>({category:p.category,trains:trainsOf(p.id,p.category,p.specs)})),
+  ...ownedTrains(ownedCats)]);
 
 // What each goal has to be able to train before the kit is honest about
 // itself. Strength and a full home gym must cover the whole body; fat-loss and
@@ -1171,8 +1184,8 @@ const GOAL_NEEDS={
   'lose-weight':{'push-h':1,'pull-h':1,squat:1,hinge:1,core:1,conditioning:2},
 };
 const needsFor=goal=>GOAL_NEEDS[goal]||GOAL_NEEDS['get-fit'];
-const coverageGaps=(products,goal)=>{
-  const cov=coverageOf(products), need=needsFor(goal);
+const coverageGaps=(products,goal,ownedCats)=>{
+  const cov=coverageOf(products,ownedCats), need=needsFor(goal);
   return Object.keys(need).filter(k=>cov[k]<need[k]);
 };
 
@@ -1190,8 +1203,8 @@ const MUSCLE_GROUPS=[
   {key:'core',label:'Core',patterns:['core']},
   {key:'conditioning',label:'Conditioning',patterns:['conditioning']},
 ];
-function muscleCoverage(products){
-  const cov=coverageOf(products);
+function muscleCoverage(products,ownedCats){
+  const cov=coverageOf(products,ownedCats);
   const maxOf=ps=>ps.reduce((m,p)=>Math.max(m,cov[p]),0);
   return MUSCLE_GROUPS.map(g=>({
     key:g.key, label:g.label,
@@ -1199,8 +1212,8 @@ function muscleCoverage(products){
     via:g.patterns.filter(p=>cov[p]>0).map(p=>PATTERN_LABEL[p]),
   }));
 }
-function coverageSummary(products){
-  const groups=muscleCoverage(products), missing=groups.filter(g=>g.level===0);
+function coverageSummary(products,ownedCats){
+  const groups=muscleCoverage(products,ownedCats), missing=groups.filter(g=>g.level===0);
   if(!missing.length) return `Trains all ${groups.length} muscle groups.`;
   const names=missing.map(g=>g.label.toLowerCase());
   const list=names.length===1?names[0]:`${names.slice(0,-1).join(', ')} and ${names[names.length-1]}`;
@@ -1347,13 +1360,22 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
   // from blocking the rack and gutting the kit.
   const conflicted=p=>(p.cat==='racks'&&picks.some(q=>q.rackLike))
     ||(p.rackLike&&picks.some(q=>q.cat==='racks'));
-  // Everything except the budget test — reused by the usability passes below.
-  const allowed=p=>!blocked.has(p.cat)&&!ownedCats.has(p.cat)&&!conflicted(p)
+  // The gates that come from the buyer's own answers: it doesn't fit the room,
+  // it doesn't clear the ceiling, they already own it, or it isn't the kind of
+  // bar a kit can be built on. These hold for ANY slot — separated from
+  // allowed() because the deal swap replaces a product in a slot that is
+  // already taken, so it can't use the blocked-category test but absolutely
+  // must still respect these (it was swapping a compact all-in-one for a
+  // discounted commercial leg press that then failed the room filter, leaving
+  // a two-item "kit").
+  const eligible=p=>!ownedCats.has(p.cat)
     // An EZ curl bar is not a barbell you can rack, bench or squat.
     &&!SPECIALTY_BARS.has(p.id)
     &&!(tight&&(p.cat==='machines'||p.cat==='cardio'||p.cat==='racks')&&!p.compact)
     &&!(lowCeil&&p.cat==='racks'&&!LOW_CEIL_RACKS.has(p.id))
     &&!(lowCeil&&p.cat==='machines'&&!LOW_CEIL_MACHINES.has(p.id));
+  // Everything except the budget test — reused by the usability passes below.
+  const allowed=p=>!blocked.has(p.cat)&&!conflicted(p)&&eligible(p);
   const fitsIn=(p,budget)=>spent+p.price<=budget;
   // Hold budget back for the slots still to fill: one greedy anchor must not be
   // able to eat the whole kit (a $295 dumbbell under a $300 cap left users
@@ -1468,7 +1490,11 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
   // the other usability rules use. Cheapest-that-fixes-it (not best) keeps the
   // repair from quietly rebuilding the tier's character — a $54 kettlebell
   // restores the hinge, it doesn't turn Best Value into Best Quality.
-  const coverNow=()=>coverageFromTrains(picks.map(p=>({category:p.cat,trains:p.trains})));
+  // Owned gear counts toward what the buyer can train — the kit doesn't
+  // re-sell you the rack you already have, and without this the repair pass
+  // would "fix" your missing pull-up bar with a resistance band.
+  const owned=ownedTrains(ownedCats);
+  const coverNow=()=>coverageFromTrains([...picks.map(p=>({category:p.cat,trains:p.trains})),...owned]);
   for(let pass=0;pass<PATTERNS.length;pass++){
     const cov=coverNow();
     // Deepest hole first: a pattern at 0 is a muscle group you cannot train at
@@ -1481,7 +1507,7 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
     // alongside something to press.
     const fixes=KIT_CATALOG
       .filter(p=>allowed(p)&&!picks.some(q=>q.cat===p.cat)&&fitsIn(p,stretch))
-      .filter(p=>coverageFromTrains([...picks,p].map(q=>({category:q.cat,trains:q.trains})))[pat]>=want)
+      .filter(p=>coverageFromTrains([...[...picks,p].map(q=>({category:q.cat,trains:q.trains})),...owned])[pat]>=want)
       .sort((a,b)=>a.price-b.price);
     if(!fixes.length)break;
     take(fixes[0]);
@@ -1501,7 +1527,7 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
   // deal, and it was shuffling Best Value above Best Match on the results page.
   const covBefore=coverNow();
   const keepsCoverage=(i,alt)=>{
-    const after=coverageFromTrains(picks.map((q,j)=>({category:j===i?alt.cat:q.cat,trains:j===i?alt.trains:q.trains})));
+    const after=coverageFromTrains([...picks.map((q,j)=>({category:j===i?alt.cat:q.cat,trains:j===i?alt.trains:q.trains})),...owned]);
     return PATTERNS.every(k=>after[k]>=((needs||{})[k]||0)&&!(covBefore[k]>0&&after[k]===0));
   };
   if(!picks.some(p=>dealBoost(p)>0)){
@@ -1512,6 +1538,10 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
           &&p.quality>=cur.quality-DEAL_SWAP_MAX_QUALITY_DROP
           &&p.price<=cur.price
           &&spent-cur.price+p.price<=stretch
+          &&eligible(p)
+          // An all-in-one swapped in next to a rack is the redundancy the
+          // rack-like rule exists to prevent.
+          &&!(p.rackLike&&picks.some((q,j)=>j!==i&&q.cat==='racks'))
           &&keepsCoverage(i,p))
         .sort((a,b)=>(b.quality+dealBoost(b)*2)-(a.quality+dealBoost(a)*2))[0];
       if(alt){ spent+=alt.price-cur.price; picks[i]=alt; break; }
@@ -1591,10 +1621,10 @@ function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight,lowCeil,goal){
       if(total<=cap||products.length<=MIN_PIECES)break;
       // Trimming for budget must never re-open a coverage gap: a cheaper kit
       // that can no longer train your back isn't cheaper, it's broken.
-      const gapsNow=coverageGaps(products,goal).length;
+      const gapsNow=coverageGaps(products,goal,ownedCats).length;
       const droppable=products.map((p,idx)=>({p,idx}))
         .filter(({p})=>!(needsBench&&p.category==='benches'))
-        .filter(({idx})=>coverageGaps(products.filter((_,i)=>i!==idx),goal).length<=gapsNow);
+        .filter(({idx})=>coverageGaps(products.filter((_,i)=>i!==idx),goal,ownedCats).length<=gapsNow);
       if(!droppable.length)break;
       const worst=droppable.reduce((m,c)=>priceOf(c.p)>priceOf(m.p)?c:m);
       total-=priceOf(worst.p); products.splice(worst.idx,1);
@@ -1621,6 +1651,7 @@ function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight,lowCeil,goal){
 }
 
 // Default copy when Groq is absent or fails — never blank.
+const ownedCatsOf=answers=>new Set((answers.owned||[]).map(id=>OWNED_TO_CAT[id]).filter(Boolean));
 const GOAL_WORD={'build-strength':'strength','lose-weight':'fat-loss','get-fit':'all-round fitness','home-gym-setup':'complete home-gym'};
 function defaultCopy(kit,answers){
   const lead=kit.products[0]?.name||'your essentials';
@@ -1634,7 +1665,7 @@ function defaultCopy(kit,answers){
   // about a kit, and saying it here keeps the claim honest when it isn't
   // complete (coverageSummary names what's missing rather than hiding it).
   // (Lockstep: frontend route.ts defaultCopy.)
-  return {name:kit.name,description:`${blurb} ${coverageSummary(kit.products)}`};
+  return {name:kit.name,description:`${blurb} ${coverageSummary(kit.products,ownedCatsOf(answers))}`};
 }
 
 // Groq writes only the name + description for already-chosen kits. It cannot
@@ -1768,7 +1799,7 @@ app.post('/api/kit',async(req,res)=>{
           // The coverage sentence is measured, never written: append ours to
           // whatever the model produced so the claim can't be hallucinated
           // (and can't be dropped) by the copy pass.
-          description:written?`${written} ${coverageSummary(k.products)}`:fallbackCopy.description};
+          description:written?`${written} ${coverageSummary(k.products,ownedCats)}`:fallbackCopy.description};
       });
     }else{
       kits=kits.map(k=>({...k,...defaultCopy(k,a)}));
@@ -1780,9 +1811,9 @@ app.post('/api/kit',async(req,res)=>{
   // What the kit can actually train — rendered as the coverage panel, and the
   // site's proof that "complete" is a measurement, not a slogan.
   kits=kits.map(k=>({...k,
-    coverage:coverageOf(k.products),
-    coverageGaps:coverageGaps(k.products,a.goal),
-    muscles:muscleCoverage(k.products)}));
+    coverage:coverageOf(k.products,ownedCats),
+    coverageGaps:coverageGaps(k.products,a.goal,ownedCats),
+    muscles:muscleCoverage(k.products,ownedCats)}));
   // "Frequently bought together" — top complementary accessories for this kit,
   // each with a short "why add this" line. Deterministic copy first (always
   // present), then enhanced by Groq when available; AI dashes are stripped to
