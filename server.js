@@ -939,18 +939,46 @@ for (const [cat, list] of Object.entries(PRODUCTS)) {
   const vLo = Math.min(...vs), vHi = Math.max(...vs), tLo = Math.min(...ts), tHi = Math.max(...ts);
 
   for (const p of list) {
+    // Retailer rating is OPTIONAL - most retailers publish no aggregateRating,
+    // and inventing one fabricates social proof. OUR quality score is always
+    // present, so `build` always carries.
+    const hasRating = typeof p.rating === 'number' && p.rating > 0;
+    const hasReviews = typeof p.reviewCount === 'number' && p.reviewCount > 0;
     const f = {
       build: clamp01(p.quality / 10),
-      rated: clamp01(p.rating / 5),
+      rated: hasRating ? clamp01(p.rating / 5) : null,
       value: clamp01(norm(valOf(p), vLo, vHi)),
-      trust: clamp01(norm(trustOf(p), tLo, tHi)),
+      // "Review confidence" is unknowable without a published review count -
+      // scoring it 0 punishes the product for the retailer's silence.
+      trust: hasReviews ? clamp01(norm(trustOf(p), tLo, tHi)) : null,
     };
-    p.gymgearScore = Math.round(100 * (w.build * f.build + w.rated * f.rated + w.value * f.value + w.trust * f.trust));
-    // Breakdown for "how we score": each facet's 0-100 strength + its weight.
-    p.scoreBreakdown = Object.keys(SCORE_FACETS).map((k) => ({
-      key: k, label: SCORE_FACETS[k], score: Math.round(f[k] * 100), weight: w[k],
-    }));
+    p._f = f; // scored in a second pass, once category medians are known
     p.awards = [];
+  }
+
+  // Second pass. A facet the retailer never published is neither a strength
+  // nor a flaw, so it scores at the category median for that facet: absence is
+  // neutral. Redistributing its weight instead let an unrated product outrank
+  // a better-reviewed one purely by having fewer dimensions to be judged on.
+  const median = (arr) => {
+    const s = arr.filter((v) => v !== null && v !== undefined).sort((a, b) => a - b);
+    return s.length ? s[Math.floor(s.length / 2)] : 0.5;
+  };
+  const med = {};
+  for (const k of Object.keys(SCORE_FACETS)) med[k] = median(list.map((p) => p._f[k]));
+
+  for (const p of list) {
+    const f = p._f;
+    p.gymgearScore = Math.round(100 * Object.keys(SCORE_FACETS)
+      .reduce((s, k) => s + w[k] * (f[k] ?? med[k]), 0));
+    // Breakdown for "how we score": each facet's 0-100 strength + its weight.
+    // Unpublished facets report null so the UI can say "not published"
+    // instead of rendering a zero the product did not earn.
+    p.scoreBreakdown = Object.keys(SCORE_FACETS).map((k) => ({
+      key: k, label: SCORE_FACETS[k],
+      score: f[k] === null ? null : Math.round(f[k] * 100), weight: w[k],
+    }));
+    delete p._f;
   }
 
   // Segmented picks — each product collects the awards it wins in its category.
@@ -1163,7 +1191,10 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil}){
   const dealBoost=p=>(p.list>0?Math.max(0,(p.list-p.price)/p.list):0);
   const score={
     value:p=>-p.price,                            // cheapest first (sale price)
-    match:p=>(p.gs/100)*2+p.rating/5+fit(p)*1.5+dealBoost(p)*DEAL_WEIGHT_MATCH,
+    // Unrated products fall back to our own score on the same 0-1 scale -
+    // gs already absorbs rating and re-weights when it is absent. Using 0
+    // would bury every unrated product out of the match tier permanently.
+    match:p=>(p.gs/100)*2+(p.rating!=null?p.rating/5:p.gs/100)+fit(p)*1.5+dealBoost(p)*DEAL_WEIGHT_MATCH,
     quality:p=>p.quality+fit(p)*0.5+dealBoost(p)*DEAL_WEIGHT_QUALITY,
   }[strategy];
   const picks=[]; let spent=0; const blocked=new Set();
@@ -1451,7 +1482,10 @@ function accessoryPool(kits, ownedCats = new Set(), max = 8) {
     if (!list || !list.length) continue;
     const pw = list[0].pairsWith || [];
     if (!pw.some(c => kitCats.has(c))) continue; // not relevant to this kit
-    const best = [...list].sort((a, b) => (b.rating - a.rating) || (b.quality - a.quality))[0];
+    // quality/2 maps our 0-10 onto the 0-5 rating scale, so an unrated
+    // accessory sorts on merit instead of NaN-ing the comparator.
+    const rk = (p) => (p.rating != null ? p.rating : p.quality / 2);
+    const best = [...list].sort((a, b) => (rk(b) - rk(a)) || (b.quality - a.quality))[0];
     if (best) pool.push({ ...best, category: cat });
   }
   return pool;

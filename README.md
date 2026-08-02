@@ -4,6 +4,7 @@ Express API serving the product catalog, kit builder and gym planner. See CLAUDE
 
 ## Session log
 
+- 2026-08-02 · retailer rating/reviewCount now optional; missing facets score at category median so absence is neutral · this commit
 - 2026-08-02 · archived 27 products with dead retailer URLs to ARCHIVED-PRODUCTS.md (288 -> 261) · this commit
 - 2026-08-02 · delisted archon-bench (brand storefront now a parked domain) · this commit
 - 2026-08-02 · delisted discontinued rep-hr100; added removeProducts to catalog-io · this commit
