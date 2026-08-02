@@ -87,6 +87,25 @@ const num = (v) => {
 
 /* Shopify exposes the real list/sale pair at /products/<handle>.js — it is
  * published for machines and survives redesigns, so try it before HTML. */
+/* Shop currency, straight from Shopify. The catalog is in USD; Bells of Steel
+   is Calgary-based and quotes CAD, so reading the bare number turned a
+   CAD 159.99 bench into "$159.99" — a 51% discount that does not exist. */
+const currencyCache = new Map();
+async function shopCurrency(origin) {
+  if (!currencyCache.has(origin)) {
+    let cur = null;
+    try {
+      const r = await fetch(`${origin}/meta.json`, {
+        headers: { 'User-Agent': UA },
+        signal: AbortSignal.timeout(OPT.timeout),
+      });
+      if (r.ok) cur = (await r.json()).currency || null;
+    } catch { /* unknown currency is handled by the caller */ }
+    currencyCache.set(origin, cur);
+  }
+  return currencyCache.get(origin);
+}
+
 async function fromShopify(url) {
   const u = new URL(url);
   const m = u.pathname.match(/^(.*\/products\/[^/]+)/);
@@ -114,11 +133,19 @@ async function fromShopify(url) {
       note: `${distinct.length} variant prices ($${Math.min(...distinct) / 100}–$${Math.max(...distinct) / 100}) — catalog row does not say which`,
     };
   }
+  const cur = await shopCurrency(u.origin);
+  if (cur && cur !== 'USD')
+    return { error: `currency-${cur}`, note: `shop quotes ${cur}; the catalog is USD` };
+  if (!cur) return { error: 'currency-unknown', note: 'could not confirm the shop trades in USD' };
+
   const v = variants.find((x) => x.available) || variants[0];
   return {
     current: num(v.price / 100),
     list: num(v.compare_at_price ? v.compare_at_price / 100 : null),
     available: j.available ?? v.available ?? null,
+    /* compare_at_price is authoritative: null genuinely means "no sale", so a
+       sale ending can be believed from this source. */
+    canSeeList: true,
     method: 'shopify-json',
   };
 }
@@ -140,11 +167,19 @@ function fromJsonLd(html) {
         if (!o || typeof o !== 'object') continue;
         const current = num(o.price ?? o.lowPrice);
         if (!current) continue;
+        const cur = o.priceCurrency || node.priceCurrency;
+        if (cur && String(cur).toUpperCase() !== 'USD')
+          return { error: `currency-${String(cur).toUpperCase()}`, note: 'catalog is USD' };
         return {
           current,
           list: num(o.highPrice) && num(o.highPrice) > current ? num(o.highPrice) : null,
           available: o.availability ? !/OutOfStock|SoldOut|Discontinued/i.test(o.availability) : null,
           validUntil: typeof o.priceValidUntil === 'string' ? o.priceValidUntil.slice(0, 10) : null,
+          /* Structured data carries the selling price and rarely the struck-out
+             one. Not seeing a compare-at here is not evidence there isn't one —
+             Schwinn's IC4 shows "$899 was $999" on the page while its markup
+             exposes only 899. Believing that would have deleted a live deal. */
+          canSeeList: false,
           method: 'json-ld',
         };
       }
@@ -195,6 +230,16 @@ async function readListing(url) {
 function classify(row, seen) {
   if (seen.error) return { cls: 'UNREADABLE', reason: seen.error, note: seen.note };
   if (seen.available === false) return { cls: 'OUT_OF_STOCK', reason: 'listing reports out of stock' };
+  /* Only the Shopify feed can confirm all three things an edit depends on:
+     the shop's currency, that the listing is not priced per variant, and
+     whether a compare-at price exists. Structured data confirms none of them —
+     it read $69.99 for a plate set sold from $69.99 (10lb pair) to $199.99,
+     against a $215 catalog set price. Report those, never auto-edit them. */
+  if (seen.method !== 'shopify-json')
+    return {
+      cls: 'NEEDS_REVIEW',
+      reason: `reads $${seen.current} via ${seen.method}, which cannot confirm currency, variants or compare-at — verify by hand`,
+    };
 
   const edit = { id: row.id };
   const advertisedSale = seen.list && seen.current && seen.list > seen.current;
@@ -214,8 +259,16 @@ function classify(row, seen) {
   }
 
   if (row.salePrice !== null) {
-    // Listing no longer advertises a sale. Record what we read as the price
-    // and clear the sale — never keep a discount the retailer has withdrawn.
+    /* Only a source that can actually see a compare-at price may conclude a
+       sale has ended. From JSON-LD, "no list price in the markup" means we
+       could not see one — not that the discount is gone. Report it and leave
+       the sale alone; a human decides. */
+    if (!seen.canSeeList)
+      return {
+        cls: 'NEEDS_REVIEW',
+        reason: `reads $${seen.current} but this source cannot see a compare-at price; catalog claims a sale at $${row.salePrice}`,
+      };
+    // compare_at_price is genuinely absent → the retailer withdrew the sale.
     edit.price = seen.current; edit.salePrice = null; edit.saleEndsAt = null;
     return { cls: 'SALE_ENDED', edit };
   }
