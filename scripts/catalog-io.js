@@ -157,4 +157,30 @@ function removeProducts(file, ids) {
   return cuts.length;
 }
 
-export { readCatalog, applyEdits, removeProducts };
+/* Archive = delist, but keep the row verbatim so it can be pasted straight
+ * back. Products whose retailer URL is dead are useless live (the Buy button
+ * 404s) but not necessarily gone forever — several are only unverifiable
+ * because Amazon needs PA-API keys we don't have yet. */
+function archiveProducts(file, ids, archivePath, reason) {
+  const { src, rows } = readCatalog(file);
+  const kept = [];
+  for (const id of ids) {
+    const row = rows.find((r) => r.id === id);
+    if (!row) throw new Error(`archiveProducts: unknown product id ${id}`);
+    kept.push({ id, url: row.url, text: src.slice(row.span.call.start, row.span.call.end + 1) });
+  }
+  /* Markdown, not .js: these are bare `p(...)` calls, which are not valid
+     standalone JavaScript and would fail node --check as a .js file. */
+  const stamp = new Date().toISOString().slice(0, 10);
+  const head = fs.existsSync(archivePath)
+    ? ''
+    : `# Archived catalog rows\n\nDelisted from \`server.js\`, kept verbatim. To relist, paste the row back into\nits category array in \`PRODUCTS\` and re-verify the URL and price first.\n`;
+  const block =
+    `\n## ${stamp} · ${reason}\n\n` +
+    kept.map((k) => `- \`${k.id}\` — dead URL: ${k.url}\n\n\`\`\`js\n${k.text},\n\`\`\`\n`).join('\n');
+  fs.appendFileSync(archivePath, head + block);
+  removeProducts(file, ids);
+  return kept.length;
+}
+
+export { readCatalog, applyEdits, removeProducts, archiveProducts };
