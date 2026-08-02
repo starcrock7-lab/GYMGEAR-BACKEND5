@@ -13,6 +13,7 @@ The frontend is a **Next.js 16 app** in `C:\Users\nirka\Documents\gymgear-fronte
 3. **Smallest possible diff.** `server.js` is one large file (~1,300 lines, mostly hardcoded product data). Bad bulk edits have corrupted files in this project before. Never rewrite it wholesale.
 4. **Keep the security middleware intact:** CORS origin allowlist, 60 req/min rate limit, and `X-Site-Key` header validation. The frontend only calls through its `apiFetch()` wrapper which sends that header.
 5. **Git email must be `starcrock7@gmail.com`** (`git config user.email`) or Vercel-linked deploy tooling rejects the push.
+6. **The kit builder exists twice.** `COVERAGE MODEL` + `KIT BUILDER` here are a mirror of the frontend's `src/lib/coverage.ts` + `src/lib/kit-builder.ts`, which is what production actually serves. Change one, change both, then prove it: `npm run check:lockstep` and `npm run audit:kits` in the frontend repo. `node --check` cannot see divergence. See the `gymgear-kits` skill.
 
 ## What's in server.js
 | Route | What it does |
@@ -21,7 +22,7 @@ The frontend is a **Next.js 16 app** in `C:\Users\nirka\Documents\gymgear-fronte
 | `GET /api/products/:cat` | 8 products for one of 20 categories (`:910`) |
 | `GET /api/categories` | category metadata (`:917`) |
 | `POST /api/compare` | AI verdict comparing selected products — Anthropic Claude (`:922`) |
-| `POST /api/kit` | quiz → kit builder (`:1218`): **deterministic cart builder** picks products (budget/space/owned-aware); Groq (Llama 3.3 70B) writes only the kit name/description; templated fallback copy if no key or API error. Server validates + hydrates product ids and owns all price data. |
+| `POST /api/kit` | quiz → kit builder: **deterministic cart builder** picks products (budget/space/owned-aware), then checks the result against the `COVERAGE MODEL` section — a kit must let you *train every muscle group its goal requires*, not merely hang together. Groq (Llama 3.3 70B) writes only the kit name/description; the coverage sentence is appended deterministically on every path so the claim can't be hallucinated or dropped. Templated fallback copy if no key or API error. Server validates + hydrates product ids and owns all price data. |
 | `POST /api/gym-plan` | commercial gym planner (new build/renovation): deterministic zone allocator (budget split by facility type, quantities from area/peak capacity, renovation keep-zones, flooring sized by coverageSqFt) specs **pro-flagged** gear only; Groq writes the prose plan (LAYOUT/BUYING ORDER/WHY/WATCH OUT), templated fallback. |
 
 Catalog: 31 categories, 290 hardcoded products in `PRODUCTS` (incl. `machines` and `flooring`). Product flags: `compact:true` (machines/cardio/racks — fits a tight space; kit builder gates non-compact out of small rooms per product), `pro:true` (commercial-suitable — set in p() opts or bulk via `PRO_IDS`; the gym planner specs pro gear only), `coverageSqFt` (flooring sizing). Product shape: `{ id, name, brand, emoji, price, retailer, url, affiliateUrl, quality, rating, reviewCount, reviewSource, expertVerdict, expertSource, specs{}, aspects[], bestChoice?, salePrice?, discount? }`. Buy links resolve `affiliateUrl || url`; Amazon tag `gymgearcompar-20`.
