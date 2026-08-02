@@ -1465,9 +1465,17 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
 
   // Budget left and slots left → add value picks from any remaining category.
   if(picks.length<target){
+    // Fill the remaining slots the way this tier picks everything else — a
+    // filler slot is still a slot the buyer sees, and value-per-dollar
+    // regardless of tier would put the cheapest thing that clears the bar into
+    // a Best Quality kit. Latent today (the greedy pass almost always reaches
+    // `target` on its own, and this changed no kit across the 8,640 the audit
+    // builds), but the sort is wrong on its own terms. The coverage repair
+    // below stays deliberately cheapest-first: that one is closing a gap, not
+    // expressing the tier.
     const extra=KIT_CATALOG
       .filter(pickable)
-      .sort((a,b)=>(b.quality/b.price)-(a.quality/a.price));
+      .sort((a,b)=>score(b)-score(a));
     for(const p of extra){ if(picks.length>=target)break; if(!pickable(p))continue; take(p); }
   }
   // Filler only: standalone gear. Benches are seatBench()'s call, and barbell
