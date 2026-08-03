@@ -126,11 +126,17 @@ async function fromShopify(url) {
      have no single price, and the catalog row does not record which variant it
      priced. Picking one would have turned a $295 dumbbell SET into the $29.99
      single — a fabricated 90% discount. Refuse rather than guess. */
+  /* A ?variant=<id> on the catalog URL is the row saying which one it priced,
+     so the listing is no longer ambiguous — read that variant and only it. */
+  const wanted = u.searchParams.get('variant');
+  const pinned = wanted ? variants.find((x) => String(x.id) === wanted) : null;
+  if (wanted && !pinned)
+    return { error: 'variant-gone', note: `URL pins variant ${wanted}; the listing no longer offers it` };
   const distinct = [...new Set(variants.map((x) => x.price))];
-  if (distinct.length > 1) {
+  if (!pinned && distinct.length > 1) {
     return {
       error: 'ambiguous-variants',
-      note: `${distinct.length} variant prices ($${Math.min(...distinct) / 100}–$${Math.max(...distinct) / 100}) — catalog row does not say which`,
+      note: `${distinct.length} variant prices ($${Math.min(...distinct) / 100}–$${Math.max(...distinct) / 100}) — catalog row does not say which (pin one with ?variant=<id>)`,
     };
   }
   const cur = await shopCurrency(u.origin);
@@ -138,11 +144,11 @@ async function fromShopify(url) {
     return { error: `currency-${cur}`, note: `shop quotes ${cur}; the catalog is USD` };
   if (!cur) return { error: 'currency-unknown', note: 'could not confirm the shop trades in USD' };
 
-  const v = variants.find((x) => x.available) || variants[0];
+  const v = pinned || variants.find((x) => x.available) || variants[0];
   return {
     current: num(v.price / 100),
     list: num(v.compare_at_price ? v.compare_at_price / 100 : null),
-    available: j.available ?? v.available ?? null,
+    available: (pinned ? v.available : j.available ?? v.available) ?? null,
     /* compare_at_price is authoritative: null genuinely means "no sale", so a
        sale ending can be believed from this source. */
     canSeeList: true,
