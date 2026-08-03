@@ -4,6 +4,7 @@ Express API serving the product catalog, kit builder and gym planner. See CLAUDE
 
 ## Session log
 
+- 2026-08-02 · full price audit: 23 rows re-priced from live retailer data; 4 Bells of Steel rows moved off the CAD .com store to .us · this commit
 - 2026-08-02 · check-prices honours ?variant= on a catalog URL (no longer UNREADABLE as ambiguous); pinned both Bells of Steel rows, bells-ft 2145 -> 2144.99 · this commit
 - 2026-08-02 · bells-cable-tower buy link now deep-links the plate-loaded variant; added Config spec · this commit
 - 2026-08-02 · bells-cable-tower price 420 -> 434.99, verified against Bells of Steel plate-loaded variant · this commit
