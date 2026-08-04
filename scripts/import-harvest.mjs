@@ -211,9 +211,17 @@ for (let page = 1; page <= OPT.pages; page++) {
     }
     haveIds.add(id);
 
+    /* A multi-variant listing is priced per variant, and stores order plates
+       and bars ascending — so the pinned default is routinely the 10 lb pair
+       or the fractional set, not "the product". Naming the row after the
+       variant is what keeps the price honest: "Colored Bumper Plates" at
+       $64.96 is wrong, "Colored Bumper Plates — 10 LB (Pair)" is not. */
+    const variantName =
+      pinned && v.title && !/^default title$/i.test(v.title) ? ` — ${v.title}` : '';
+
     out.push({
       id,
-      name: p.title.trim(),
+      name: `${p.title.trim()}${variantName}`,
       brand: (OPT.brand || p.vendor || '').trim(),
       /* On sale: price = list (struck through), salePrice = what you pay —
          the shape p() expects. Not on sale: price only. */

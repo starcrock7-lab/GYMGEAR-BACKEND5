@@ -24,8 +24,11 @@ const CATALOG = 'server.js';
 /* Our own one-line read, not a publication's — saying otherwise would be
    inventing a source, which is the one thing this pipeline must never do. */
 const VERDICT_SOURCE = 'GymGear Compare';
+/* Fewest reviews we will publish a star rating from. */
+const MIN_REVIEWS = 5;
 
 const ready = [];
+const thinRatings = [];
 const rejected = [];
 let dropped = 0;
 
@@ -50,6 +53,13 @@ for (const file of files) {
     }
     /* A sale must be a real one: salePrice below the list price we read. */
     const onSale = p.salePrice && Number(p.salePrice) < Number(p.price);
+
+    /* A 5.0 from two reviews is noise dressed as evidence, and it outranks a
+       4.7 from 3,000. Below the floor we drop the figure rather than publish
+       it — a missing rating already scores at the category median, which is
+       the honest answer for "we don't know yet". */
+    const enoughReviews = Number(p.reviewCount) >= MIN_REVIEWS;
+    if (p.rating && !enoughReviews) thinRatings.push(`${p.id} (${p.reviewCount || 0} reviews)`);
     ready.push({
       id: p.id,
       name: p.name,
@@ -60,8 +70,8 @@ for (const file of files) {
       image: p.image,
       category: p.category,
       quality: p.quality,
-      rating: p.rating ?? null,
-      reviewCount: p.reviewCount ?? null,
+      rating: enoughReviews ? p.rating ?? null : null,
+      reviewCount: enoughReviews ? p.reviewCount ?? null : null,
       reviewSource: p.reviewSource ?? p.retailer ?? null,
       expertVerdict: p.expertVerdict,
       expertSource: p.expertSource ?? VERDICT_SOURCE,
@@ -78,6 +88,8 @@ console.log(`ready ${ready.length}  dropped ${dropped}  rejected ${rejected.leng
 console.log(`  ${Object.entries(byCat).map(([c, n]) => `${c}=${n}`).join(' ')}`);
 for (const r of rejected) console.log(`  REJECTED ${r}`);
 console.log(`  on sale: ${ready.filter((r) => r.opts.salePrice).length}`);
+if (thinRatings.length)
+  console.log(`  rating dropped (under ${MIN_REVIEWS} reviews): ${thinRatings.join(', ')}`);
 
 if (DRY) {
   console.log('\ndry run — nothing written');
