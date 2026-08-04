@@ -87,7 +87,22 @@ const REJECT =
 /* Attachments and add-ons: real products, but they are accessories to a
    machine rather than something a kit or a comparison should ever pick. */
 const ACCESSORY =
-  /attachment|adapter|adaptor|conversion|connection kit|upgrade kit|footplate|foot plate|band peg|\bpegs?\b|\bshim\b|mounting|bracket|extension kit|spotter arm|safety (arm|strap|spotter)|j.?cup|landmine|storage|dip bar|handles?\b|carabiner|cover\b|stand alone base|shackle|crossmember|cross member|divider|\bfor .*(bench|rack|tower|cage|trainer)\b|converter bench/i;
+  /attachment|adapter|adaptor|conversion|connection kit|upgrade kit|footplate|foot plate|band peg|\bpegs?\b|\bshim\b|mounting|bracket|extension kit|spotter arm|safety (arm|strap|spotter)|j.?cup|landmine|storage|dip bar|handles?\b|carabiner|cover\b|stand alone base|shackle|crossmember|cross member|divider|\bfor .*(bench|rack|tower|cage|trainer)\b|converter bench|\buprights?\b|connector|iso arms?|\bpads?\b|pull.?up bar|socket set|\bwheels?\b|\bcasters?\b|fractional|change plate|builder|pre.?selected bundle/i;
+
+/* The retailer usually says so itself. REP tags rig hardware "Rig Attachment"
+   and yoke crossmembers "bundle_component". Matched per whole tag, not as a
+   substring of the joined list: a rack legitimately carries a "Rack
+   Attachments" collection tag, and a substring match on "attachment" deleted
+   REP's entire rack range (43 -> 1) before this was tightened. */
+const ACCESSORY_TAGS =
+  /^(rig|rack|optional|bar|bench) attachments?$|^bundle_component$|^replacement|^spare/i;
+
+/* Weight-graded lines (a plate, dumbbell or bell sold per weight) have no
+   single price and no representative variant. Pinning the default gave a
+   "plates" row that was really a 2.5 lb pair at $35.99 on a line running to
+   $259.98 — honest about the SKU, useless in a kit, and one a kit builder
+   would happily pick as somebody's only plates. Refuse them. */
+const WEIGHT_GRADED = new Set(['plates', 'dumbbells', 'kettlebells']);
 
 const slug = (s) =>
   s
@@ -103,11 +118,17 @@ const money = (v) => {
 
 function categoryOf(p) {
   const title = p.title.toLowerCase();
-  const hay = `${title} ${p.product_type || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+  const tags = (p.tags || []).join(' ');
+  const hay = `${title} ${p.product_type || ''} ${tags}`.toLowerCase();
   if (REJECT.test(hay)) return null;
   /* Judge accessory-ness on the title only: a rack's tags legitimately
      mention its j-cups, but a product NAMED "J-Cup" is an accessory. */
   if (ACCESSORY.test(title)) return null;
+  /* The retailer's own tags are more reliable than the title. */
+  if ((p.tags || []).some((t) => ACCESSORY_TAGS.test(String(t).trim()))) return null;
+  /* Bundle-builder and dealer pages: noindex, hidden from search, and they
+     redirect to a login — no specs, no public price, nothing to list. */
+  if (/hide-from-search|bundle-parent|dealer|wholesale/i.test(tags)) return null;
   for (const [cat, re] of RULES) if (re.test(hay)) return cat;
   return null;
 }
@@ -154,7 +175,7 @@ const haveUrls = new Set(existing.map((r) => (r.url || '').split('?')[0].toLower
 
 const prefix = slug(OPT.brand || OPT.host.split('.')[0]).split('-')[0];
 const out = [];
-const skipped = { rejected: 0, unmapped: 0, ambiguous: 0, duplicate: 0, noPrice: 0, notOnSale: 0 };
+const skipped = { rejected: 0, unmapped: 0, ambiguous: 0, graded: 0, unavailable: 0, duplicate: 0, noPrice: 0, notOnSale: 0 };
 
 for (let page = 1; page <= OPT.pages; page++) {
   const products = await feedPage(OPT.host, page);
@@ -184,6 +205,17 @@ for (let page = 1; page <= OPT.pages; page++) {
       continue;
     }
     const pinned = prices.length > 1;
+    if (pinned && WEIGHT_GRADED.has(category)) {
+      /* A weight-graded line has no representative SKU — see WEIGHT_GRADED. */
+      skipped.graded++;
+      continue;
+    }
+    if (v.available === false) {
+      /* Sold out, pre-order or "coming soon": a Buy button that cannot be
+         used is worse than no listing. */
+      skipped.unavailable++;
+      continue;
+    }
     if (pinned && !v.available) {
       // Default variant sold out and siblings differ in price → nothing certain to quote.
       skipped.ambiguous++;

@@ -1,14 +1,16 @@
 {
   "name": "gymgear-backend",
   "version": "2.0.0",
-  "description": "GymGear Compare Pro — secure backend with daily AI refresh",
+  "description": "GymGear Compare Pro \u2014 secure backend with daily AI refresh",
   "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
     "check:prices": "node scripts/check-prices.js",
-    "check:prices:write": "node scripts/check-prices.js --write"
+    "check:prices:write": "node scripts/check-prices.js --write",
+    "import:harvest": "node scripts/import-harvest.mjs",
+    "import:apply": "node scripts/import-apply.mjs"
   },
   "engines": {
     "node": ">=18.0.0"
