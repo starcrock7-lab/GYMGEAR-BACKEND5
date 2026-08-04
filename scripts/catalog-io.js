@@ -183,4 +183,95 @@ function archiveProducts(file, ids, archivePath, reason) {
   return kept.length;
 }
 
-export { readCatalog, applyEdits, removeProducts, archiveProducts };
+/* Insert new products (stage 3 of docs/plans/catalog-expansion.md).
+ *
+ * p() takes 15 positional args and swapping two of them is silent — a row
+ * whose rating landed in the reviewCount slot still parses and still serves.
+ * So the order lives here once, and callers pass a named object.
+ *
+ * rows = [{ id, name, brand, price, retailer, url, image, category, quality,
+ *           rating, reviewCount, reviewSource, expertVerdict, expertSource,
+ *           specs, aspects, opts }]
+ */
+function addProducts(file, rows) {
+  let src = fs.readFileSync(file, 'utf8');
+  const known = new Set(readCatalog(file).rows.map((r) => r.id));
+
+  /* Character index just before the closing bracket of PRODUCTS.<cat>. */
+  function categoryEnd(cat) {
+    const open = new RegExp(`\\n  ${cat}\\s*:\\s*\\[`).exec(src);
+    if (!open) throw new Error(`addProducts: no category array "${cat}" in ${file}`);
+    let depth = 0, quote = null;
+    for (let i = open.index + open[0].length - 1; i < src.length; i++) {
+      const c = src[i];
+      if (quote) {
+        if (c === '\\') i++;
+        else if (c === quote) quote = null;
+        continue;
+      }
+      if (c === '"' || c === "'" || c === '`') { quote = c; continue; }
+      if (c === '[' || c === '(' || c === '{') depth++;
+      else if (c === ')' || c === '}') depth--;
+      else if (c === ']') {
+        depth--;
+        if (depth === 0) return i;
+      }
+    }
+    throw new Error(`addProducts: unterminated category array "${cat}"`);
+  }
+
+  function imgsEnd() {
+    const open = /\nconst IMGS\s*=\s*\{/.exec(src);
+    if (!open) throw new Error('addProducts: no IMGS map');
+    let depth = 0, quote = null;
+    for (let i = open.index + open[0].length - 1; i < src.length; i++) {
+      const c = src[i];
+      if (quote) {
+        if (c === '\\') i++;
+        else if (c === quote) quote = null;
+        continue;
+      }
+      if (c === '"' || c === "'" || c === '`') { quote = c; continue; }
+      if (c === '{') depth++;
+      else if (c === '}') {
+        depth--;
+        if (depth === 0) return i;
+      }
+    }
+    throw new Error('addProducts: unterminated IMGS map');
+  }
+
+  const js = (v) => JSON.stringify(v ?? null);
+  const optsText = (o) => {
+    const parts = Object.entries(o || {})
+      .filter(([, v]) => v !== null && v !== undefined && v !== false)
+      .map(([k, v]) => `${k}:${typeof v === 'string' ? js(v) : v}`);
+    return parts.length ? `,{${parts.join(',')}}` : '';
+  };
+
+  const patches = [];
+  for (const r of rows) {
+    if (!r.id || known.has(r.id)) throw new Error(`addProducts: duplicate or missing id "${r.id}"`);
+    if (!(Number(r.price) > 0)) throw new Error(`addProducts: ${r.id} has no price`);
+    if (!r.url || !r.category) throw new Error(`addProducts: ${r.id} needs url and category`);
+    known.add(r.id);
+
+    /* The 15 args of p(), in order. Do not reorder without changing p(). */
+    const call =
+      `  p(${js(r.id)},${js(r.name)},${js(r.brand)},${r.price},${js(r.retailer)},${js(r.url)},` +
+      `${r.quality},${js(r.rating)},${js(r.reviewCount)},${js(r.reviewSource)},` +
+      `${js(r.expertVerdict)},${js(r.expertSource)},${js(r.specs || {})},${js(r.aspects || [])}` +
+      `${optsText(r.opts)}),\n`;
+
+    patches.push({ at: categoryEnd(r.category), text: call });
+    if (r.image) patches.push({ at: imgsEnd(), text: `  ${js(r.id)}: ${js(r.image)},\n` });
+  }
+
+  /* Back to front, so every index computed above stays valid. */
+  patches.sort((a, b) => b.at - a.at);
+  for (const p of patches) src = src.slice(0, p.at) + p.text + src.slice(p.at);
+  fs.writeFileSync(file, src);
+  return rows.length;
+}
+
+export { readCatalog, applyEdits, removeProducts, archiveProducts, addProducts };

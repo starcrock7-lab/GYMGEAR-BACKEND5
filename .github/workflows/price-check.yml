@@ -1,9 +1,11 @@
-# Weekly price truth check.
+# Daily price and discount truth check.
 #
-# Cadence is weekly, not daily: the catalog is hand-curated and its prices move
-# on the order of weeks, so a daily run would mostly spend requests on other
-# people's servers to confirm nothing changed. Revisit if saleEndsAt dates
-# start landing, since a countdown that outlives its sale is a false claim.
+# Daily, not weekly: the site's pitch is the best deals available right now, so
+# every row is checked every day for whether its discount is still live — a
+# sale that ended yesterday but still shows a struck-through price is a false
+# claim. Every product in the catalog is read, so products added by the
+# expansion (docs/plans/catalog-expansion.md) are covered from the moment they
+# land, with no registration step.
 #
 # This job NEVER writes to main. It opens a pull request and a human merges it.
 # That review is the control that stops a broken extractor silently rewriting
@@ -12,7 +14,7 @@ name: price-check
 
 on:
   schedule:
-    - cron: '17 6 * * 1' # Mondays 06:17 UTC
+    - cron: '17 6 * * *' # every day 06:17 UTC
   workflow_dispatch:
 
 permissions:
@@ -41,6 +43,27 @@ jobs:
           set -o pipefail
           node scripts/check-prices.js --json price-report.json | tee price-log.txt
           echo "changes=$(node -e "const r=require('./price-report.json');console.log(r.results.filter(x=>x.edit).length)")" >> "$GITHUB_OUTPUT"
+
+      # Coverage floor: a catalog we cannot re-read is a catalog whose discounts
+      # we cannot vouch for. Growing it with unverifiable rows (Amazon, or any
+      # retailer that 403s) would quietly erode this number, so the run fails
+      # instead of reporting a clean bill of health on shrinking evidence.
+      - name: Check verifiable coverage
+        run: |
+          node -e "
+            const r = require('./price-report.json');
+            const total = r.results.length;
+            const readable = r.results.filter(x => x.cls !== 'UNREADABLE').length;
+            const pct = total ? (readable / total) * 100 : 0;
+            const FLOOR = Number(process.env.COVERAGE_FLOOR || 18);
+            console.log(\`verifiable coverage: \${readable}/\${total} (\${pct.toFixed(1)}%), floor \${FLOOR}%\`);
+            if (pct < FLOOR) {
+              console.error('FAILED: coverage below the floor — new rows must come from feeds we can re-read.');
+              process.exit(1);
+            }
+          "
+        env:
+          COVERAGE_FLOOR: '18'
 
       # Visible even when nothing changes, so a run that read 0 products is
       # obvious instead of looking like a clean bill of health.
