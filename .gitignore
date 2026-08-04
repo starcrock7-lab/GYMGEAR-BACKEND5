@@ -5,3 +5,4 @@ node_modules/
 *.log
 # local knowledge graph
 graphify-out/
+staging/
