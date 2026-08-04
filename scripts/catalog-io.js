@@ -197,10 +197,40 @@ function addProducts(file, rows) {
   let src = fs.readFileSync(file, 'utf8');
   const known = new Set(readCatalog(file).rows.map((r) => r.id));
 
+  /* Span of the PRODUCTS object. Category names are not unique in this file —
+     `barbells:` is also a key in the stock-image pool and in the taxonomy map,
+     and inserting a p(...) row into the image pool is a syntax error that a
+     bare name search walks straight into. */
+  function objectSpan(openRe, label) {
+    const open = openRe.exec(src);
+    if (!open) throw new Error(`addProducts: no ${label} in ${file}`);
+    let depth = 0, quote = null;
+    for (let i = open.index + open[0].length - 1; i < src.length; i++) {
+      const c = src[i];
+      if (quote) {
+        if (c === '\\') i++;
+        else if (c === quote) quote = null;
+        continue;
+      }
+      if (c === '"' || c === "'" || c === '`') { quote = c; continue; }
+      if (c === '{') depth++;
+      else if (c === '}') {
+        depth--;
+        if (depth === 0) return { start: open.index, end: i };
+      }
+    }
+    throw new Error(`addProducts: unterminated ${label}`);
+  }
+  const products = objectSpan(/\nconst PRODUCTS\s*=\s*\{/, 'PRODUCTS map');
+
   /* Character index just before the closing bracket of PRODUCTS.<cat>. */
   function categoryEnd(cat) {
-    const open = new RegExp(`\\n  ${cat}\\s*:\\s*\\[`).exec(src);
-    if (!open) throw new Error(`addProducts: no category array "${cat}" in ${file}`);
+    const re = new RegExp(`\\n\\s*${cat}\\s*:\\s*\\[`, 'g');
+    let open = null, m;
+    while ((m = re.exec(src))) {
+      if (m.index > products.start && m.index < products.end) { open = m; break; }
+    }
+    if (!open) throw new Error(`addProducts: no category array "${cat}" inside PRODUCTS`);
     let depth = 0, quote = null;
     for (let i = open.index + open[0].length - 1; i < src.length; i++) {
       const c = src[i];

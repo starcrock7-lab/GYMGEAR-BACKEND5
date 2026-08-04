@@ -87,3 +87,4 @@ Append one line per batch. Newest last.
 | Date | Retailer | Categories | Added | Coverage after | Commit |
 |---|---|---|---|---|---|
 | — | — | — | — | 51/261 (20%) | baseline |
+| 2026-08-03 | Bells of Steel | racks 9, barbells 4, cardio 3, plates 2, machines 1, dumbbells 1, flooring 1 | 21 (all currently discounted) | 72/282 (26%) | this commit |

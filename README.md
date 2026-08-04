@@ -4,6 +4,7 @@ Express API serving the product catalog, kit builder and gym planner. See CLAUDE
 
 ## Session log
 
+- 2026-08-03 · first expansion batch: 21 discounted Bells of Steel products added (261 -> 282), all 21 verify UNCHANGED against the live listing; addProducts now scopes the category lookup to PRODUCTS (a bare name search inserted a row into the stock-image pool) · this commit
 - 2026-08-03 · catalog expansion started: plan + agent enrichment brief in docs/plans/, import-harvest (Shopify feed -> staging, USD-only, variant-pinned), catalog-io addProducts + import-apply (refuses unfinished rows), price-check now daily with an 18% verifiable-coverage floor · this commit
 - 2026-08-02 · full price audit: 23 rows re-priced from live retailer data; 4 Bells of Steel rows moved off the CAD .com store to .us · this commit
 - 2026-08-02 · check-prices honours ?variant= on a catalog URL (no longer UNREADABLE as ambiguous); pinned both Bells of Steel rows, bells-ft 2145 -> 2144.99 · this commit
