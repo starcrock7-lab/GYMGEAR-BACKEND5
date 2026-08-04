@@ -7,7 +7,9 @@
 
 Two goals, one pipeline.
 
-1. **Size.** The catalog is 261 products across 31 categories. Target is **700–1000**. Ten retailers already in the catalog publish ~3,900 products through their own product feeds, ~3,080 of them at a single unambiguous price, so the data exists and is readable.
+1. **Size.** The catalog is 261 products across 31 categories. Target is **700–1000**. Ten retailers already in the catalog publish ~3,900 products through their own product feeds, ~3,080 of them at a single unambiguous price.
+
+   **Measured yield, so you don't over-promise:** a feed is mostly not listable. REP Fitness went 705 raw → 253 mapped → **97 after the accessory/hidden/graded filters**, and the enrichment agents then drop roughly a third of what is left (rig hardware, configurators, unusable variants). Bells of Steel: 479 raw → 236 listable. So budget **10–15% of a feed** reaching the catalog, which means 700–1000 products needs on the order of **15–20 retailers**, not five. Cast wide rather than mining one store deep.
 2. **Deals are the product.** The site's edge is "the best deals available right now". Discounted products get priority — in the kit builder, in listings, and in what the site chooses to show first. A discount is only real if it was **read from the retailer**, never inferred.
 
 ## Hard rules (these are what stop the site from lying)
@@ -24,7 +26,9 @@ Two goals, one pipeline.
 
 `scripts/import-harvest.mjs` pulls a retailer's Shopify feed and writes candidate rows to `staging/<retailer>.json`. It never touches `server.js`.
 
-For each product it records: title, brand (vendor), handle/URL, chosen variant id + price, `compare_at_price` (→ the real discount), first image URL, published product type/tags, and the mapped GymGear category. It drops: products with no price, gift cards, parts/spares, apparel sizes that duplicate one product, and anything whose category cannot be mapped.
+For each product it records: title (plus the variant name when a variant is pinned), brand (vendor), handle/URL, chosen variant id + price, `compare_at_price` (→ the real discount), first image URL, published product type/tags, and the mapped GymGear category.
+
+It refuses, in order: shops not quoting USD; gift cards, spares and refurbs; accessories and rig hardware by name (uprights, connectors, ISO arms, casters, pads, J-cups, storage) and by the retailer's own tag (`Rig Attachment`, `bundle_component`); `hide-from-search` / dealer / bundle-parent pages, which are noindex, render nothing and redirect to a login; configurator "builder" pages; sold-out and coming-soon variants; **weight-graded lines** (plates, dumbbells, kettlebells sold per weight — no representative SKU, and the pinned default is a 2.5 lb pair a kit builder would treat as somebody's only plates); and anything whose category cannot be mapped.
 
 **Discount capture is the point:** `compare_at_price > price` becomes `salePrice` + list `price`, which is exactly what the deals surfaces read.
 
@@ -88,3 +92,4 @@ Append one line per batch. Newest last.
 |---|---|---|---|---|---|
 | — | — | — | — | 51/261 (20%) | baseline |
 | 2026-08-03 | Bells of Steel | racks 9, barbells 4, cardio 3, plates 2, machines 1, dumbbells 1, flooring 1 | 21 (all currently discounted) | 72/282 (26%) | this commit |
+| 2026-08-04 | REP Fitness | barbells 2, racks 2, benches 2, bands 2, machines 1 | 9 (3 discounted) | 81/291 (28%) | this commit |
