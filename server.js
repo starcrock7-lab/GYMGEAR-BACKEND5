@@ -973,6 +973,34 @@ for (const [cat, list] of Object.entries(PRODUCTS)) {
   }
 }
 
+// ── Published vs shelved ──────────────────────────────────────────
+// A row with no verified photo of that exact product does not go on the site.
+// It stays in this file — nothing is deleted — it simply is not served, so it
+// cannot appear in a listing, a kit, a plan, search or the sitemap.
+//
+// One rule covers every case that made the catalog look unfinished:
+//   · Amazon rows, whose images need PA-API through the Associates account.
+//     Shelved on purpose until we have keys — the affiliate links stay in the
+//     file and come straight back the day an image can be verified.
+//   · Rows whose retailer page is dead (Titan, Klean, YoungLA, AG1…). A Buy
+//     button that 404s is worse than an absent product.
+//   · Rows pointing at a collection page rather than a product, where no image
+//     can be correct by construction.
+// It is self-maintaining: verify a photo, and the product publishes itself.
+const SHELVED = new Map();
+for (const [cat, list] of Object.entries(PRODUCTS)) {
+  const keep = [];
+  for (const p of list) {
+    if (p.image) keep.push(p);
+    else SHELVED.set(p.id, cat);
+  }
+  PRODUCTS[cat] = keep;
+}
+const PUBLISHED_COUNT = Object.values(PRODUCTS).reduce((n, l) => n + l.length, 0);
+console.log(
+  `catalog: ${PUBLISHED_COUNT} published, ${SHELVED.size} shelved for want of a verified product photo`,
+);
+
 // ── GymGear Score + segmented "best for X" awards ─────────────────
 // A transparent 0-100 score from the signals we can stand behind: expert
 // build quality, user rating, value-per-dollar, and review confidence. It is

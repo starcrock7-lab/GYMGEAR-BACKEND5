@@ -82,6 +82,22 @@ that product before it ships. That is the whole point of this exercise.
 Those go through the re-sourcing brief (`resource-brief.md`), same as the
 Amazon rows: find the same product on a retailer we can verify, or delist.
 
+## Published vs shelved (2026-08-04)
+
+`server.js` serves only rows that have a verified photo. Everything else stays
+in the file and is filtered out at startup, so it cannot appear in a listing, a
+kit, a plan, search or the sitemap. One rule, and it is self-maintaining —
+verify a photo and the product publishes itself.
+
+That shelf currently holds **66 rows**: the 33 Amazon ones (deliberate — their
+images need PA-API, and the affiliate links are kept for the day we have keys),
+the 13 dead retailer links, the collection-URL rows, and the rest that no
+source could prove.
+
+Published: **225 of 291**, every one with a photo of that exact product.
+Thin categories to refill first: gymbags (1), kettlebells (2), sportsbras (2),
+foamrollers (2).
+
 ## Gate
 
 `npm run check:images` is the gate. It fails a run where nothing was readable
