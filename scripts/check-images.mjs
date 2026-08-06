@@ -33,6 +33,8 @@ const OPT = {
   delay: Number(val('--delay', 900)),
   timeout: Number(val('--timeout', 20000)),
   catalog: val('--catalog', 'server.js'),
+  /* Re-apply a previous audit without hitting every retailer again. */
+  from: val('--from', ''),
 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -185,7 +187,9 @@ if (OPT.limit) rows = rows.slice(0, OPT.limit);
 
 const results = [];
 const lastHit = new Map();
-for (const row of rows) {
+const cached = OPT.from ? JSON.parse(fs.readFileSync(OPT.from, 'utf8')).results : null;
+if (cached) results.push(...cached.filter((r) => !OPT.only.length || OPT.only.includes(r.id)));
+for (const row of cached ? [] : rows) {
   const host = hostOf(row.url);
   const since = Date.now() - (lastHit.get(host) || 0);
   if (since < OPT.delay) await sleep(OPT.delay - since);
@@ -226,31 +230,37 @@ if (noPhoto.length) {
 
 if (OPT.json) fs.writeFileSync(OPT.json, JSON.stringify({ generatedAt: new Date().toISOString(), counts, results }, null, 2));
 
-const fixable = results.filter((r) => r.cls === 'MISSING' || r.cls === 'MISMATCH');
+/* og:image is the weakest source and the one that yields share cards, so it
+   is reported but never auto-written — a human decides those. */
+const fixable = results.filter(
+  (r) => (r.cls === 'MISSING' || r.cls === 'MISMATCH') && !/^(og|twitter)-image$/.test(r.method),
+);
 if (OPT.write && fixable.length) {
-  const { src, end } = readImages(OPT.catalog);
-  const existing = readImages(OPT.catalog).map;
+  const { src, end: imgsEnd, map: existing } = readImages(OPT.catalog);
   let out = src;
-  const adds = [];
+
+  /* New entries FIRST, at the end of IMGS, then the replacements back to
+     front. Doing it the other way round is what corrupted server.js on the
+     first attempt: the replacements shift every offset after them, so an
+     insertion point measured on the original file landed mid-statement. */
+  const adds = fixable
+    .filter((r) => !existing.has(r.id))
+    .map((r) => `  '${r.id}': '${r.seen}',\n`);
+  if (adds.length) out = out.slice(0, imgsEnd) + adds.join('') + out.slice(imgsEnd);
+
   const patches = [];
   for (const r of fixable) {
-    if (existing.has(r.id)) {
-      /* Replace in place — the line is `'id': 'url',` inside IMGS. */
-      const re = new RegExp(`(['"]${r.id}['"]\\s*:\\s*)['"][^'"]+['"]`);
-      const m = re.exec(out);
-      if (m) patches.push({ start: m.index, end: m.index + m[0].length, text: `${m[1]}'${r.seen}'` });
-    } else {
-      adds.push(`  '${r.id}': '${r.seen}',\n`);
-    }
+    if (!existing.has(r.id)) continue;
+    /* Replace in place — the entry is `'id': 'url',` inside IMGS. */
+    const re = new RegExp(`(['"]${r.id}['"]\\s*:\\s*)['"][^'"]+['"]`);
+    const m = re.exec(out);
+    if (m) patches.push({ start: m.index, end: m.index + m[0].length, text: `${m[1]}'${r.seen}'` });
   }
   patches.sort((a, b) => b.start - a.start);
   for (const p of patches) out = out.slice(0, p.start) + p.text + out.slice(p.end);
-  if (adds.length) {
-    const at = readImages(OPT.catalog).end; // recompute against original offsets
-    out = out.slice(0, at) + adds.join('') + out.slice(at);
-  }
+
   fs.writeFileSync(OPT.catalog, out);
-  console.log(`\nwrote ${fixable.length} image(s) to ${OPT.catalog} — review the diff`);
+  console.log(`\nwrote ${adds.length + patches.length} image(s) to ${OPT.catalog} — review the diff`);
 } else if (fixable.length) {
   console.log(`\n${fixable.length} image(s) would change. Dry run: nothing written.`);
 }
