@@ -9,6 +9,8 @@
     "dev": "node server.js",
     "check:prices": "node scripts/check-prices.js",
     "check:prices:write": "node scripts/check-prices.js --write",
+    "check:images": "node scripts/check-images.mjs",
+    "check:images:write": "node scripts/check-images.mjs --write",
     "import:harvest": "node scripts/import-harvest.mjs",
     "import:apply": "node scripts/import-apply.mjs"
   },
