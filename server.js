@@ -340,6 +340,9 @@ const IMGS = {
   'pioneer-gc-belt': 'https://cdn.shopify.com/s/files/1/0693/3060/0182/files/Stock_4_10mm.png',
   'pioneer-straps': 'https://cdn.shopify.com/s/files/1/0693/3060/0182/files/Pioneer-Fitness-Treated-Leather-Lifting-Straps.jpg',
   'pioneer-knee-sleeves': 'https://cdn.shopify.com/s/files/1/0693/3060/0182/files/Pioneer-Competition-Knee-Sleeves-jpg.webp',
+  'thorne-whey': '/product-images/thorne-whey.png',
+  'thorne-creatine': '/product-images/thorne-creatine.png',
+  'thorne-basics': '/product-images/thorne-basics.png',
 };
 
 function p(id,name,brand,price,retailer,url,quality,rating,reviewCount,reviewSource,expertVerdict,expertSource,specs,aspects,opts={}){
@@ -948,16 +951,14 @@ const PRO_IDS = new Set([
 ]);
 
 for (const [cat, list] of Object.entries(PRODUCTS)) {
-  const pool = (CAT_IMAGE[cat] || []).map(UNSPLASH);
-  if (!pool.length) pool.push(DEFAULT_IMAGE);
   const tags = CATEGORY_TAGS[cat] || DEFAULT_TAGS;
   for (const p of list) {
-    // A real product photo from IMGS always wins. The pool is only a fallback:
-    // stable id hash → the same product always keeps the same photo, but a
-    // category grid spreads across the pool instead of repeating one image.
-    let h = 0;
-    for (const ch of p.id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-    p.image = p.image || pool[h % pool.length];
+    // Only that product's own photo, or nothing. The stock-photo pool used to
+    // fill this gap, which put a generic gym shot on a specific hoodie — one
+    // wrong image makes every correct one look staged too. A product with no
+    // verified photo now renders the brand tile the frontend already draws.
+    // Category thumbnails still use the pool below; a category is not a product.
+    p.image = p.image || null;
     // Buy link: the real product page when it resolves, otherwise an Amazon
     // affiliate search. (The frontend's buyUrl() prefers affiliateUrl.)
     p.affiliateUrl = p.url && !BROKEN_URL_IDS.has(p.id)

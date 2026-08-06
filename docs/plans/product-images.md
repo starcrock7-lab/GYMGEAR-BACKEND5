@@ -52,12 +52,35 @@ the **filename**, not the URL, or every row reads as a mismatch.
 | `UNVERIFIABLE` | Page unreadable, but we have an image already | leave |
 | `NO_IMAGE` | Page unreadable AND no image | screenshot or delist |
 
-## The stock pool has to go
+## The stock pool is gone (2026-08-04)
 
-Once coverage is high, delete the pool fallback. A random photo of a different
-product is worse than an honest placeholder: it makes every image on the site
-untrustworthy, including the correct ones. Interim state is fine; the end
-state is "verified photo or neutral placeholder".
+`server.js` no longer substitutes a category stock photo. A product with no
+verified image returns `image: null` and the frontend draws the brand tile it
+already had. Category thumbnails still use the pool — a category is not a
+product.
+
+## What the capture pass taught us
+
+Running headless Chrome over the 31 unreadable rows returned 6 images, and
+**3 of those 6 were wrong** — a backpack for a sports-bra row, a campaign
+banner for a different shoe model, a bra of the wrong model. Two causes, both
+now refused outright:
+
+- **The row's URL was a collection or category page**, so no single product was
+  on it. Those rows need a real product URL, not a picture.
+- **The picked filename shared no word with the product**, i.e. the picker was
+  guessing among a page full of images. Now reported as `NEEDS_EYES`.
+
+**Never write a captured image without looking at it.** The heuristic picks a
+plausible file, not a correct one; a human or an agent has to confirm it is
+that product before it ships. That is the whole point of this exercise.
+
+## The bigger find: dead links
+
+13 of the 31 rows are not missing an image — their **Buy link is dead**
+(Titan ×5 canonical to /404, Klean ×3, YoungLA ×2, Hydrow, New Balance, AG1).
+Those go through the re-sourcing brief (`resource-brief.md`), same as the
+Amazon rows: find the same product on a retailer we can verify, or delist.
 
 ## Gate
 
