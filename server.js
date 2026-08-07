@@ -837,34 +837,34 @@ const CAT_IMAGE = {
 };
 const DEFAULT_IMAGE = UNSPLASH('1534438327276-14e5300c3a48');
 const AMAZON_TAG = 'gymgearcompar-20';
-const amazonAffiliate = (name, brand) =>
-  `https://www.amazon.com/s?k=${encodeURIComponent(`${brand} ${name}`.trim())}&tag=${AMAZON_TAG}`;
-
-// Product URLs verified to 404 / soft-404 / redirect away (tested live).
-// For these we send buyers to an Amazon affiliate search instead of a dead
-// page; every other product keeps its real brand product page.
-const BROKEN_URL_IDS = new Set([
-  'adidas-bra', 'adidas-defender', 'ag1', 'alani-pre', 'alo-warrior', 'alphalete-hoodie',
-  'alphalete-shorts', 'alphalete-sports-bra', 'alphalete-surge', 'alphalete-tank', 'amazon-bands', 'amazon-basics-mat',
-  'amazon-basics-rope', 'american-ss', 'archon-bench', 'assault-bike', 'assault-runner', 'bells-bench',
-  'bells-lever-belt', 'bells-power-bar', 'bells-squat', 'bowflex-552', 'bucked-up', 'buddy-lee-aero',
-  'cap-ob86b', 'concept2-bikeerg', 'crossrope-get-lean', 'eleiko-iwf', 'elite-surge-3', 'elitefts-bands',
-  'frictionlabs-loose', 'fringe-urethane', 'fringe-wonder', 'gaiam-premium', 'gasp-hoodie', 'gasp-stringer',
-  'gasp-tights', 'ghost-legend', 'gymshark-arrival', 'gymshark-critical', 'gymshark-gym-bag', 'gymshark-tank',
-  'gymshark-vital', 'hydrow-wave', 'inov8-bare', 'inzer-forever-belt', 'jump-rope-dudes-rope', 'kabuki-power-bar',
-  'klean-bcaa', 'klean-creatine', 'klean-mv', 'lululemon-align', 'lululemon-belt-bag', 'lululemon-energy',
-  'lululemon-mat', 'lululemon-scuba', 'lululemon-shorts', 'lux-fit-roller', 'manduka-pro', 'mhp-thyro-slim',
-  'momentous-creatine', 'new-balance-minimus', 'nike-brasilia', 'nike-hoops-elite', 'nike-metcon-9', 'nobull-lifter',
-  'nobull-shorts', 'nobull-tank', 'nobull-trainer', 'nordictrack-1750', 'nuobell-adj', 'onnit-kb',
-  'osprey-daylite', 'perform-better-mini', 'pioneer-gc-belt', 'pioneer-knee-sleeves', 'pioneer-straps', 'raw-thavage',
-  'reebok-nano', 'rep-ab3000', 'rep-alpine-bar', 'rep-color', 'rep-comp', 'rep-equalizer',
-  'rep-hex', 'rep-hr100', 'rep-kb', 'rep-pr5000', 'ritual-men', 'rogue-bands',
-  'rogue-rm6', 'rogue-squat', 'rogue-squat-bar', 'rogue-sr-1c', 'rumble-roller', 'rx-smart-gear-rope',
-  'sbd-knee-sleeves', 'sbd-sleeves', 'sbd-wrist-wraps', 'texas-power-bar', 'the-stick', 'theraband-roller',
-  'titan-ab', 'titan-adj', 'titan-bumper', 'titan-kb', 'titan-olympic', 'titan-t2',
-  'titan-x3', 'tptherapy-mb1', 'transparent-sleep', 'transparent-whey', 'ua-infinity-bra', 'ua-undeniable',
-  'under-armour-leggings', 'under-armour-tank', 'vulcan-alpha', 'vulcan-db', 'vulcan-kb', 'vulcan-pro',
-  'wod-nation-speed-rope', 'youngla-joggers', 'youngla-shorts', 'youngla-sports-bra', 'youngla-tank', 'yune-tohi',
+// Links that do NOT reach the product's own page, from the last
+// `node scripts/check-links.mjs` run (2026-08-04): 35 dead, 14 category or
+// collection listings, 12 that answer with the retailer's home page, 5 whose
+// domain is now parked and for sale. See docs/plans/buy-links.md.
+//
+// These rows are NOT served. The site used to send these buyers to an Amazon
+// search for the product name instead, which is the same lie as a stock photo:
+// we showed one retailer's price and photo, then handed the shopper a search
+// box. A row with no working product link does not belong on the site until it
+// has one — regenerate this list after re-sourcing.
+const BAD_LINK_IDS = new Set([
+  'adidas-adipower', 'adidas-bra', 'adidas-defender', 'adidas-shorts',
+  'ag1', 'amazon-bands', 'amazon-basics-mat', 'amazon-basics-rope',
+  'better-bodies-hoodie', 'better-bodies-shorts', 'better-bodies-tank', 'better-bodies-tights',
+  'bowflex-552', 'buddy-lee-aero', 'cap-ob86b', 'converse-chuck',
+  'fringe-urethane', 'fringe-wonder', 'gaiam-premium', 'ghost-legend',
+  'gymshark-flex-bra', 'inov8-bare', 'ironmaster-ql', 'ironmaster-superbench',
+  'jump-rope-dudes-rope', 'kabuki-power-bar', 'kbkings-powder', 'klean-bcaa',
+  'klean-creatine', 'klean-mv', 'lf-club-elliptical', 'lululemon-align',
+  'lululemon-energy', 'lululemon-scuba', 'lululemon-shorts', 'lux-fit-roller',
+  'mhp-thyro-slim', 'momentous-creatine', 'new-balance-minimus', 'nike-brasilia',
+  'nike-club-hoodie', 'nike-dri-fit', 'nike-dri-fit-tank', 'nike-indy-bra',
+  'nike-pro', 'nobull-sports-bra', 'nuobell-adj', 'onnit-kb',
+  'osprey-daylite', 'prx-profile-pro', 'rumble-roller', 'sbd-belt',
+  'the-stick', 'theraband-roller', 'titan-ab', 'titan-adj',
+  'titan-bumper', 'titan-kb', 'titan-olympic', 'tptherapy-mb1',
+  'ua-undeniable', 'weightlifting-house-chalk', 'wod-nation-speed-rope', 'youngla-hoodie',
+  'youngla-joggers', 'youngla-tank', 'yune-tohi',
 ]);
 
 /* ── Product taxonomy ─────────────────────────────────────────────
@@ -959,11 +959,9 @@ for (const [cat, list] of Object.entries(PRODUCTS)) {
     // verified photo now renders the brand tile the frontend already draws.
     // Category thumbnails still use the pool below; a category is not a product.
     p.image = p.image || null;
-    // Buy link: the real product page when it resolves, otherwise an Amazon
-    // affiliate search. (The frontend's buyUrl() prefers affiliateUrl.)
-    p.affiliateUrl = p.url && !BROKEN_URL_IDS.has(p.id)
-      ? p.url
-      : amazonAffiliate(p.name, p.brand);
+    // Buy link: the product's own page, always. A row whose link does not
+    // reach the product is shelved below rather than redirected somewhere else.
+    p.affiliateUrl = p.url;
     // Taxonomy for the kit cross-sell + recommendations (one source of truth).
     p.productType = tags.productType;
     p.kitRole = tags.kitRole;
@@ -991,14 +989,16 @@ const SHELVED = new Map();
 for (const [cat, list] of Object.entries(PRODUCTS)) {
   const keep = [];
   for (const p of list) {
-    if (p.image) keep.push(p);
-    else SHELVED.set(p.id, cat);
+    if (p.image && !BAD_LINK_IDS.has(p.id)) keep.push(p);
+    else SHELVED.set(p.id, p.image ? 'broken link' : 'no verified photo');
   }
   PRODUCTS[cat] = keep;
 }
 const PUBLISHED_COUNT = Object.values(PRODUCTS).reduce((n, l) => n + l.length, 0);
+const shelvedFor = (reason) => [...SHELVED.values()].filter((r) => r === reason).length;
 console.log(
-  `catalog: ${PUBLISHED_COUNT} published, ${SHELVED.size} shelved for want of a verified product photo`,
+  `catalog: ${PUBLISHED_COUNT} published, ${SHELVED.size} shelved ` +
+    `(${shelvedFor('no verified photo')} without a verified photo, ${shelvedFor('broken link')} with a link that misses the product)`,
 );
 
 // ── GymGear Score + segmented "best for X" awards ─────────────────
@@ -1103,7 +1103,14 @@ app.get('/api/products/:cat',(req,res)=>{
 
 app.get('/api/categories',(req,res)=>res.json({
   // image = the category's lead pool photo, for browse-page thumbnails.
-  categories:Object.entries(CATEGORY_META).map(([key,meta])=>({key,label:meta.label,group:meta.group,loaded:true,count:PRODUCTS[key]?.length||0,image:CAT_IMAGE[key]?UNSPLASH(CAT_IMAGE[key][0]):DEFAULT_IMAGE})),
+  // A category with nothing publishable is left out entirely: a "Best Hoodies,
+  // ranked" page with no products is worse than not offering the page, and the
+  // frontend builds its nav, browse grid and sitemap from this list. Shelved
+  // rows come back the moment they have a photo and a working link, and the
+  // category returns with them.
+  categories:Object.entries(CATEGORY_META)
+    .filter(([key])=>(PRODUCTS[key]?.length||0)>0)
+    .map(([key,meta])=>({key,label:meta.label,group:meta.group,loaded:true,count:PRODUCTS[key]?.length||0,image:CAT_IMAGE[key]?UNSPLASH(CAT_IMAGE[key][0]):DEFAULT_IMAGE})),
 }));
 
 app.post('/api/compare',(req,res)=>{

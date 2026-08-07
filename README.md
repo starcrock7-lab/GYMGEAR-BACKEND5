@@ -4,6 +4,7 @@ Express API serving the product catalog, kit builder and gym planner. See CLAUDE
 
 ## Session log
 
+- 2026-08-04 · Buy-link audit (check-links.mjs): 66 of 291 links never reached a product page (35 dead, 14 listings, 12 landing on the retailer's home page, 5 parked domains) — all shelved, the Amazon-search fallback for broken links deleted, and categories left with nothing publishable are no longer offered; 202 published · this commit
 - 2026-08-04 · products without a verified photo are no longer served (225 published, 66 shelved incl. all 33 Amazon rows kept for later); every product on the site now shows a photo of that exact product · this commit
 - 2026-08-04 · stock-photo fallback deleted (a product with no verified photo now renders the brand tile); Chrome capture pass over the 31 unreadable rows returned 3 usable images (Thorne) and exposed 13 dead Buy links · this commit
 - 2026-08-04 · product images audited against each product's own page: 45 fixed (36 wrong photo, 9 missing), including variant-correct shots — the Open Trap Bar had the Standard photo on a Wide row, the BlackWing had Matte on a Metallic SKU; 69 rows still on the stock-photo fallback (33 of them Amazon, which needs PA-API) · this commit
