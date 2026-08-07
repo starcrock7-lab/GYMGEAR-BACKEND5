@@ -85,6 +85,18 @@ and the frontend builds its nav, browse grid and sitemap from that list.
 **Published: 202 of 291** — every one with a photo of that exact product and a
 link that lands on it.
 
+## Deploy order (learned the hard way, 2026-08-07)
+
+Shelving a row removes it from the API, but the frontend's category and product
+pages are ISR-cached for an hour. Push the backend, **wait for Render to finish**,
+then deploy the frontend — otherwise Vercel prerenders against the old catalog
+and keeps serving the shelved products until revalidation. After the first push
+`/category/hoodies` was still listing five rows whose links were dead or parked,
+straight from `X-Vercel-Cache: HIT`.
+
+If they get out of step, push again once the backend is live; a fresh
+deployment discards the stale pages.
+
 ## Gate
 
 `npm run check:links`. Publishing is conditional on it, so a link that rots
