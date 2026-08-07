@@ -93,3 +93,4 @@ Append one line per batch. Newest last.
 | — | — | — | — | 51/261 (20%) | baseline |
 | 2026-08-03 | Bells of Steel | racks 9, barbells 4, cardio 3, plates 2, machines 1, dumbbells 1, flooring 1 | 21 (all currently discounted) | 72/282 (26%) | this commit |
 | 2026-08-04 | REP Fitness | barbells 2, racks 2, benches 2, bands 2, machines 1 | 9 (3 discounted) | 81/291 (28%) | this commit |
+| 2026-08-07 | Titan, GoRuck, Pioneer, Fringe, JadeYoga, FrictionLabs | apparel 13, chalk 5, yogamats 5, gymbags 5, kettlebells 4, dumbbells 4, footwear 3, foamrollers 3, wraps/straps/belts 8, machines 2, shorts 4 | 56 (17 discounted) | 258 published of 347 | this commit |

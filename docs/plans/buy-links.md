@@ -97,6 +97,20 @@ straight from `X-Vercel-Cache: HIT`.
 If they get out of step, push again once the backend is live; a fresh
 deployment discards the stale pages.
 
+## Picker pages (added 2026-08-07)
+
+A `/products/…` URL can answer 200, carry add-to-cart markup, and still not be
+a product: Titan sells whole ranges from one page — 20+ kettlebells or plates,
+each with its own price and stock state — behind a single handle whose feed
+price belongs to none of them. `titan-lb-cast-iron-kettlebells` advertised
+$1,999.99 → $1,339.99; `lb-elite-competition-plates` carried $449.99 against a
+real basket of $2,059.86. Two enrichment agents found this independently.
+
+The detector is the **"add all selections"** control, nothing else. Counting
+prices or cart buttons condemns any normal product page with a
+recommended-accessories grid — it wrongly flagged the REP Arcadia and the
+Bells cable tower before being narrowed.
+
 ## Gate
 
 `npm run check:links`. Publishing is conditional on it, so a link that rots

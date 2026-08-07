@@ -44,7 +44,12 @@ for (const file of files) {
     if (!p.expertVerdict) missing.push('expertVerdict');
     if (!p.specs || Object.keys(p.specs).length < 3) missing.push('3+ specs');
     if (!p.aspects || p.aspects.length < 3) missing.push('3 aspects');
-    if (!p.image) missing.push('image');
+    /* An agent that checked the photo against the page and found it wrong
+       supplies the right one. A row flagged wrong with no fix has no usable
+       photo at all — Pioneer's knee wraps only publish the wrist-wrap shot —
+       so it is refused rather than shipped with a picture of something else. */
+    if (p.imageWrong && !p.imageFix) missing.push('a correct image (flagged wrong, no fix given)');
+    if (!(p.imageFix || p.image)) missing.push('image');
     if (!(Number(p.price) > 0)) missing.push('price');
     if (!/^https?:\/\//.test(p.url || '')) missing.push('url');
     if (missing.length) {
@@ -67,7 +72,7 @@ for (const file of files) {
       price: p.price,
       retailer: p.retailer,
       url: p.url,
-      image: p.image,
+      image: p.imageFix || p.image,
       category: p.category,
       quality: p.quality,
       rating: enoughReviews ? p.rating ?? null : null,

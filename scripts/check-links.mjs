@@ -9,6 +9,11 @@
  * Classifies, never guesses a replacement:
  *   PRODUCT   the page is that product (JSON-LD Product / og:type product /
  *             an add-to-cart form) — the only class that may be published
+ *   GROUP     a /products/ URL that is really a multi-SKU picker: it answers
+ *             200 and has add-to-cart markup, but sells 6-24 separate weights
+ *             from one page, so the feed's price belongs to none of them
+ *             (Titan listed elite plates at $449.99 against a real basket of
+ *             $2,059.86)
  *   LISTING   a collection, category or search page
  *   HOME      redirects to the site root
  *   DEAD      404, gone, or a canonical pointing at /404
@@ -91,6 +96,15 @@ function classifyHtml(html, finalUrl, requestedUrl) {
 
   if (LISTING_PATH.test(path) && !/\/products?\//.test(path))
     return { cls: 'LISTING', note: `path ${path}` };
+
+  /* A picker page: many buyable SKUs behind one URL, where the feed's price
+     belongs to none of them (Titan listed elite plates at $449.99 against a
+     real basket of $2,059.86). The giveaway is the "add all selections"
+     control. Counting prices or cart buttons does NOT work — a normal product
+     page with a recommended-accessories grid trips that, and it wrongly
+     condemned the REP Arcadia and the Bells cable tower. */
+  if (/add all selections|add all to cart|add selected to cart/i.test(html))
+    return { cls: 'GROUP', note: 'sells several SKUs from one page ("add all selections")' };
   if (hasProductLd || ogProduct || hasCart) return { cls: 'PRODUCT' };
   /* No product signal and a page full of product links = a listing. */
   if (productLinks > 8) return { cls: 'LISTING', note: `${productLinks} product links, no product markup` };
@@ -177,7 +191,7 @@ console.log('\n── summary ────────────────�
 console.log(`checked ${results.length} links`);
 for (const [k, v] of Object.entries(counts).sort((a, b) => b[1] - a[1])) console.log(`  ${k.padEnd(9)} ${v}`);
 
-const broken = results.filter((r) => ['LISTING', 'HOME', 'DEAD', 'PARKED'].includes(r.cls));
+const broken = results.filter((r) => ['LISTING', 'HOME', 'DEAD', 'PARKED', 'GROUP'].includes(r.cls));
 if (broken.length) {
   console.log(`\n${broken.length} link(s) do not go to a product page:`);
   for (const r of broken) console.log(`  ${r.cls.padEnd(8)} ${r.id.padEnd(24)} ${r.url}`);
