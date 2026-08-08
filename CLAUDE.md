@@ -31,13 +31,13 @@ Locally: `npm run check:prices`, `check:links`, `check:images` (add `:write` whe
 | Route | What it does |
 |---|---|
 | `GET /health` | status + category count (`server.js:908`) |
-| `GET /api/products/:cat` | 8 products for one of 20 categories (`:910`) |
-| `GET /api/categories` | category metadata (`:917`) |
+| `GET /api/products/:cat` | every published product in that category |
+| `GET /api/categories` | category metadata — categories with nothing publishable are omitted, so the frontend's nav, browse grid and sitemap never offer an empty page |
 | `POST /api/compare` | AI verdict comparing selected products — Anthropic Claude (`:922`) |
 | `POST /api/kit` | quiz → kit builder: **deterministic cart builder** picks products (budget/space/owned-aware), then checks the result against the `COVERAGE MODEL` section — a kit must let you *train every muscle group its goal requires*, not merely hang together. Groq (Llama 3.3 70B) writes only the kit name/description; the coverage sentence is appended deterministically on every path so the claim can't be hallucinated or dropped. Templated fallback copy if no key or API error. Server validates + hydrates product ids and owns all price data. |
 | `POST /api/gym-plan` | commercial gym planner (new build/renovation): deterministic zone allocator (budget split by facility type, quantities from area/peak capacity, renovation keep-zones, flooring sized by coverageSqFt) specs **pro-flagged** gear only; Groq writes the prose plan (LAYOUT/BUYING ORDER/WHY/WATCH OUT), templated fallback. |
 
-Catalog: 31 categories, 290 hardcoded products in `PRODUCTS` (incl. `machines` and `flooring`). Product flags: `compact:true` (machines/cardio/racks — fits a tight space; kit builder gates non-compact out of small rooms per product), `pro:true` (commercial-suitable — set in p() opts or bulk via `PRO_IDS`; the gym planner specs pro gear only), `coverageSqFt` (flooring sizing). Product shape: `{ id, name, brand, emoji, price, retailer, url, affiliateUrl, quality, rating, reviewCount, reviewSource, expertVerdict, expertSource, specs{}, aspects[], bestChoice?, salePrice?, discount? }`. Buy links resolve `affiliateUrl || url`; Amazon tag `gymgearcompar-20`.
+Catalog: 31 categories, **347 rows in `PRODUCTS`, 258 of them published** — a row is served only when it has a verified photo of that exact product AND a link that lands on that product's page (the rest stay in the file, shelved; all 33 Amazon rows are shelved until PA-API keys exist). Product flags: `compact:true` (machines/cardio/racks — fits a tight space; kit builder gates non-compact out of small rooms per product), `pro:true` (commercial-suitable — set in p() opts or bulk via `PRO_IDS`; the gym planner specs pro gear only), `coverageSqFt` (flooring sizing). Product shape: `{ id, name, brand, emoji, price, retailer, url, affiliateUrl, quality, rating, reviewCount, reviewSource, expertVerdict, expertSource, specs{}, aspects[], bestChoice?, salePrice?, discount? }`. Buy links resolve `affiliateUrl || url`; Amazon tag `gymgearcompar-20`.
 
 ## Render env vars (names only — values live in the Render dashboard)
 `ANTHROPIC_API_KEY` (compare verdicts) · `GROQ_API_KEY` (kit copy) · `SITE_KEY` (must match frontend) · `ALLOWED_ORIGINS` (must include `https://gymgearcompare.com` + `www`)
@@ -46,14 +46,14 @@ Catalog: 31 categories, 290 hardcoded products in `PRODUCTS` (incl. `machines` a
 Push to `main` → Render deploy (manual deploy from dashboard if auto-deploy is off). Free tier **sleeps after 15 min**; first request takes 30–60 s — normal, not a bug.
 
 ## Price truth check (`scripts/check-prices.js`)
-Weekly GitHub Action (`.github/workflows/price-check.yml`) that reads every product's price from its **live retailer listing** and opens a PR with the diff. A human merges it — the job never writes to `main`.
+**Daily** GitHub Action (`.github/workflows/price-check.yml`) that reads every product's price from its **live retailer listing** and opens a PR with the diff. A human merges it — the job never writes to `main`. Daily because the site's pitch is the best deals right now, and a sale that ended yesterday is a false claim. If the PR is refused (repo setting), the run raises an issue instead of failing quietly.
 
 - `npm run check:prices` — dry run, writes nothing, prints the classification table
 - `npm run check:prices:write` — applies edits (what CI runs before raising the PR)
 - Flags: `--limit N`, `--only id1,id2`, `--json out.json`, `--catalog file` (test against a copy)
 
 **The rule this exists to enforce:** a price is only ever *read*, never inferred, estimated or carried forward, and **no LLM authors a price**. Anything unreadable is reported `UNREADABLE` and left alone. Deliberate refusals you'll see in the output:
-- `amazon-tos` — Amazon (81 of 290 products) is never scraped; it needs PA-API via the Associates account
+- `amazon-tos` — Amazon (33 rows, all shelved) is never scraped; it needs PA-API via the Associates account
 - `ambiguous-variants` — a Shopify listing priced per variant, where the catalog row doesn't record which one. Guessing here turned a $295 dumbbell **set** into the $29.99 single, i.e. a fabricated 90% discount
 - `http-403` — Rogue and several others block bots at the product page; robots.txt is served fine, the page is not
 
