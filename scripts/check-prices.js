@@ -337,6 +337,41 @@ if (unreadable.length) {
 const edits = results.filter((r) => r.edit).map((r) => r.edit);
 if (OPT.json) fs.writeFileSync(OPT.json, JSON.stringify({ generatedAt: new Date().toISOString(), counts, results }, null, 2));
 
+/* Stock is the one fact that flips back on its own, so it gets a list the job
+ * maintains rather than a human. A published row whose retailer has sold out
+ * sends a buyer to a dead end; shelving it is right, but so is un-shelving it
+ * the day it returns.
+ *
+ * Only rows this run actually READ are touched. An unreadable row keeps
+ * whatever it had — inferring "back in stock" from a failed fetch is how a
+ * sold-out product quietly returns to the shelf. */
+function writeSoldOut(file, results) {
+  let src = fs.readFileSync(file, 'utf8');
+  const m = /const SOLD_OUT_IDS = new Set\(\[([\s\S]*?)\]\);/.exec(src);
+  const current = new Set(
+    m ? [...m[1].matchAll(/'([a-z0-9-]+)'/g)].map((x) => x[1]) : [],
+  );
+  const before = new Set(current);
+  for (const r of results) {
+    if (r.cls === 'UNREADABLE') continue; // never guess from a failed read
+    if (r.cls === 'OUT_OF_STOCK') current.add(r.id);
+    else current.delete(r.id);
+  }
+  const added = [...current].filter((id) => !before.has(id));
+  const removed = [...before].filter((id) => !current.has(id));
+  if (!added.length && !removed.length) return { added, removed };
+
+  const ids = [...current].sort();
+  const lines = [];
+  for (let i = 0; i < ids.length; i += 4)
+    lines.push('  ' + ids.slice(i, i + 4).map((x) => `'${x}'`).join(', ') + ',');
+  const block = ['const SOLD_OUT_IDS = new Set([', ...lines, ']);'].join('\n');
+  if (m) src = src.slice(0, m.index) + block + src.slice(m.index + m[0].length);
+  else throw new Error('no SOLD_OUT_IDS set in ' + file);
+  fs.writeFileSync(file, src);
+  return { added, removed };
+}
+
 if (OPT.write && edits.length) {
   const n = applyEdits(CATALOG, edits);
   console.log(`\napplied ${n} edit(s) to ${CATALOG} — review the diff, never merge unread`);

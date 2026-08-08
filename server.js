@@ -959,6 +959,19 @@ const AMAZON_TAG = 'gymgearcompar-20';
 // we showed one retailer's price and photo, then handed the shopper a search
 // box. A row with no working product link does not belong on the site until it
 // has one — regenerate this list after re-sourcing.
+// Sold out at the retailer, per the last `npm run check:prices` run. The
+// daily job maintains this list itself — it adds a row it read as out of
+// stock and removes one it read as available again, and never touches a row
+// it could not read. Stock is the one fact that flips back on its own, so it
+// would rot fastest if a human owned it.
+//
+// Shelved rather than shown: a Buy button that lands on a sold-out page wastes
+// the click, and the price we advertised is not one anybody can pay today.
+const SOLD_OUT_IDS = new Set([
+  'crossrope-get-lean', 'force-usa-g3', 'force-usa-g6', 'gymshark-vital',
+  'legion-pulse',
+]);
+
 const BAD_LINK_IDS = new Set([
   'adidas-adipower', 'adidas-bra', 'adidas-defender', 'adidas-shorts',
   'ag1', 'amazon-bands', 'amazon-basics-mat', 'amazon-basics-rope',
@@ -1101,8 +1114,12 @@ const SHELVED = new Map();
 for (const [cat, list] of Object.entries(PRODUCTS)) {
   const keep = [];
   for (const p of list) {
-    if (p.image && !BAD_LINK_IDS.has(p.id)) keep.push(p);
-    else SHELVED.set(p.id, p.image ? 'broken link' : 'no verified photo');
+    if (p.image && !BAD_LINK_IDS.has(p.id) && !SOLD_OUT_IDS.has(p.id)) keep.push(p);
+    else
+      SHELVED.set(
+        p.id,
+        !p.image ? 'no verified photo' : BAD_LINK_IDS.has(p.id) ? 'broken link' : 'sold out',
+      );
   }
   PRODUCTS[cat] = keep;
 }
@@ -1110,7 +1127,8 @@ const PUBLISHED_COUNT = Object.values(PRODUCTS).reduce((n, l) => n + l.length, 0
 const shelvedFor = (reason) => [...SHELVED.values()].filter((r) => r === reason).length;
 console.log(
   `catalog: ${PUBLISHED_COUNT} published, ${SHELVED.size} shelved ` +
-    `(${shelvedFor('no verified photo')} without a verified photo, ${shelvedFor('broken link')} with a link that misses the product)`,
+    `(${shelvedFor('no verified photo')} without a verified photo, ${shelvedFor('broken link')} with a link that misses the product, ` +
+    `${shelvedFor('sold out')} sold out)`,
 );
 
 // ── GymGear Score + segmented "best for X" awards ─────────────────
