@@ -11,6 +11,8 @@
     "check:prices:write": "node scripts/check-prices.js --write",
     "check:images": "node scripts/check-images.mjs",
     "check:images:write": "node scripts/check-images.mjs --write",
+    "check:links": "node scripts/check-links.mjs",
+    "capture:images": "node scripts/capture-images.mjs",
     "import:harvest": "node scripts/import-harvest.mjs",
     "import:apply": "node scripts/import-apply.mjs"
   },

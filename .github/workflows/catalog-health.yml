@@ -1,0 +1,75 @@
+# Weekly catalog health: do the links still reach the product, and is each
+# photo still that product's own?
+#
+# Prices move daily and have their own job. Links and images rot slowly but
+# silently, and the failure is worse: a Buy button that lands on a category
+# page, a home page, or a domain that has since been sold (better-bodies.com
+# became a HugeDomains sale page while its "product photo" was the parking
+# banner). This job never edits the catalog — it reports, and a human decides
+# what to re-source or shelve.
+name: catalog-health
+
+on:
+  schedule:
+    - cron: '41 7 * * 1' # Mondays 07:41 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: catalog-health
+  cancel-in-progress: false
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check every Buy link
+        run: node scripts/check-links.mjs --json link-report.json | tee link-log.txt
+
+      - name: Check every product photo
+        run: node scripts/check-images.mjs --json image-report.json | tee image-log.txt
+
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo '## Catalog health'
+            echo '### Links'
+            echo '```'
+            tail -n 25 link-log.txt || echo 'link check produced no output'
+            echo '```'
+            echo '### Images'
+            echo '```'
+            tail -n 25 image-log.txt || echo 'image check produced no output'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Only rows the site actually serves matter here: a shelved row already
+      # cannot hurt anyone, and treating it as a failure would cry wolf weekly.
+      - name: Raise an issue for anything published that broke
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/health-issue.mjs link-report.json image-report.json issue.md
+          if [ -f issue.md ]; then
+            gh issue create --title "Catalog health $(date -u +%Y-%m-%d): published rows need attention" --body-file issue.md
+          fi
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalog-health
+          path: |
+            link-report.json
+            image-report.json
+            link-log.txt
+            image-log.txt

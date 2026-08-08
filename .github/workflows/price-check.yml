@@ -20,6 +20,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write   # the fallback when opening a PR is refused
 
 concurrency:
   group: price-check
@@ -79,6 +80,7 @@ jobs:
 
       - name: Apply changes and open PR
         if: steps.check.outputs.changes != '0'
+        id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -93,12 +95,43 @@ jobs:
           git add server.js
           git commit -m "chore: price check $(date -u +%Y-%m-%d)" -m "Prices read from the live listings. Every changed value is evidenced in the run log; review before merging."
           git push -u origin "$BRANCH"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
           node scripts/pr-body.js price-report.json > pr-body.md
-          gh pr create \
-            --title "Price check $(date -u +%Y-%m-%d)" \
-            --body-file pr-body.md \
-            --base main --head "$BRANCH"
+
+          # Opening the PR can be refused even though the push succeeded: the
+          # repo setting "Allow GitHub Actions to create and approve pull
+          # requests" gates it. That is exactly what happened on 2026-08-03 and
+          # 2026-08-08 — both runs pushed a branch carrying real price changes,
+          # the PR step failed, and nobody was told. Deals sat unmerged for days.
+          # So a refused PR must not kill the run silently; it falls through to
+          # the issue below.
+          if gh pr create             --title "Price check $(date -u +%Y-%m-%d)"             --body-file pr-body.md             --base main --head "$BRANCH"; then
+            echo "opened=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "opened=no" >> "$GITHUB_OUTPUT"
+            echo "::warning::Could not open a PR — branch $BRANCH is pushed and waiting. Enable Settings > Actions > General > Workflow permissions > 'Allow GitHub Actions to create and approve pull requests'."
+          fi
+
+      # A change nobody can see is a change that does not happen. If the PR was
+      # refused, say so somewhere a human actually looks.
+      - name: Raise an issue when the PR was refused
+        if: steps.pr.outputs.opened == 'no'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "The daily price check found changes and pushed them to \`${{ steps.pr.outputs.branch }}\`, but it could not open a pull request."
+            echo
+            echo "**Fix once:** Settings → Actions → General → Workflow permissions → tick *Allow GitHub Actions to create and approve pull requests*."
+            echo
+            echo "**Merge meanwhile:** \`git fetch origin && git cherry-pick -x origin/${{ steps.pr.outputs.branch }}\`"
+            echo
+            echo '```'
+            tail -n 30 price-log.txt
+            echo '```'
+          } > issue.md
+          gh issue create --title "Price check $(date -u +%Y-%m-%d) is stranded on a branch" --body-file issue.md
 
       # The report is an artifact, not a commit: it carries URLs and timestamps
       # that would otherwise churn the repo every week.

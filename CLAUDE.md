@@ -15,6 +15,15 @@ The frontend is a **Next.js 16 app** in `C:\Users\nirka\Documents\gymgear-fronte
 5. **Git email must be `starcrock7@gmail.com`** (`git config user.email`) or Vercel-linked deploy tooling rejects the push.
 6. **The kit builder exists twice.** `COVERAGE MODEL` + `KIT BUILDER` here are a mirror of the frontend's `src/lib/coverage.ts` + `src/lib/kit-builder.ts`, which is what production actually serves. Change one, change both, then prove it: `npm run check:lockstep` and `npm run audit:kits` in the frontend repo. `node --check` cannot see divergence. See the `gymgear-kits` skill.
 
+## Keeping the catalog true (automated)
+
+| When | Job | What it does |
+|---|---|---|
+| Daily 06:17 UTC | `price-check` | Reads every row's live listing; applies price/sale changes it can prove, pushes a branch, opens a PR. If the PR is refused it raises an **issue** instead — two runs' worth of real deals sat stranded on branches before that fallback existed. |
+| Weekly Mon 07:41 UTC | `catalog-health` | Re-checks every Buy link and every product photo; opens an issue naming any **published** row whose link stopped reaching its product or whose photo drifted. Never edits the catalog. |
+
+Locally: `npm run check:prices`, `check:links`, `check:images` (add `:write` where offered). A row is only served when it has a verified photo AND a link that lands on that product — see `docs/plans/product-images.md` and `docs/plans/buy-links.md`.
+
 ## Active plan — read this before touching the catalog
 **[docs/plans/catalog-expansion.md](docs/plans/catalog-expansion.md)** — growing the catalog 261 → 700–1000 products, deals first. It owns the sourcing rules (never invent a price, rating or discount), the harvest → enrich → apply pipeline, the surfaces a new product must be wired into, and the gate list. Agent enrichment prompt: [docs/plans/enrichment-brief.md](docs/plans/enrichment-brief.md). Append to its batch ledger whenever you add products.
 
