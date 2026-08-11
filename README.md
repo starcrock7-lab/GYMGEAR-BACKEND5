@@ -4,6 +4,7 @@ Express API serving the product catalog, kit builder and gym planner. See CLAUDE
 
 ## Session log
 
+- 2026-08-10 · fixed the 16 unverifiable rows: 14 had silently redirected to new URLs (adopted, and one had landed on the WRONG product — Legion Whey+ vs Whey Concentrate), manduka pinned to a variant, 5 prices corrected incl. a Schwinn sale that had ended; 8 rows shelved as unverifiable (Legion x5, Liforme GBP, two weight-graded REP). Link checker no longer calls a Cloudflare challenge a dead product — it was about to condemn all 26 Rogue rows · this commit
 - 2026-08-08 · sold-out rows are shelved automatically: the daily price job now maintains SOLD_OUT_IDS (adds what it reads as out of stock, removes what came back, never guesses from a failed read); 253 published · this commit
 - 2026-08-08 · merged the price bot's stranded sale (bells-power-bar 10% off); a refused PR now raises an issue instead of failing silently; new weekly catalog-health workflow re-checks every link and photo · this commit
 - 2026-08-07 · refill batch: 56 products added from six unmined retailers (Titan, GoRuck, Pioneer, Fringe, JadeYoga, FrictionLabs) — 56/56 verify UNCHANGED and 56/56 links resolve to a product page; hoodies and sports bras are back, 258 published of 347 · this commit

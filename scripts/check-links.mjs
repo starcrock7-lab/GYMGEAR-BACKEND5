@@ -59,6 +59,14 @@ const hostOf = (u) => {
 };
 
 const PARKED = /hugedomains|afternic|sedoparking|dan\.com|domain( name)? is for sale|buy this domain|parkingcrew|bodis\.com/i;
+
+/* A bot wall is not a dead product. Rogue sits behind Cloudflare, which answers
+   403 to one client and a 404-shaped challenge page to another — and the
+   challenge's title made this checker call 26 live products DEAD, including
+   the R-3 and RM-6 the whole rack ranking is anchored on. Shelving those would
+   have been the most expensive false positive in the catalog. */
+const CHALLENGE =
+  /just a moment|attention required|cf-browser-verification|checking your browser|enable javascript and cookies|__cf_chl|请稍候|verify you are human|ddos protection by/i;
 const NOT_FOUND = /404|page not found|not found|no longer available|gone/i;
 /* Path shapes that are a list of products rather than one product. Nike's /w/
    and adidas' bare category paths are the ones that slipped through. */
@@ -66,6 +74,9 @@ const LISTING_PATH =
   /\/(collections|collection|category|categories|shop|browse|search|w|c)\/|\/(mens|womens)-[a-z-]+$|-shorts$|-bras$|-shoes$/i;
 
 function classifyHtml(html, finalUrl, requestedUrl) {
+  /* Checked before everything else: a challenge page can carry any status code
+     and any title, so reading further only produces a confident wrong answer. */
+  if (CHALLENGE.test(html)) return { cls: 'BLOCKED', note: 'bot challenge page — the link is unreadable, not dead' };
   if (PARKED.test(html)) return { cls: 'PARKED' };
 
   const title = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1]?.trim() || '';
@@ -119,7 +130,8 @@ async function readPage(url) {
       signal: AbortSignal.timeout(OPT.timeout),
     });
     const html = await res.text();
-    if (res.status === 404 || res.status === 410) return { cls: 'DEAD', note: `http-${res.status}` };
+    if ((res.status === 404 || res.status === 410) && !CHALLENGE.test(html))
+      return { cls: 'DEAD', note: `http-${res.status}` };
     /* Bot walls answer 400/403/429 to a plain fetch and serve the real page to
        a browser, so those are a reason to try Chrome, not a verdict. */
     if (!res.ok) throw new Error(`http-${res.status}`);
@@ -183,6 +195,28 @@ for (const row of rows) {
   console.log(
     `${verdict.cls.padEnd(8)} ${row.id.padEnd(24)} ${verdict.note || verdict.finalUrl || ''}${foreignImage ? '  [' + foreignImage + ']' : ''}`,
   );
+}
+
+/* A retailer does not delete its entire range overnight. When every row we
+   hold on a host comes back dead, the host is blocking us, not closing down —
+   Rogue answers a bot challenge here and a bare 404 from CI's datacenter IPs,
+   which would have condemned all 26 of its products including the R-3 and
+   RM-6 the rack ranking is anchored on. Needs at least three rows on the host
+   before the pattern means anything. */
+const byHost = new Map();
+for (const r of results) {
+  if (!byHost.has(r.host)) byHost.set(r.host, []);
+  byHost.get(r.host).push(r);
+}
+for (const [host, rows] of byHost) {
+  if (rows.length < 3) continue;
+  if (!rows.every((r) => r.cls === 'DEAD')) continue;
+  for (const r of rows) {
+    r.cls = 'BLOCKED';
+    r.note = `every one of ${rows.length} rows on ${host} read as dead — treating it as a block, not ${rows.length} deletions`;
+  }
+  console.log(`
+[reclassified] ${host}: ${rows.length} rows DEAD -> BLOCKED (whole-host pattern)`);
 }
 
 const counts = {};
