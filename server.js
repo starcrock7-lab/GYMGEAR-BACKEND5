@@ -72,7 +72,7 @@ const IMGS = {
   'rep-black':          'https://repfitness.com/cdn/shop/products/Shopify-BP-1000-45-Thumbnail_663c22df-766d-4ea0-be35-d0b4400488cd.jpg?v=1635876002',
   'rep-bands':          'https://repfitness.com/cdn/shop/products/Shopify-Pull-Up-Bands-Yellow-Thumbnail_1d885469-3377-43cb-9a04-d1d634d6a32d.jpg',
   'peloton-bike':       'https://images.ctfassets.net/7vk8puwnesgc/2xURCMwD091uJI4uqrh3UN/755365da4bcac7fff2bc5102f5976530/Metadata-Bike_.jpg',
-  'nike-club-hoodie':   'https://static.nike.com/a/images/t_default/94f6d19b-8ab6-41da-8dd2-d9b718abfaea/M+NSW+CLUB+HOODIE+PO+BB.png',
+
   'transparent-stim':   'https://www.transparentlabs.com/cdn/shop/files/TL-127_BULK_BLK_30_BC_1_5.png?v=1769104751',
   'transparent-creatine':'https://www.transparentlabs.com/cdn/shop/files/TL_CreatineHMB_30S_U_1_2.png?v=1745537479',
   'transparent-fat':    'https://www.transparentlabs.com/cdn/shop/files/tl_bodyrecomp_120c_1.png',
@@ -90,8 +90,7 @@ const IMGS = {
   'bells-bench':        'https://cdn.shopify.com/s/files/1/0654/3346/9125/files/UTIL-FLT-BEN_Carousel_8_c4dd2ae6-0492-4148-a04e-59caf572266e.jpg',
 
   // Barbells
-  'eleiko-iwf':         'https://media.eleiko.com/images/upload/4x5/3085912_10.jpg',
-  'american-ss':        'https://cdn.shopify.com/s/files/1/0332/6297/files/stainless-steel-ipf-power-lifting-chewy-bar-ob20-ss-ipf-c20-4875192.png?v=1779315621',
+
   'rep-equalizer':      'https://cdn.shopify.com/s/files/1/0574/1215/7598/products/Shopify-Curl-HC-Thumbnail.jpg',
 
   // Dumbbells
@@ -123,44 +122,21 @@ const IMGS = {
   'rep-kb':             'https://cdn.shopify.com/s/files/1/0574/1215/7598/files/Shopify-KB-3002-20-Thumbnail.jpg',
 
   // Bands
-  'elitefts-bands':     'https://cdn.shopify.com/s/files/1/0930/6416/7710/files/micro-long-band.jpg?v=1752170129',
+
   'fit-simplify-bands': 'https://m.media-amazon.com/images/I/71S4-NjoTDL._AC_SL1500_.jpg',
   'ironbull-bands':     'https://m.media-amazon.com/images/I/61Nws-24csL._AC_SL1000_.jpg',
 
   // Clothing  --  Shorts
-  'nobull-shorts':      'https://cdn.shopify.com/s/files/1/0558/4169/files/nobull-apparel-men-s-rep-short-6-unlined-1200016489.png',
-  'lululemon-shorts':   'https://images.lululemon.com/is/image/lululemon/LM1BGCS_032334_1',
-  'nike-dri-fit':       'https://static.nike.com/a/images/t_default/training-shorts-main.jpg',
-  'better-bodies-shorts':'https://static.hugedomains.com/images/hdv3-img/og_hugedomains.png',
 
   // Compression
-  'lululemon-align':    'https://images.lululemon.com/is/image/lululemon/LW5CJAS_032343_1',
-  'nike-pro':           'https://static.nike.com/a/images/t_default/womens-nike-pro-leggings.jpg',
-  'better-bodies-tights':'https://static.hugedomains.com/images/hdv3-img/og_hugedomains.png',
-  'gasp-tights':        'https://sfgroup.centracdn.net/client/dynamic/images/3297_56b376dd25-230-edit.jpg',
 
   // Tanks
-  'better-bodies-tank': 'https://static.hugedomains.com/images/hdv3-img/og_hugedomains.png',
-  'nike-dri-fit-tank':  'https://static.nike.com/a/images/t_default/mens-dri-fit-tank.jpg',
-  'under-armour-tank':  'https://underarmour.scene7.com/is/image/Underarmour/V5-1361518-001_FC?rp=standard-0pad|pdpMainDesktop&scl=1&fmt=jpg&qlt=85',
-  'nobull-tank':        'https://nobullproject.com/cdn/shop/files/nobull-apparel-men-s-nobull-tank-1194036666.png?v=1760784729',
 
   // Hoodies
-  'youngla-hoodie':     'https://www.youngla.com/cdn/shop/collections/OUTERWEAR_096cd88c-dfe9-4b5b-a7f0-6d93ffede8d7.png?v=1779387475&width=2048',
-  'better-bodies-hoodie':'https://static.hugedomains.com/images/hdv3-img/og_hugedomains.png',
-  'gasp-hoodie':        'https://sfgroup.centracdn.net/client/dynamic/images/4117_d39d4623ad-351-edit.jpg',
-  'lululemon-scuba':    'https://images.lululemon.com/is/image/lululemon/LW4DRFS_064847_1',
 
   // Footwear
-  'nike-metcon-9':      'https://static.nike.com/a/images/t_default/metcon-9-training-shoes-main.jpg',
-  'reebok-nano':        'https://cdn.shopify.com/s/files/1/0862/7834/0912/files/100074684_SLC_eCom.jpg',
-  'converse-chuck':     'https://www.converse.com/dw/image/v2/BCZC_PRD/on/demandware.static/-/Sites-cnv-master-catalog/default/dw7281ff30/images/a_107/1T406_A_107X1.jpg?sw=406&strip=false',
 
   // Sports Bras
-  'lululemon-energy':   'https://images.lululemon.com/is/image/lululemon/LW1AHOS_064847_1',
-  'nike-indy-bra':      'https://static.nike.com/a/images/t_default/womens-dri-fit-indy-bra.jpg',
-  'ua-infinity-bra':    'https://underarmour.scene7.com/is/image/Underarmour/V5-1376885-001_FC?rp=standard-0pad|pdpMainDesktop&scl=1&fmt=jpg&qlt=85',
-  'youngla-sports-bra': 'https://cdn.shopify.com/s/files/1/1775/6429/files/Noel___Maddie_BF_eComm_11_25_253999_7f07fe2d-e72f-4be3-960e-8b5f9e536fa4.jpg?v=1775509287',
 
   // Supplements  --  Pre-Workout
   'ghost-legend':       'https://cdn.shopify.com/s/files/1/2060/6331/files/LegendBlueRaspberry.webp?v=1739820789',
@@ -293,7 +269,7 @@ const IMGS = {
   'yune-tohi': 'https://yuneyoga.com/cdn/shop/products/the-rowan-yoga-mat-cotton-exercise-fitness-product-health-yune-co-298.jpg?v=1758305451&width=1024',
   'liforme-original': 'https://liforme.com/cdn/shop/files/Liforme_Classic_Black_Yoga_Mat_Frontview.png?v=1772447172&width=1920',
   'hyperice-vyper': 'https://hyperice.com/cdn/shop/files/vyper-3-pdp-1.png?v=1769126521&width=1200',
-  'gymshark-gym-bag': 'https://cdn.shopify.com/s/files/1/0156/6146/files/images-EVERYDAYCAMERABAGGSBLACKOATWHITEI1C5X_BC2V_0214.jpg?v=1755804098',
+
   'goruck-kit-bag': 'https://www.goruck.com/cdn/shop/files/kit_bag_black.jpg?v=1776701022&width=480',
   'rx-smart-gear-rope': 'https://cdn.shopify.com/s/files/1/0715/0098/8732/files/99275467-2025-47ca-bef1-80708dd244f4.jpg',
   'crossrope-get-lean': 'https://cdn.shopify.com/s/files/1/0316/7810/3691/products/JRD_4_Lean_820px-4__84175_29aa18d5-ab63-4dff-be89-f24500254655.jpg',
@@ -333,9 +309,7 @@ const IMGS = {
   "rep-teton-training-bar-15kg": "https://cdn.shopify.com/s/files/1/0574/1215/7598/files/Teton-15KG-Nickel-thumbnail.jpg?v=1725383893",
   'titan-x3': 'https://cdn.shopify.com/s/files/1/0802/1508/1237/files/401391_01.jpg',
   'titan-t2': 'https://cdn.shopify.com/s/files/1/0802/1508/1237/files/401835_01.jpg',
-  'gymshark-arrival': 'https://cdn.shopify.com/s/files/1/0156/6146/files/Arrival5ShortsNavyA2A1M-UBCY-4050_A.jpg',
-  'gymshark-vital': 'https://cdn.shopify.com/s/files/1/0156/6146/files/images-VitalSeamless2_0LeggingsBlackMarlB1A2B_BBF3_0766_V1b.jpg',
-  'nobull-trainer': 'https://cdn.shopify.com/s/files/1/0558/4169/files/nobull-footwear-men-s-outwork-1200727317.png',
+
   'ritual-men': 'https://cdn.shopify.com/s/files/1/0626/8842/8126/files/PDP_EFM18_Pills_Animated.gif',
   'pioneer-gc-belt': 'https://cdn.shopify.com/s/files/1/0693/3060/0182/files/Stock_4_10mm.png',
   'pioneer-straps': 'https://cdn.shopify.com/s/files/1/0693/3060/0182/files/Pioneer-Fitness-Treated-Leather-Lifting-Straps.jpg',
@@ -599,75 +573,6 @@ bands:[
   p("rep-short-resistance-bands","Short Resistance Bands — XXX-Light","REP Fitness",15.99,"REP Fitness","https://repfitness.com/products/short-resistance-bands?variant=42919516373150",7.7,5,12,"REP Fitness","The 12-inch length loops straight onto band pegs, so light banded barbell work needs no doubling up.","GymGear Compare",{"Length":"12\"","Band width (XXX-Light)":"0.25\"","Resistance":"5-15 lb","Material":"Molded latex","Warranty":"1 year home use, 6 months commercial"},["Sold In Pairs","Banded Barbell Work","1-Year Warranty"],{salePrice:12.79}),
 ],
 
-shorts:[
-  p('gymshark-arrival','Arrival 5" Shorts','Gymshark',45,'Gymshark','https://www.gymshark.com/products/gymshark-arrival-5-shorts-navy-ss22',8.6,4.7,8900,'Gymshark','Most popular gym shorts globally  --  flexible and comfortable.','GQ',{'Material':'86% Poly 14% Elastane','Length':'5"','Pockets':'2','Liner':'No','Fit':'Regular'},['Most Popular','Lightweight','Great Fit']),
-  p('nobull-shorts','Training Shorts','NOBULL',60,'NOBULL','https://www.nobullproject.com/products/mens-nobull-training-short-6-unlined-black',9.0,4.7,1200,'NOBULL','Premium training shorts with stretch and durability for CrossFit.','Barbend',{'Material':'92% Poly 8% Spandex','Length':'7"','Pockets':'3','Liner':'Yes','Fit':'Athletic'},['Premium Build','CrossFit Ready','7" Inseam']),
-  p('lululemon-shorts','Pace Breaker 5" Shorts','Lululemon',78,'Lululemon','https://www.lululemon.com/en-us/p/pace-breaker-linerless-short-5/prod9920053.html',9.1,4.8,5400,'Lululemon','Premium shorts with Swift fabric  --  worth the price for serious athletes.','Wirecutter',{'Material':'Swift Fabric','Length':'5"','Pockets':'3','Liner':'No','Fit':'Relaxed'},['Swift Fabric','Premium Quality','Trusted Brand']),
-  p('nike-dri-fit','Dri-FIT Training Shorts','Nike',35,'Nike','https://www.nike.com/w/mens-training-shorts',8.2,4.6,18000,'Nike','Most trusted gym shorts brand  --  moisture wicking and affordable.','Runner\'s World',{'Material':'Dri-FIT Polyester','Length':'7"','Pockets':'2','Liner':'No','Fit':'Regular'},['Dri-FIT Tech','Most Trusted','Affordable']),
-  p('adidas-shorts','Techfit Shorts','Adidas',38,'Adidas','https://www.adidas.com/us/training-shorts',8.0,4.5,9800,'Adidas','Compression-style shorts with iconic three-stripe design.','GQ',{'Material':'Techfit Poly-Spandex','Length':'5"','Pockets':'1','Liner':'Yes','Fit':'Compression'},['Compression Fit','Iconic Design','Performance Tech']),
-  p('better-bodies-shorts','Mesh Training Shorts','Better Bodies',52,'Better Bodies','https://www.better-bodies.com/collections/mens-shorts',8.4,4.7,870,'Better Bodies','Bodybuilding-focused shorts built for high-rep training.','Generation Iron',{'Material':'Mesh Poly Blend','Length':'5"','Pockets':'2','Liner':'No','Fit':'Relaxed'},['Bodybuilder Brand','Mesh Panels','Relaxed Fit']),
-  p("goruck-performance-brief","Performance Brief","GORUCK",45,"goruck.com","https://goruck.com/products/performance-brief",8,4.9,28,"goruck.com","A 240 GSM compression brief with a nine-inch inseam and mesh gusset, built to stop chafing.","GymGear Compare",{"Fabric":"80% poly, 20% elastane","Fabric Weight":"240 GSM","Inseam":"9\"","Waistband":"1.75\" jacquard elastic","Origin":"Made in the USA"},["Made In USA","Lifetime Warranty","Anti-Chafe"]),
-  p("goruck-womens-biker-shorts-toughflex","Biker Shorts","GORUCK",65,"goruck.com","https://goruck.com/products/womens-biker-shorts-toughflex",7.6,4.5,16,"goruck.com","High-waisted, squat-proof six-inch biker shorts with no-ride leg grippers, made in the USA for training.","GymGear Compare",{"Fabric":"ToughFlex, 4-way stretch","Inseam":"6\"","Fit":"High-waisted, squat proof","Hems":"No-ride leg grippers","Origin":"Made in the USA"},["Made In USA","Squat Proof","High Waisted"]),
-  p("goruck-mens-training-shorts-toughstretch","Men’s Training Shorts - ToughStretch — Black / 5\" / S (29-31)","GORUCK",65,"goruck.com","https://goruck.com/products/mens-training-shorts-toughstretch?variant=43261145940068",8.2,null,null,"goruck.com","Lined training shorts with a zip pocket and two inseam lengths, the everyday gym short for rucking.","GymGear Compare",{"Fabric":"ToughStretch, 4-way stretch","Inseam":"5\" or 7.5\"","Liner":"Built-in","Pockets":"Two side pockets plus internal zip pocket","Warranty":"SCARS Lifetime Guarantee"},["Lifetime Warranty","Built-In Liner","Zip Pocket"]),
-  p("goruck-mens-usa-training-shorts-toughstretch","Men’s USA Training Shorts - Flag - ToughStretch","GORUCK",95,"goruck.com","https://goruck.com/products/mens-usa-training-shorts-toughstretch",8,null,null,"goruck.com","US-made training shorts in four-way stretch ToughStretch fabric, backed by a lifetime guarantee at a premium price.","GymGear Compare",{"Fabric":"ToughStretch, 4-way stretch","Inseam":"5\" (Short) or 7.5\" (Long)","Pockets":"Two front side pockets","Waistband":"Adjustable with internal drawcord","Origin":"Made in the USA"},["Made In USA","Lifetime Warranty","4-Way Stretch"]),
-],
-
-compression:[
-  p('gymshark-vital','Vital Seamless Leggings','Gymshark',55,'Gymshark','https://www.gymshark.com/products/gymshark-vital-seamless-leggings-logo-black-marl-aw24',8.8,4.8,12400,'Gymshark','Best-selling compression leggings globally  --  soft and sculpting.','Women\'s Health',{'Material':'Seamless Knit','Fit':'Compressive','Pockets':'1','Waistband':'High','Squat Proof':'Yes'},['Seamless','Squat Proof','Best Seller'],{bestChoice:true}),
-  p('lululemon-align','Align Pant 25"','Lululemon',128,'Lululemon','https://www.lululemon.com/en-us/p/align-pant-25/prod8560273.html',9.5,4.9,28000,'Lululemon','The legging every other brand tries to replicate.','Vogue',{'Material':'Nulu Fabric','Fit':'Naked Sensation','Pockets':'1','Waistband':'High','Length':'25"'},['Gold Standard','Nulu Fabric','Most Copied']),
-  p('youngla-joggers','Tapered Joggers 101','Young LA',58,'Young LA','https://youngla.com/collections/bottoms',8.9,4.8,4100,'Young LA','Most popular gym bottoms from the hottest rising brand.','Fitness Reviews',{'Material':'Poly-Spandex Blend','Fit':'Tapered','Pockets':'2','Waistband':'Elastic','Compression':'Light'},['Best Seller','Tapered Fit','Young LA'],{salePrice:46}),
-  p('nike-pro','Pro Mid-Rise Leggings','Nike',55,'Nike','https://www.nike.com/w/womens-nike-pro-leggings',8.5,4.7,22000,'Nike','Most trusted compression legging  --  Dri-FIT and durable.','Runner\'s World',{'Material':'Dri-FIT Nylon','Fit':'Compression','Pockets':'1','Waistband':'Mid-Rise','Squat Proof':'Yes'},['Dri-FIT','Most Trusted','Squat Proof']),
-  p('better-bodies-tights','Pro Tights','Better Bodies',62,'Better Bodies','https://www.better-bodies.com/collections/womens-tights',8.5,4.7,940,'Better Bodies','Bodybuilding-grade compression built for heavy lifting.','Generation Iron',{'Material':'Nylon-Spandex','Fit':'Compression','Pockets':'1','Waistband':'High','Squat Proof':'Yes'},['Lifting Focused','Squat Proof','Bodybuilder Brand']),
-  p("goruck-training-leggings","Training Leggings","GORUCK",50,"goruck.com","https://goruck.com/products/training-leggings",8,null,null,"goruck.com","Same ToughFlex cut and squat-proof waistband as the USA version, cheaper, but not USA-built.","GymGear Compare",{"Fabric":"ToughFlex — lightweight, fast-drying, four-way stretch","Inseam":"26.25 in (size 2) to 29.75 in (size 16)","Pockets":"Two side pockets, 5.375 in wide at the top","Waistband":"High-waisted with hidden mesh panel; squat-proof","Colors":"Black and Ranger Green, sizes 2-14"},["Squat Proof","Side Pockets","Value Pick"]),
-  p("goruck-womens-cropped-training-leggings-usa","Cropped Training Leggings USA","GORUCK",65,"goruck.com","https://goruck.com/products/womens-cropped-training-leggings-usa",8.5,null,null,"goruck.com","The 21-inch-inseam version of GORUCK's USA-made ToughFlex leggings, squat-proof with an optional pair of side pockets.","GymGear Compare",{"Fabric":"ToughFlex — nylon for strength, spandex for stretch","Inseam":"21 in (cropped)","Pockets":"Two side pockets, 5.375 in wide at the top; also sold pocket-free","Waistband":"High-waisted with hidden mesh panel; squat-proof","Country of manufacture":"Made in the USA"},["Cropped 21in","Squat Proof","Made In USA"]),
-  p("goruck-womens-training-leggings-usa","Training Leggings USA","GORUCK",70,"goruck.com","https://goruck.com/products/womens-training-leggings-usa",8.7,null,null,"goruck.com","USA-made squat-proof training leggings with a hidden-mesh waistband and deep side pockets, in eight colors.","GymGear Compare",{"Fabric":"ToughFlex — lightweight, fast-drying, four-way stretch","Inseam":"26.25 in (size 2) to 29.75 in (size 16)","Pockets":"Two side pockets, 5.375 in wide at the top; also sold pocket-free","Waistband":"High-waisted with hidden mesh panel; squat-proof","Country of manufacture":"Made in the USA"},["Squat Proof","Made In USA","Deep Side Pockets"]),
-  p("goruck-mens-base-layer-bottom","Men’s Base Layer Bottom - Merino Wool","GORUCK",75,"goruck.com","https://goruck.com/products/mens-base-layer-bottom",9,4.8,10,"goruck.com","An 81% merino base layer at 180 GSM, built in the USA with a lifetime guarantee.","GymGear Compare",{"Material":"81% merino wool / 12% nylon / 7% elastane","Fabric weight":"180 GSM","Care":"Machine wash cold, do not bleach, hang dry","Warranty":"Scars Lifetime Guarantee","Country of manufacture":"Built in the USA"},["81% Merino","Lifetime Guarantee","Made In USA"]),
-],
-
-tanks:[
-  p('youngla-tank','Sleeveless Tank 303','Young LA',32,'Young LA','https://youngla.com/collections/tops',8.8,4.8,4200,'Young LA','Best gym tank  --  wide-cut armholes and athletic fit.','Fitness Reviews',{'Material':'95% Poly 5% Spandex','Fit':'Athletic','Armholes':'Wide Cut','Length':'Standard','Style':'Sleeveless'},['Best Seller','Wide Armholes','Athletic Fit'],{bestChoice:true}),
-  p('better-bodies-tank','Ribbed Tank','Better Bodies',38,'Better Bodies','https://www.better-bodies.com/collections/mens-tanks',8.4,4.7,780,'Better Bodies','Stylish ribbed construction with athletic drape.','Generation Iron',{'Material':'Viscose-Poly Blend','Fit':'Athletic','Style':'Ribbed','Armholes':'Standard','Length':'Long'},['Ribbed Design','Athletic Drape','Bodybuilder Brand']),
-  p('nike-dri-fit-tank','Dri-FIT Tank','Nike',28,'Nike','https://www.nike.com/w/mens-training-tanks',8.0,4.6,14000,'Nike','Most reliable gym tank  --  Dri-FIT moisture management.','Runner\'s World',{'Material':'Dri-FIT Polyester','Fit':'Regular','Technology':'Dri-FIT','Armholes':'Standard','Style':'Sleeveless'},['Dri-FIT Tech','Most Trusted','Affordable']),
-  p('nobull-tank','Performance Tank','NOBULL',30,'NOBULL','https://www.nobullproject.com/products/mens-nobull-tank-black',8.9,4.7,890,'NOBULL','Premium performance tank built for CrossFit and hard training.','Barbend',{'Material':'Moisture Wicking Blend','Fit':'Athletic','Armholes':'Wide Cut','Style':'Performance','Use':'CrossFit'},['Premium Build','CrossFit Ready','Wide Armholes']),
-  p("goruck-mens-performance-tank-tough-mesh","Men's Performance Tank - ToughMesh","GORUCK",45,"goruck.com","https://goruck.com/products/mens-performance-tank-tough-mesh",8.7,4.9,18,"goruck.com","A 100 GSM ToughMesh tank with UPF 35 and off-shoulder seams that clear a ruck strap.","GymGear Compare",{"Material (Black / Ranger Green)":"85% nylon / 15% elastane","Fabric weight":"ToughMesh, 100 GSM","Sun protection":"UPF 35 (97%+ coverage)","Seams":"Off-the-shoulder to remove friction under a ruck","Country of manufacture":"Italian-milled fabric, built in the USA"},["100 GSM","UPF 35","Ruck Friendly"]),
-  p("goruck-womens-racerback-tank","Women’s Racerback Tank","GORUCK",55,"goruck.com","https://goruck.com/products/womens-racerback-tank",8.4,null,null,"goruck.com","A 100 GSM ToughMesh racerback singlet with UPF 35, built in the USA for hot sessions.","GymGear Compare",{"Material (Black)":"85% nylon / 15% elastane","Fabric weight":"ToughMesh, 100 GSM","Sun protection":"UPF 35","Airflow":"Mini-perforations woven in to speed dry time","Country of manufacture":"Italian-milled fabric, built in the USA"},["Racerback Cut","UPF 35","Made In USA"]),
-  p("goruck-womens-long-sleeve-mock-neck-toughmes","Women’s Long Sleeve Mock Neck - ToughMesh","GORUCK",75,"goruck.com","https://goruck.com/products/womens-long-sleeve-mock-neck-toughmesh",8.5,5,6,"goruck.com","A featherweight ToughMesh long-sleeve with UPF 35 sun protection, for hot-weather training and travel.","GymGear Compare",{"Material (Black)":"85% nylon / 15% elastane","Fabric weight":"ToughMesh, 100 GSM","Sun protection":"UPF 35","Airflow":"Mini-perforations woven in to speed dry time","Country of manufacture":"Italian-milled fabric, built in the USA"},["UPF 35","100 GSM","Made In USA"]),
-  p("goruck-womens-performance-tank","Women’s Performance Tank - ToughMesh — Dark Grey / S","GORUCK",35,"goruck.com","https://goruck.com/products/womens-performance-tank?variant=43637474558052",8.6,4.8,32,"goruck.com","A 100 GSM Italian ToughMesh training tank rated UPF 35, cut and sewn in the USA.","GymGear Compare",{"Material (Dark Grey)":"80% nylon / 15% elastane / 5% polyester","Fabric weight":"ToughMesh, 100 GSM","Sun protection":"UPF 35","Odour control":"Antimicrobial treated in the fibre before weaving","Country of manufacture":"Italian-milled fabric, built in the USA"},["100 GSM","UPF 35","Made In USA"],{salePrice:25}),
-  p("pioneerfit-dusty-blue-womens-crop-tank","Dusty Blue Women's Crop Tank","Pioneer Fitness | General Leathercraft Mfg.",29,"pioneerfit.com","https://pioneerfit.com/products/dusty-blue-womens-crop-tank",6.3,null,null,"pioneerfit.com","A cotton-poly Bella+Canvas crop tank with Pioneer Powerlifting branding, stocked in all five adult sizes.","GymGear Compare",{"Material":"52% cotton / 48% polyester","Blank":"Bella+Canvas","Cut":"Women's crop tank","Graphics":"Pioneer Powerlifting logo on chest, P logo on back","Sizes":"S to 2XL, all in stock"},["Cotton Blend","Cropped Cut","Budget Pick"],{salePrice:17.4}),
-],
-
-hoodies:[
-  p('youngla-hoodie','Oversized Hoodie 549','Young LA',65,'Young LA','https://youngla.com/collections/hoodies',9.0,4.9,5600,'Young LA','Best gym hoodie  --  oversized, soft, iconic.','Fitness Reviews',{'Material':'80% Cotton 20% Poly','Fit':'Oversized','Hood':'Drawstring','Pockets':'Kangaroo','Weight':'Heavyweight'},['Oversized Fit','Best Seller','Heavyweight Cotton'],{bestChoice:true}),
-  p('nike-club-hoodie','Club Fleece Hoodie','Nike',65,'Nike','https://www.nike.com/w/mens-nike-club-hoodies',8.5,4.8,35000,'Nike','The most iconic gym hoodie  --  trusted by athletes everywhere.','GQ',{'Material':'80% Cotton 20% Poly','Fit':'Standard','Hood':'Drawstring','Pockets':'Kangaroo','Weight':'Medium'},['Most Iconic','Trusted Brand','Everyday Wear']),
-  p('adidas-essentials','Essentials Fleece Hoodie','Adidas',60,'Adidas','https://www.adidas.com/us/hoodies',8.3,4.7,24000,'Adidas','Classic three-stripe hoodie  --  comfortable and timeless.','GQ',{'Material':'70% Cotton 30% Poly','Fit':'Regular','Hood':'Drawstring','Pockets':'Kangaroo','Weight':'Medium'},['Classic Design','Three Stripes','Timeless']),
-  p('better-bodies-hoodie','Athlete Hoodie','Better Bodies',68,'Better Bodies','https://www.better-bodies.com/collections/mens-hoodies',8.4,4.7,780,'Better Bodies','Bodybuilding cut with dropped shoulders.','Generation Iron',{'Material':'Cotton-Poly Blend','Fit':'Athletic','Hood':'Drawstring','Pockets':'Kangaroo','Shoulders':'Dropped'},['Bodybuilder Cut','Dropped Shoulders','Athletic Fit']),
-  p('lululemon-scuba','Scuba Oversized Hoodie','Lululemon',138,'Lululemon','https://www.lululemon.com/en-us/p/scuba-oversized-half-zip-hoodie/prod11120082.html',9.3,4.9,11000,'Lululemon','Cult-status hoodie  --  everyone at the gym has one.','Vogue',{'Material':'Terry Fabric','Fit':'Oversized','Hood':'No Drawstring','Pockets':'2','Style':'Half-Zip'},['Cult Status','Terry Fabric','Half Zip']),
-  p("fringesport-fringe-crest-zipper-hoodie","Fringe Crest Zipper Hoodie","Fringe Sport",58,"fringesport.com","https://fringesport.com/products/fringe-crest-zipper-hoodie",6.5,null,null,"fringesport.com","A 6.5 oz combed-cotton fleece full-zip, printed to order, so expect up to ten business days.","GymGear Compare",{"Material":"52% Airlume combed ring-spun cotton / 48% poly fleece, 32 single","Weight":"6.5 oz","Closure":"Full zip with ribbed cuffs and waistband","Care":"Machine wash and tumble dry on low","Lead time":"Made to order, up to 10 business days"},["Ring-Spun Cotton","Full Zip","Made To Order"]),
-  p("titan-titan-fitness-hoodie","Titan Fitness Hoodie","Titan Fitness",64.99,"titan.fitness","https://titan.fitness/products/titan-fitness-hoodie",7.4,null,null,"titan.fitness","A mid-weight 50/50 cotton-poly gym hoodie with jersey-lined hood and a one-year Titan warranty.","GymGear Compare",{"Material":"50% cotton / 50% polyester, mid-weight","Fit":"Athletic unisex","Construction":"Jersey-lined hood, kangaroo pocket, aluminum-grommet drawcords","Care":"Wash cold, tumble dry low, do not bleach or iron","Warranty":"1 year"},["Mid-Weight Fleece","Athletic Unisex Fit","1-Year Warranty"]),
-],
-
-footwear:[
-  p('nobull-trainer','Trainer+','NOBULL',150,'NOBULL','https://www.nobullproject.com/products/mens-black-gum-outwork',9.2,4.8,6700,'NOBULL','Best all-around training shoe  --  CrossFit and lifting in one.','Barbend',{'Upper':'SuperFabric','Sole':'Flat Rubber','Drop':'4mm','Weight':'11.5 oz','Use':'Cross-Training'},['CrossFit Ready','SuperFabric','All-Purpose'],{bestChoice:true}),
-  p('adidas-adipower','Adipower Weightlifting Shoe','Adidas',175,'Adidas','https://www.adidas.com/us/adipower-weightlifting-shoes',9.1,4.8,3400,'Adidas','Best weightlifting shoe  --  elevated heel for Olympic lifts.','Barbend',{'Upper':'Synthetic','Heel Raise':'0.75"','Sole':'TPU','Strap':'Double Strap','Use':'Olympic Lifting'},['Lifting Specific','Elevated Heel','Double Strap'],{salePrice:139}),
-  p('reebok-nano','Nano X4','Reebok',140,'Reebok','https://www.reebok.com/products/reebok-nano-x4-training-shoes-black-ftwr-white-orange-flare-112667',8.8,4.7,7800,'Reebok','Classic CrossFit trainer  --  versatile and trusted since 2011.','Barbend',{'Upper':'Engineered Mesh','Sole':'Rubber','Drop':'4mm','Weight':'10.2 oz','Use':'Cross-Training'},['CrossFit Classic','Versatile','Trusted Since 2011'],{salePrice:79.99}),
-  p('converse-chuck','Chuck Taylor All Star','Converse',65,'Converse','https://www.converse.com/us/en/p/chuck-taylor-all-star',7.5,4.6,45000,'Amazon','Powerlifters love these  --  dead flat sole, zero drop.','Starting Strength',{'Upper':'Canvas','Sole':'Flat Rubber','Drop':'0mm','Weight':'11 oz','Use':'Powerlifting'},['Zero Drop','Powerlifter Favorite','Flat Sole']),
-  p('inov8-bare','Bare-XF V3','Inov-8',125,'Inov-8','https://www.inov-8.com/us/bare-xf-v3',8.9,4.7,1200,'Inov-8','Best minimalist training shoe for barefoot-style lifting.','Barbend',{'Upper':'Mesh','Sole':'Bare-XF','Drop':'0mm','Weight':'7.6 oz','Use':'Lifting + WOD'},['Zero Drop','Minimalist','Barefoot Feel']),
-  p('new-balance-minimus','Minimus TR V1','New Balance',100,'New Balance','https://www.newbalance.com/pd/minimus-tr-v1-training-shoe',8.4,4.6,2100,'New Balance','Lightweight trainer great for lifting and agility.','Runner\'s World',{'Upper':'Mesh','Sole':'REVlite','Drop':'4mm','Weight':'8.1 oz','Use':'Training'},['Lightweight','REVlite Sole','Versatile']),
-  p("fringesport-liftopus-weightlifting-shoes","Liftopus Weightlifting Shoes","Fringe Sport",150,"fringesport.com","https://fringesport.com/products/liftopus-weightlifting-shoes",7.2,5,7,"fringesport.com","A budget lifter with a 0.75-inch effective heel and anti-slip rubber sole, let down by a 90-day warranty.","GymGear Compare",{"Effective Heel Height":"0.75 inch","Weight":"2 lbs (pair)","Upper":"PU leather + knit fabric","Sole":"TPU + 100% anti-slip rubber","Warranty":"90 days"},["Raised Heel","Budget Lifter","Anti-Slip Sole"]),
-  p("goruck-macv-2-safety-boot","MACV-2 Safety Boot - Mid Top","GORUCK",185,"goruck.com","https://goruck.com/products/macv-2-safety-boot",8.7,4.5,94,"goruck.com","The mid-top safety boot, with the same composite toe and puncture-resistant sole but a freer ankle.","GymGear Compare",{"Heel-to-Toe Drop":"13mm","Upper":"Premium Suede + 1000D CORDURA","Outsole":"Triple compound rubber","Weight":"22.5 oz (size 9)","Shaft Height":"6\""},["ASTM Certified","Composite Toe","Lightweight Build"]),
-  p("goruck-macv-2-safety-boot-high-top","MACV-2 Safety Boot - 8\" High Top","GORUCK",195,"goruck.com","https://goruck.com/products/macv-2-safety-boot-high-top",8.8,4.6,70,"goruck.com","An eight-inch ASTM-certified work boot with composite toe and 13mm drop for long days on your feet.","GymGear Compare",{"Heel-to-Toe Drop":"13mm","Upper":"Challenge Leather + 1000D CORDURA","Outsole":"Triple compound rubber","Weight":"24.8 oz (size 9)","Safety Rating":"ASTM F2412 / F2413 (I, C, EH, PR)"},["ASTM Certified","Composite Toe","13mm Drop"]),
-],
-
-sportsbras:[
-  p('lululemon-energy','Energy Bra','Lululemon',68,'Lululemon','https://www.lululemon.com/en-us/p/energy-bra/prod8560290.html',9.4,4.9,18000,'Lululemon','The benchmark for sports bras  --  supportive, comfortable, stylish.','Women\'s Health',{'Support':'Medium','Material':'Luon Fabric','Pads':'Removable','Straps':'Racerback','Cups':'Molded'},['Gold Standard','Luon Fabric','Racerback'],{bestChoice:true}),
-  p('gymshark-flex-bra','Flex Sports Bra','Gymshark',38,'Gymshark','https://www.gymshark.com/collections/sports-bras',8.6,4.7,9200,'Gymshark','Best value sports bra  --  comfortable for all workout types.','Women\'s Health',{'Support':'Medium','Material':'Stretch Fabric','Pads':'Removable','Straps':'Crossback','Cups':'Removable'},['Best Value','Crossback','All-Purpose']),
-  p('nike-indy-bra','Dri-FIT Indy Bra','Nike',45,'Nike','https://www.nike.com/w/womens-sports-bras',8.5,4.7,24000,'Nike','Light support bra with Dri-FIT  --  perfect for yoga and low impact.','Runner\'s World',{'Support':'Light','Material':'Dri-FIT','Pads':'Removable','Straps':'Standard','Cups':'Shelf'},['Dri-FIT','Light Support','Yoga Friendly']),
-  p('nobull-sports-bra','Performance Sports Bra','NOBULL',68,'NOBULL','https://www.nobullproject.com/collections/womens-sports-bras',8.9,4.7,780,'NOBULL','CrossFit-ready bra with premium support for heavy training.','Barbend',{'Support':'Medium-High','Material':'Performance Blend','Pads':'Removable','Straps':'Racerback','Use':'CrossFit'},['CrossFit Ready','Premium Build','Performance Support']),
-  p('adidas-bra','Believe This 3-Bar Bra','Adidas',40,'Adidas','https://www.adidas.com/us/womens-sports-bras',8.2,4.6,12000,'Adidas','Iconic three-stripe sports bra  --  comfortable for all activities.','GQ',{'Support':'Medium','Material':'Climalite','Pads':'Removable','Straps':'Standard','Style':'Three-Stripe'},['Iconic Design','Climalite','All-Activity']),
-  p("goruck-stealth-bra-toughflex","Stealth Bra","GORUCK",45,"goruck.com","https://goruck.com/products/stealth-bra-toughflex",8.1,4.8,12,"goruck.com","Lighter-support USA-made bra pairing ToughFlex nylon-spandex with a breathable ToughMesh back panel for hot training.","GymGear Compare",{"Shell":"75% nylon / 25% spandex ToughFlex","Back panel":"ToughMesh, 85% nylon / 15% elastane","Fabric behaviour":"Fast-drying, sweat-wicking, 4-way stretch","Care":"Machine wash cold, non-chlorine bleach only, hang dry","Country of manufacture":"Designed and built in the USA"},["Light Support","Made In USA","Mesh Back"]),
-  p("goruck-power-bra-toughflex","Power Bra","GORUCK",65,"goruck.com","https://goruck.com/products/power-bra-toughflex",8.3,4.2,6,"goruck.com","High-impact compression bra with wide straps and no clasps, built in the USA for rucking under load.","GymGear Compare",{"Shell":"75% nylon / 25% spandex ToughFlex","Interior liner":"88% recycled polyester / 12% spandex","Construction":"Wide straps, minimal seams, no clasps","Care":"Machine wash cold, non-chlorine bleach only, hang dry","Country of manufacture":"Designed and built in the USA"},["High Impact","Made In USA","No Clasps"]),
-],
-
 preworkout:[
   p('ghost-legend','Ghost Legend Pre-Workout','Ghost',49,'Ghost','https://ghostlifestyle.com/products/ghost-legend',9.0,4.8,14200,'Ghost','Most popular pre-workout of the decade  --  transparent label.','Barbend',{'Caffeine':'250mg','L-Citrulline':'4g','Beta-Alanine':'3.2g','Servings':'40','Collab':'Yes'},['Transparent Label','40 Servings','Collab Flavors'],{bestChoice:true}),
   p('transparent-stim','Bulk Pre-Workout','Transparent Labs',54.99,'Transparent Labs','https://www.transparentlabs.com/products/bulk-black-pre-workout',9.5,4.9,8900,'Transparent Labs','Cleanest formula on the market  --  fully disclosed, no fillers.','Examine.com',{'Caffeine':'275mg','L-Citrulline':'8g','Beta-Alanine':'4g','Servings':'30','Third Party':'Yes'},['Cleanest Formula','8g Citrulline','Third Party Tested']),
@@ -875,7 +780,6 @@ jumpropes:[
 
 const CATEGORY_META = {
   benches:{group:'equipment',label:'Weight Benches'},machines:{group:'equipment',label:'All-in-One Machines'},flooring:{group:'equipment',label:'Gym Flooring'},barbells:{group:'equipment',label:'Barbells'},dumbbells:{group:'equipment',label:'Dumbbells'},plates:{group:'equipment',label:'Weight Plates'},racks:{group:'equipment',label:'Racks & Rigs'},cardio:{group:'equipment',label:'Cardio'},kettlebells:{group:'equipment',label:'Kettlebells'},bands:{group:'equipment',label:'Resistance Bands'},
-  shorts:{group:'clothing',label:'Gym Shorts'},compression:{group:'clothing',label:'Compression'},tanks:{group:'clothing',label:'Tank Tops'},hoodies:{group:'clothing',label:'Hoodies'},footwear:{group:'clothing',label:'Footwear'},sportsbras:{group:'clothing',label:'Sports Bras'},
   preworkout:{group:'supplements',label:'Pre-Workout'},protein:{group:'supplements',label:'Protein'},creatine:{group:'supplements',label:'Creatine'},recovery:{group:'supplements',label:'Recovery'},vitamins:{group:'supplements',label:'Vitamins'},fatburners:{group:'supplements',label:'Fat Burners'},
   belts:{group:'gear',label:'Lifting Belts'},straps:{group:'gear',label:'Lifting Straps'},wraps:{group:'gear',label:'Wrist Wraps'},sleeves:{group:'gear',label:'Knee Sleeves'},chalk:{group:'gear',label:'Chalk'},
   yogamats:{group:'accessories',label:'Yoga Mats'},foamrollers:{group:'accessories',label:'Foam Rollers'},gymbags:{group:'accessories',label:'Gym Bags'},jumpropes:{group:'accessories',label:'Jump Ropes'},
@@ -925,12 +829,6 @@ const CAT_IMAGE = {
   cardio: ['1571019613454-1cb2f99b2d8b', '1571902943202-507ec2618e8f', '1593079831268-3381b0db4a77'],
   kettlebells: ['1517344884509-a0c97ec11bcc', '1601422407692-ec4eeec1d9b3'],
   bands: ['1591291621164-2c6367723315', '1517130038641-a774d04afb3c'],
-  shorts: ['1556906781-9a412961c28c'],
-  compression: ['1556906781-9a412961c28c', '1538805060514-97d9cc17730c'],
-  tanks: ['1483721310020-03333e577078'],
-  hoodies: ['1483721310020-03333e577078'],
-  footwear: ['1542291026-7eec264c27ff', '1595950653106-6c9ebd614d3a'],
-  sportsbras: ['1556906781-9a412961c28c', '1538805060514-97d9cc17730c'],
   preworkout: ['1693996045899-7cf0ac0229c7'],
   protein: ['1693996045899-7cf0ac0229c7'],
   creatine: ['1693996045899-7cf0ac0229c7'],
@@ -990,28 +888,21 @@ const UNVERIFIED_PRICE_IDS = new Set([
 ]);
 
 const SOLD_OUT_IDS = new Set([
-  'crossrope-get-lean', 'force-usa-g3', 'force-usa-g6', 'gymshark-vital',
-  'legion-pulse',
+  'crossrope-get-lean', 'force-usa-g3', 'force-usa-g6', 'legion-pulse',
 ]);
 
 const BAD_LINK_IDS = new Set([
-  'adidas-adipower', 'adidas-bra', 'adidas-defender', 'adidas-shorts',
-  'ag1', 'amazon-bands', 'amazon-basics-mat', 'amazon-basics-rope',
-  'better-bodies-hoodie', 'better-bodies-shorts', 'better-bodies-tank', 'better-bodies-tights',
-  'bowflex-552', 'buddy-lee-aero', 'cap-ob86b', 'converse-chuck',
+  'adidas-defender', 'ag1', 'amazon-bands', 'amazon-basics-mat',
+  'amazon-basics-rope', 'bowflex-552', 'buddy-lee-aero', 'cap-ob86b',
   'fringe-urethane', 'fringe-wonder', 'gaiam-premium', 'ghost-legend',
-  'gymshark-flex-bra', 'inov8-bare', 'ironmaster-ql', 'ironmaster-superbench',
-  'jump-rope-dudes-rope', 'kabuki-power-bar', 'kbkings-powder', 'klean-bcaa',
-  'klean-creatine', 'klean-mv', 'lf-club-elliptical', 'lululemon-align',
-  'lululemon-energy', 'lululemon-scuba', 'lululemon-shorts', 'lux-fit-roller',
-  'mhp-thyro-slim', 'momentous-creatine', 'new-balance-minimus', 'nike-brasilia',
-  'nike-club-hoodie', 'nike-dri-fit', 'nike-dri-fit-tank', 'nike-indy-bra',
-  'nike-pro', 'nobull-sports-bra', 'nuobell-adj', 'onnit-kb',
-  'osprey-daylite', 'prx-profile-pro', 'rumble-roller', 'sbd-belt',
-  'the-stick', 'theraband-roller', 'titan-ab', 'titan-adj',
-  'titan-bumper', 'titan-kb', 'titan-olympic', 'tptherapy-mb1',
-  'ua-undeniable', 'weightlifting-house-chalk', 'wod-nation-speed-rope', 'youngla-hoodie',
-  'youngla-joggers', 'youngla-tank', 'yune-tohi',
+  'ironmaster-ql', 'ironmaster-superbench', 'jump-rope-dudes-rope', 'kabuki-power-bar',
+  'kbkings-powder', 'klean-bcaa', 'klean-creatine', 'klean-mv',
+  'lf-club-elliptical', 'lux-fit-roller', 'mhp-thyro-slim', 'momentous-creatine',
+  'nike-brasilia', 'nuobell-adj', 'onnit-kb', 'osprey-daylite',
+  'prx-profile-pro', 'rumble-roller', 'sbd-belt', 'the-stick',
+  'theraband-roller', 'titan-ab', 'titan-adj', 'titan-bumper',
+  'titan-kb', 'titan-olympic', 'tptherapy-mb1', 'ua-undeniable',
+  'weightlifting-house-chalk', 'wod-nation-speed-rope', 'yune-tohi',
 ]);
 
 /* ── Product taxonomy ─────────────────────────────────────────────
@@ -1060,12 +951,6 @@ const CATEGORY_TAGS = {
   fatburners: { productType: 'accessory', kitRole: 'optional', pairsWith: EQUIPMENT_CATS },
   // Clothing — tagged accessory, but pairsWith:[] so it never surfaces in an
   // equipment kit. Still browsable in its own categories / the separate finder.
-  shorts:      { productType: 'accessory', kitRole: 'optional', pairsWith: [] },
-  compression: { productType: 'accessory', kitRole: 'optional', pairsWith: [] },
-  tanks:       { productType: 'accessory', kitRole: 'optional', pairsWith: [] },
-  hoodies:     { productType: 'accessory', kitRole: 'optional', pairsWith: [] },
-  footwear:    { productType: 'accessory', kitRole: 'optional', pairsWith: [] },
-  sportsbras:  { productType: 'accessory', kitRole: 'optional', pairsWith: [] },
 };
 const DEFAULT_TAGS = { productType: 'accessory', kitRole: 'optional', pairsWith: [] };
 
@@ -1074,26 +959,17 @@ const DEFAULT_TAGS = { productType: 'accessory', kitRole: 'optional', pairsWith:
 // commercial SKUs set {pro:true} directly in p(); this set upgrades the
 // home-catalog crossovers without touching 30 product lines.
 const PRO_IDS = new Set([
-  // racks & rigs
-  'rogue-rm6', 'rogue-r3', 'rogue-rml390f', 'rep-pr5000', 'rep-pr4000', 'rogue-sml2',
-  // barbells
-  'rogue-ohio', 'rogue-opb', 'rogue-deadlift', 'rogue-squat-bar', 'texas-power-bar',
-  'eleiko-iwf', 'american-ss', 'kabuki-power-bar', 'bells-power-bar', 'rep-alpine-bar', 'vulcan-pro',
-  // plates
-  'rogue-hg2', 'rep-comp', 'rep-black', 'rogue-echo', 'vulcan-alpha',
-  // benches
-  'rogue-mb2', 'rogue-flat2', 'rep-fb5000', 'rep-ab5200', 'rogue-adj-bench', 'bells-bench',
-  // dumbbells & kettlebells
-  'rogue-hex', 'rep-hex', 'fringe-urethane', 'vulcan-db',
-  'rogue-kb', 'rep-kb', 'dragon-door-kb', 'kbkings-powder', 'vulcan-kb',
-  // cardio
-  'concept2-rower', 'concept2-ski', 'concept2-bikeerg', 'assault-bike', 'assault-runner',
-  'rogue-echo-bike', 'lifefitness-t3',
-  // machines & functional
-  'lifefitness-g7', 'force-usa-g20', 'rep-arcadia', 'bells-ft',
-  // bands / straps-adjacent functional kit
-  'rogue-bands', 'elitefts-bands', 'trx-pro4',
-  // accessories the planner stocks
+  'rogue-rm6', 'rogue-r3', 'rogue-rml390f', 'rep-pr5000',
+  'rep-pr4000', 'rogue-sml2', 'rogue-ohio', 'rogue-opb',
+  'rogue-deadlift', 'rogue-squat-bar', 'texas-power-bar', 'kabuki-power-bar',
+  'bells-power-bar', 'rep-alpine-bar', 'rogue-hg2', 'rep-comp',
+  'rep-black', 'rogue-echo', 'rogue-mb2', 'rogue-flat2',
+  'rep-fb5000', 'rep-ab5200', 'rogue-adj-bench', 'bells-bench',
+  'rogue-hex', 'rep-hex', 'fringe-urethane', 'rogue-kb',
+  'rep-kb', 'dragon-door-kb', 'kbkings-powder', 'concept2-rower',
+  'concept2-ski', 'concept2-bikeerg', 'assault-bike', 'assault-runner',
+  'rogue-echo-bike', 'lifefitness-t3', 'lifefitness-g7', 'force-usa-g20',
+  'rep-arcadia', 'bells-ft', 'rogue-bands', 'trx-pro4',
   'manduka-pro', 'frictionlabs-loose', 'trigger-point-grid', 'rogue-sr-1c',
 ]);
 
@@ -1187,7 +1063,6 @@ const SCORE_WEIGHTS = {
   protein:    { build: 0.20, rated: 0.45, value: 0.15, trust: 0.20 },
   preworkout: { build: 0.20, rated: 0.45, value: 0.15, trust: 0.20 },
   creatine:   { build: 0.20, rated: 0.45, value: 0.15, trust: 0.20 },
-  footwear:   { build: 0.25, rated: 0.45, value: 0.15, trust: 0.15 },
 };
 const SCORE_FACETS = { build: 'Build quality', rated: 'User rating', value: 'Value for money', trust: 'Review confidence' };
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
