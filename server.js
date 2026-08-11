@@ -373,6 +373,7 @@ const IMGS = {
   "goruck-power-bra-toughflex": "https://cdn.shopify.com/s/files/1/0275/4985/9940/files/GORUCKJune2025Studio113.jpg?v=1767724388",
   "fringesport-fringe-crest-zipper-hoodie": "https://cdn.shopify.com/s/files/1/0049/4272/files/Fringe-Crest-Zipper-Hoodie-Fringe-Sport-107066828.jpg?v=1718676868",
   "titan-titan-fitness-hoodie": "https://cdn.shopify.com/s/files/1/0802/1508/1237/files/401770_01.jpg?v=1772651256",
+  "titan-25-lb-rubber-hex-pair": "https://cdn.shopify.com/s/files/1/0802/1508/1237/files/421025_01.jpg",
 };
 
 function p(id,name,brand,price,retailer,url,quality,rating,reviewCount,reviewSource,expertVerdict,expertSource,specs,aspects,opts={}){
@@ -450,6 +451,7 @@ dumbbells:[
   p("titan-80-lb-straight-stainless-steel-hex-dum","80 LB Straight Stainless Steel Hex Dumbbells","Titan Fitness",444.99,"titan.fitness","https://titan.fitness/products/80-lb-straight-stainless-steel-hex-dumbbells",7.8,null,null,"titan.fitness","An 80 lb pair with stainless handles and rubber hex heads, sold as the pair not a set.","GymGear Compare",{"Product Weight":"80 lb. Each","Quantity":"2 (Sold as a Pair)","Handle Diameter":"32 mm","Handle Material":"Stainless Steel","Warranty":"1 Year"},["Stainless Handle","Sold In Pairs","Rubber Hex Head"],{salePrice:299.97}),
   p("titan-115-lb-straight-stainless-steel-hex-du","115 LB Straight Stainless Steel Hex Dumbbells","Titan Fitness",619.99,"titan.fitness","https://titan.fitness/products/115-lb-straight-stainless-steel-hex-dumbbells",7.8,null,null,"titan.fitness","A heavy 115 lb pair with stainless handles, for lifters topping out on their existing dumbbell rack.","GymGear Compare",{"Product Weight":"115 lb. Each","Quantity":"2 (Sold as a Pair)","Handle Diameter":"32 mm","Handle Material":"Stainless Steel","Warranty":"1 Year"},["Stainless Handle","Sold In Pairs","Rubber Hex Head"],{salePrice:399.97}),
   p("titan-110-lb-straight-stainless-steel-hex-du","110 LB Straight Stainless Steel Hex Dumbbells","Titan Fitness",589.99,"titan.fitness","https://titan.fitness/products/110-lb-straight-stainless-steel-hex-dumbbells",8.2,null,null,"titan.fitness","Rubber-coated hex pair with rust-resistant stainless straight handles, sold as two 110 lb dumbbells.","GymGear Compare",{"Material":"Stainless Steel","Product Weight":"110 lb. each","Quantity":"2 (sold as a pair)","Handle Diameter":"32 mm","Handle Length":"5-in."},["Stainless Handles","Sold As Pair","Knurled Grip"],{salePrice:324.97}),
+  p("titan-25-lb-rubber-hex-pair","25 LB Rubber Hex Dumbbells — Pair (50 lb total)","Titan Fitness",114.99,"Titan Fitness","https://titan.fitness/products/25-lb-rubber-hex-dumbbells",7.5,null,null,"Titan Fitness","A rubber-coated 25 lb pair with a knurled 34 mm chrome handle — the cheap way to own real dumbbells.","GymGear Compare",{"Sold as":"Pair (2 x 25 lb)","Total weight":"50 lb","Handle diameter":"34 mm","Material":"Solid steel","Finish":"Chrome handle, black matte head"},["Sold In Pairs","Rubber Coated","Budget Pick"],{salePrice:99.97}),
 ],
 
 plates:[
@@ -995,6 +997,15 @@ for (const [cat, list] of Object.entries(PRODUCTS)) {
 }
 
 // ── Published vs shelved ──────────────────────────────────────────
+// Amazon rows are never published. Their price cannot be read — the Associates
+// terms rule out scraping, and PA-API needs keys we do not have — so the number
+// on the card is whatever it was when a human last typed it. A Dark Iron belt
+// sat on the site at $28 with a 20% OFF badge while Amazon charged $49.99, and
+// its rating claimed 4.5 from 18,000 against a real 4.7 from 24,918.
+//
+// This is a rule, not a list, because a list is exactly how 48 of them crept
+// back: they were shelved for want of a photo, then a photo turned up.
+const isAmazon = (p) => /(^|\.)amazon\.[a-z.]+\//i.test(p.url || '');
 // A row with no verified photo of that exact product does not go on the site.
 // It stays in this file — nothing is deleted — it simply is not served, so it
 // cannot appear in a listing, a kit, a plan, search or the sitemap.
@@ -1014,6 +1025,7 @@ for (const [cat, list] of Object.entries(PRODUCTS)) {
   for (const p of list) {
     if (
       p.image &&
+      !isAmazon(p) &&
       !BAD_LINK_IDS.has(p.id) &&
       !SOLD_OUT_IDS.has(p.id) &&
       !UNVERIFIED_PRICE_IDS.has(p.id)
@@ -1022,13 +1034,15 @@ for (const [cat, list] of Object.entries(PRODUCTS)) {
     else
       SHELVED.set(
         p.id,
-        !p.image
-          ? 'no verified photo'
-          : BAD_LINK_IDS.has(p.id)
-            ? 'broken link'
-            : SOLD_OUT_IDS.has(p.id)
-              ? 'sold out'
-              : 'unverifiable price',
+        isAmazon(p)
+          ? 'amazon, unverifiable until PA-API'
+          : !p.image
+            ? 'no verified photo'
+            : BAD_LINK_IDS.has(p.id)
+              ? 'broken link'
+              : SOLD_OUT_IDS.has(p.id)
+                ? 'sold out'
+                : 'unverifiable price',
       );
   }
   PRODUCTS[cat] = keep;
@@ -1037,7 +1051,8 @@ const PUBLISHED_COUNT = Object.values(PRODUCTS).reduce((n, l) => n + l.length, 0
 const shelvedFor = (reason) => [...SHELVED.values()].filter((r) => r === reason).length;
 console.log(
   `catalog: ${PUBLISHED_COUNT} published, ${SHELVED.size} shelved ` +
-    `(${shelvedFor('no verified photo')} without a verified photo, ${shelvedFor('broken link')} with a link that misses the product, ` +
+    `(${shelvedFor('amazon, unverifiable until PA-API')} amazon, ` +
+    `${shelvedFor('no verified photo')} without a verified photo, ${shelvedFor('broken link')} with a link that misses the product, ` +
     `${shelvedFor('sold out')} sold out, ${shelvedFor('unverifiable price')} with a price we cannot stand behind)`,
 );
 
