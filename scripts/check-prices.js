@@ -106,6 +106,23 @@ async function shopCurrency(origin) {
   return currencyCache.get(origin);
 }
 
+/* The currency a specific market page declares in its structured data. */
+async function marketCurrency(url) {
+  try {
+    const r = await fetch(url, {
+      headers: { 'User-Agent': UA, Accept: 'text/html' },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(OPT.timeout),
+    });
+    if (!r.ok) return null;
+    const html = await r.text();
+    const m = /"priceCurrency"\s*:\s*"([A-Z]{3})"/.exec(html);
+    return m ? m[1] : null;
+  } catch {
+    return null;
+  }
+}
+
 async function fromShopify(url) {
   const u = new URL(url);
   const m = u.pathname.match(/^(.*\/products\/[^/]+)/);
@@ -139,7 +156,17 @@ async function fromShopify(url) {
       note: `${distinct.length} variant prices ($${Math.min(...distinct) / 100}–$${Math.max(...distinct) / 100}) — catalog row does not say which (pin one with ?variant=<id>)`,
     };
   }
-  const cur = await shopCurrency(u.origin);
+  let cur = await shopCurrency(u.origin);
+  /* A Shopify store can run several markets from one domain, and /meta.json
+     answers for the PRIMARY one. Rehband's shop reports EUR from Cyprus while
+     its /en-us market genuinely sells in dollars — reading the shop-level
+     currency alone would have shelved a perfectly good row as unreadable. When
+     the URL carries a market segment, let the page's own JSON-LD settle it. */
+  const market = /^\/([a-z]{2}-[a-z]{2})\//i.exec(u.pathname);
+  if (market && cur !== 'USD') {
+    const declared = await marketCurrency(`${u.origin}${u.pathname}`);
+    if (declared) cur = declared;
+  }
   if (cur && cur !== 'USD')
     return { error: `currency-${cur}`, note: `shop quotes ${cur}; the catalog is USD` };
   if (!cur) return { error: 'currency-unknown', note: 'could not confirm the shop trades in USD' };

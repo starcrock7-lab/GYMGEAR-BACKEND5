@@ -304,4 +304,46 @@ function addProducts(file, rows) {
   return rows.length;
 }
 
-export { readCatalog, applyEdits, removeProducts, archiveProducts, addProducts };
+/* Rewrite named arguments of one product row in place.
+ *
+ * p() is positional, so "the retailer" is argument 4 and nothing in the file
+ * says so. Re-sourcing has to change several of them at once — a row moving
+ * off Amazon needs its retailer, url, price AND review source changed together,
+ * or it claims Amazon's 9,500 reviews while linking to a brand store. Editing
+ * that with regex left exactly that inconsistency, so it is done by argument
+ * index here, once. */
+const ARG_INDEX = {
+  id: 0, name: 1, brand: 2, price: 3, retailer: 4, url: 5, quality: 6,
+  rating: 7, reviewCount: 8, reviewSource: 9, expertVerdict: 10,
+  expertSource: 11, specs: 12, aspects: 13, opts: 14,
+};
+
+function setArgs(file, id, values) {
+  const src = fs.readFileSync(file, 'utf8');
+  const re = /\bp\(/g;
+  let m;
+  while ((m = re.exec(src))) {
+    const parsed = splitArgs(src, m.index + 1);
+    if (!parsed || parsed.args.length < 14) continue;
+    if (unquote(parsed.args[0].text) !== id) {
+      re.lastIndex = parsed.close;
+      continue;
+    }
+    const patches = [];
+    for (const [key, val] of Object.entries(values)) {
+      const i = ARG_INDEX[key];
+      if (i === undefined) throw new Error(`setArgs: unknown field ${key}`);
+      const arg = parsed.args[i];
+      if (!arg) continue;
+      patches.push({ start: arg.start, end: arg.end, text: JSON.stringify(val ?? null) });
+    }
+    patches.sort((a, b) => b.start - a.start);
+    let out = src;
+    for (const pt of patches) out = out.slice(0, pt.start) + pt.text + out.slice(pt.end);
+    fs.writeFileSync(file, out);
+    return patches.length;
+  }
+  throw new Error(`setArgs: no row with id ${id}`);
+}
+
+export { readCatalog, applyEdits, removeProducts, archiveProducts, addProducts, setArgs };

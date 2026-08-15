@@ -4,6 +4,7 @@ Express API serving the product catalog, kit builder and gym planner. See CLAUDE
 
 ## Session log
 
+- 2026-08-10 · re-sourcing round 1: 23 rows moved off Amazon onto brand-direct stores (belts/straps 10, wraps/sleeves 9, rollers 4), every one verified UNCHANGED and PRODUCT; the stale Amazon prices were wrong by up to 4x (iron-bull sleeves $22 -> $80); check-prices now reads a Shopify market's own currency so Rehband's /en-us USD market stops reading as EUR · this commit
 - 2026-08-10 · Amazon rows are never published now (48 were live with prices we cannot read — a Dark Iron belt showed $28/20% off against Amazon's $49.99); adding a verifiable 25 lb dumbbell pair restored kit coverage the removal broke; 173 published · this commit
 - 2026-08-10 · clothing retired: 51 apparel rows archived and the 6 apparel categories removed from both repos; pruned 63 dead ids from IMGS and the shelf sets; broken links 23 -> 8 and unphotographed 66 -> 56 as a side effect · this commit
 - 2026-08-10 · fixed the 16 unverifiable rows: 14 had silently redirected to new URLs (adopted, and one had landed on the WRONG product — Legion Whey+ vs Whey Concentrate), manduka pinned to a variant, 5 prices corrected incl. a Schwinn sale that had ended; 8 rows shelved as unverifiable (Legion x5, Liforme GBP, two weight-graded REP). Link checker no longer calls a Cloudflare challenge a dead product — it was about to condemn all 26 Rogue rows · this commit
