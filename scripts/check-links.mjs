@@ -113,9 +113,22 @@ function classifyHtml(html, finalUrl, requestedUrl) {
      real basket of $2,059.86). The giveaway is the "add all selections"
      control. Counting prices or cart buttons does NOT work — a normal product
      page with a recommended-accessories grid trips that, and it wrongly
-     condemned the REP Arcadia and the Bells cable tower. */
-  if (/add all selections|add all to cart|add selected to cart/i.test(html))
+     condemned the REP Arcadia and the Bells cable tower.
+
+     Two false positives found on the supplement re-sourcing pass, both from
+     Shopify apps (a wishlist widget, a "mix and match" bundle builder) that
+     ship a themewide i18n JSON blob on every product page in the store,
+     single-SKU or not: {"key":"collection_btn_title","value":"Add selected
+     to cart",...}. Blacklisting app names is a losing game — the general
+     tell is structural: Titan's real picker button is live HTML,
+     `>Add All Selections<` inside a <button>; every false positive so far is
+     a JSON STRING VALUE, sitting right after `":"`. Require the match not be
+     a JSON value — i.e. not immediately preceded by a quote-colon-quote. */
+  for (const m of html.matchAll(/add all selections|add all to cart|add selected to cart/gi)) {
+    const before = html.slice(Math.max(0, m.index - 6), m.index);
+    if (/["']\s*:\s*["']$/.test(before)) continue; // "key":"Add all to cart" — config copy, not a button
     return { cls: 'GROUP', note: 'sells several SKUs from one page ("add all selections")' };
+  }
   if (hasProductLd || ogProduct || hasCart) return { cls: 'PRODUCT' };
   /* No product signal and a page full of product links = a listing. */
   if (productLinks > 8) return { cls: 'LISTING', note: `${productLinks} product links, no product markup` };

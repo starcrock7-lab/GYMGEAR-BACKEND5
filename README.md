@@ -4,6 +4,7 @@ Express API serving the product catalog, kit builder and gym planner. See CLAUDE
 
 ## Session log
 
+- 2026-08-10 · re-sourcing round 2: 25 more rows moved off Amazon (protein/creatine/recovery 9, vitamins/fat-burners/pre-workout 8, bags/mats/bands 5, cellucor-clk shelved sold-out); caught kleanathlete.com (Nestle) genuinely down mid-batch — both agents that read it got fooled, reshelved 3 rows rather than trust a dead-site read; check-links GROUP detector fixed twice more (wishlist + mix-and-match Shopify apps both ship an "add all to cart" JSON i18n string on every page; now requires the match be live button HTML, not a JSON value) · this commit
 - 2026-08-10 · re-sourcing round 1: 23 rows moved off Amazon onto brand-direct stores (belts/straps 10, wraps/sleeves 9, rollers 4), every one verified UNCHANGED and PRODUCT; the stale Amazon prices were wrong by up to 4x (iron-bull sleeves $22 -> $80); check-prices now reads a Shopify market's own currency so Rehband's /en-us USD market stops reading as EUR · this commit
 - 2026-08-10 · Amazon rows are never published now (48 were live with prices we cannot read — a Dark Iron belt showed $28/20% off against Amazon's $49.99); adding a verifiable 25 lb dumbbell pair restored kit coverage the removal broke; 173 published · this commit
 - 2026-08-10 · clothing retired: 51 apparel rows archived and the 6 apparel categories removed from both repos; pruned 63 dead ids from IMGS and the shelf sets; broken links 23 -> 8 and unphotographed 66 -> 56 as a side effect · this commit
