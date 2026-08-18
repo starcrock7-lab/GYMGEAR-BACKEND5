@@ -574,9 +574,9 @@ machines:[
   p('bells-cable-tower','Plate-Loaded Cable Tower 2.0','Bells of Steel',434.99,'Bells of Steel','https://bellsofsteel.us/products/cable-tower?variant=45552311992517',8.0,4.7,210,'Bells of Steel','A real cable machine in 6 square feet  --  the budget pick to beat.','Garage Gym Reviews',{'Type':'Cable Tower','Resistance':'Plate-Loaded','Cable Ratio':'2:1 + 1:1','Footprint':'6.1 sq ft','Config':'Without Upright','Warranty':'Limited'},['Tiny Footprint','Budget Pick','550 lb Capacity'],{compact:true}),
   p('titan-ft','Plate-Loaded Functional Trainer','Titan Fitness',1264.99,'Titan Fitness','https://titan.fitness/products/plate-loaded-functional-trainer',7.7,4.5,180,'Titan Fitness','Most machine for the money  --  660 lb capacity and every attachment in the box.','Garage Gym Reviews',{'Type':'Functional Trainer','Resistance':'Plate-Loaded','Cable Ratio':'2:1 + 1:1','Footprint':'61×53"','Warranty':'1 Year'},['Attachments Included','660 lb Capacity','Budget Pick'],{salePrice:819.97}),
   p('lifefitness-g7','G7 Home Gym','Life Fitness',3999,'Life Fitness','https://shop.lifefitness.com/products/g7-home-gym',9.2,4.8,89,'Life Fitness','Commercial-club cable motion for the home  --  the brand every gym floor trusts.','Life Fitness',{'Type':'Functional Trainer','Resistance':'Dual 160 lb Stacks','Cable Ratio':'2:1','Footprint':'60×54"','Warranty':'10 Year Frame'},['Commercial Grade','Bench Included','Club Standard']),
-  p('bodysolid-exm2500','EXM2500S Home Gym','Body-Solid',2425,"Body-Solid",'https://bodysolid.com/body-solid-exm2500-multi-station-gym',8.4,5,33,"Body-Solid","Compact multi-station home gym with a 210 lb weight stack covering six exercises, plus an optional leg press attachment.","GymGear Compare",["210 lb of cast-iron weight-stack resistance","Stations: chest press, pec deck, leg extension/curl, lat pulldown, seated row, ab crunch","Dimensions: 85in L x 61in W x 83in H, 578 lb unit weight","Optional GLP2500 2:1 leg press attachment (sold separately)","Body-Solid lifetime warranty"],["210lb stack","6 stations","Lifetime warranty"]),
+  p('bodysolid-exm2500','EXM2500S Home Gym','Body-Solid',2425,"Body-Solid",'https://bodysolid.com/body-solid-exm2500-multi-station-gym',8.4,5,33,"Body-Solid","Compact multi-station home gym with a 210 lb weight stack covering six exercises, plus an optional leg press attachment.","GymGear Compare",{'Type':'Multi-Station','Resistance':'210 lb Cast-Iron Stack','Stations':'Chest press, pec deck, leg extension/curl, lat pulldown, seated row, ab crunch','Product Weight':'578 lbs','Warranty':'Lifetime'},["210lb stack","6 stations","Lifetime warranty"]),
   p('bowflex-x2se','Xtreme 2 SE Home Gym','Bowflex',1499,'Bowflex','https://www.bowflex.com/product/x2se-home-gym/100334.html',7.3,4.5,3400,'Amazon','70+ exercises from folding resistance rods  --  apartment-friendly strength.','Barbend',{'Type':'Home Gym','Resistance':'210 lb Power Rods','Exercises':'70+','Footprint':'53×49"','Warranty':'7 Year'},['Apartment Friendly','No Spotter Needed','70+ Exercises'],{salePrice:999,compact:true}),
-  p('marcy-mwm990','MWM-990 150 lb Stack Home Gym','Marcy',749.99,"Marcy Pro",'https://www.marcypro.com/products/marcy-150-lb-stack-home-gym-mwm-990',7.6,4.7,225,"Marcy Pro","Compact 150 lb stack home gym covering lat, leg, preacher curl, and pulley stations with strong, consistent customer reviews.","GymGear Compare",["150 lb weight stack","Unit weight: 280.5 lb","Lat bar, leg developer, preacher curl pad, chest arm fly station","Upper and lower pulley stations","Includes ankle and wrist strap attachment"],["150lb stack","Multi-station","Compact frame"],{compact:true}),
+  p('marcy-mwm990','MWM-990 150 lb Stack Home Gym','Marcy',749.99,"Marcy Pro",'https://www.marcypro.com/products/marcy-150-lb-stack-home-gym-mwm-990',7.6,4.7,225,"Marcy Pro","Compact 150 lb stack home gym covering lat, leg, preacher curl, and pulley stations with strong, consistent customer reviews.","GymGear Compare",{'Type':'Multi-Station','Resistance':'150 lb Stack','Stations':'Lat bar, leg developer, preacher curl, chest arm fly','Pulleys':'Upper and lower','Product Weight':'280.5 lbs'},["150lb stack","Multi-station","Compact frame"],{compact:true}),
   p('tonal-2','Tonal 2 Smart Home Gym','Tonal',4295,'Tonal','https://tonal.com/products/tonal-2',9.4,4.8,2100,'Tonal','The wall-mounted smart gym  --  250 lb of digital resistance and an AI coach in a screen.','Garage Gym Reviews',{'Type':'Smart Gym','Resistance':'250 lb Digital','Mount':'Wall','Subscription':'$59.95/mo','Footprint':'Zero Floor Space'},['Wall Mounted','AI Coaching','Digital Weight'],{compact:true}),
   // Full-commercial machines below are gym-planner stock (pro:true) — they
   // still browse/compare like any product but never enter the home kit.
@@ -584,10 +584,10 @@ machines:[
   p('hs-leg-press','Linear Leg Press','Hammer Strength',7883,'Life Fitness','https://shop.lifefitness.com/products/hammer-strength-plate-loaded-linear-leg-press',9.4,4.8,28,'Life Fitness','The leg press serious gyms buy  --  1,800 lb of plate capacity on linear bearings.','Garage Gym Reviews',{'Type':'Plate-Loaded','Movement':'Leg Press','Capacity':'40 × 45 lb Plates','Grade':'Full Commercial','Warranty':'10 Year Frame'},['Club Standard','Linear Bearings','Made In USA'],{pro:true}),
   p('bodysolid-slp500','Pro Clubline SGLP500 Leg Press','Body-Solid',4060,'Strength Warehouse USA','https://strengthwarehouseusa.com/products/body-solid-sglp500-pro-clubline-leg-press',8.6,4.7,60,'Strength Warehouse USA','Commercial-rated 45-degree leg press at half the big-brand price  --  lifetime commercial warranty.','Garage Gym Reviews',{'Type':'Plate-Loaded 45°','Movement':'Leg Press','Capacity':'1,500 lbs','Grade':'Full Commercial','Warranty':'Lifetime Frame'},['Commercial Rated','Value Pick','Lifetime Warranty'],{pro:true,salePrice:3420}),
   p('rogue-ghd','Abram GHD 2.0','Rogue Fitness',775,'Rogue Fitness','https://www.roguefitness.com/rogue-abram-glute-ham-developer-2-0',9.2,4.9,180,'Rogue Fitness','The benchmark glute-ham developer  --  every serious strength room has one.','Garage Gym Reviews',{'Type':'GHD','Movement':'Posterior Chain','Adjustment':'Precision Pin','Grade':'Full Commercial','Made In':'USA'},['Strength Room Staple','American Made','Portable'],{pro:true}),
-  p("bells-functional-trainer-cable-tower","Functional Trainer Cable Tower — Weight Stack Functional Trainer / 80.75\" Cable Tower","Bells of Steel",3449.99,"Bells of Steel","https://bellsofsteel.us/products/functional-trainer-cable-tower?variant=44646012190917",8.5,null,null,"Bells of Steel","Dual 210-pound stacks in two wall-mounted towers; a full cable gym that must be bolted down.","GymGear Compare",{"Resistance":"Dual 210 lb weight stacks","Cable ratio":"2:1 (1:1 with adapter)","Max cable capacity":"250 lb / 113 kg","Tubing":"2.3\" x 2.3\" (60mm) 14-gauge steel","Warranty":"Limited lifetime frame, 1 year parts"},["Dual 210lb Stacks","33 Height Settings","Lifetime Frame Warranty"],{salePrice:3104.96}),
-  p("rep-ghd-glute-ham-developer","Glute Ham Developer (GHD)","REP Fitness",479.99,"REP Fitness","https://repfitness.com/products/ghd-glute-ham-developer",7.8,4.9,147,"REP Fitness","A 150lb glute-ham developer with 13 adjustment points and wheels, priced far below commercial GHDs.","GymGear Compare",{"Weight":"150 lbs","Footprint":"70\" L x 36\" W x 42\" H (top of leg pads)","Frame Material":"Mostly 16-gauge steel","Adjustment Points":"13","Footplate":"20\" x 13\""},["13 Adjustment Points","Wheeled Frame","Band Pegs"]),
-  p("titan-plate-loaded-linear-hack-squat-machine","Plate-Loaded Linear Hack Squat Machine","Titan Fitness",939.99,"titan.fitness","https://titan.fitness/products/plate-loaded-linear-hack-squat-machine",7.4,null,null,"titan.fitness","A dedicated 700 lb hack squat on linear bearings, for quad work without buying a combo unit.","GymGear Compare",{"Carriage Capacity":"700 lb.","Footprint Dimensions":"46.75-in. x 60.5-in.","Overall Height":"45.5-in.","Product Weight":"190 lb.","Warranty":"1 Year"},["700 lb Capacity","Linear Bearings","Single Station"],{salePrice:599.97}),
-  p("titan-leg-press-hack-squat-machine","Leg Press Hack Squat Machine","Titan Fitness",2399.99,"titan.fitness","https://titan.fitness/products/leg-press-hack-squat-machine",7.9,null,null,"titan.fitness","Two leg movements in one 1,000 lb frame, for lifters who want machine work without commercial pricing.","GymGear Compare",{"Weight Capacity":"1,000 lb.","Carriage Bar Weight":"80 lb.","Overall Dimensions":"84-in. L x 40-in. W x 53-in. H","Product Weight":"325 lb.","Warranty":"1 Year"},["1,000 lb Capacity","Two Movements","Plate-Loaded"],{salePrice:1499.97}),
+  p("bells-functional-trainer-cable-tower","Functional Trainer Cable Tower — Weight Stack Functional Trainer / 80.75\" Cable Tower","Bells of Steel",3449.99,"Bells of Steel","https://bellsofsteel.us/products/functional-trainer-cable-tower?variant=44646012190917",8.5,null,null,"Bells of Steel","Dual 210-pound stacks in two wall-mounted towers; a full cable gym that must be bolted down.","GymGear Compare",{"Type":"Functional Trainer","Resistance":"Dual 210 lb weight stacks","Cable ratio":"2:1 (1:1 with adapter)","Max cable capacity":"250 lb / 113 kg","Tubing":"2.3\" x 2.3\" (60mm) 14-gauge steel","Warranty":"Limited lifetime frame, 1 year parts"},["Dual 210lb Stacks","33 Height Settings","Lifetime Frame Warranty"],{salePrice:3104.96}),
+  p("rep-ghd-glute-ham-developer","Glute Ham Developer (GHD)","REP Fitness",479.99,"REP Fitness","https://repfitness.com/products/ghd-glute-ham-developer",7.8,4.9,147,"REP Fitness","A 150lb glute-ham developer with 13 adjustment points and wheels, priced far below commercial GHDs.","GymGear Compare",{"Type":"GHD","Movement":"Posterior Chain","Weight":"150 lbs","Footprint":"70\" L x 36\" W x 42\" H (top of leg pads)","Frame Material":"Mostly 16-gauge steel","Adjustment Points":"13"},["13 Adjustment Points","Wheeled Frame","Band Pegs"]),
+  p("titan-plate-loaded-linear-hack-squat-machine","Plate-Loaded Linear Hack Squat Machine","Titan Fitness",939.99,"titan.fitness","https://titan.fitness/products/plate-loaded-linear-hack-squat-machine",7.4,null,null,"titan.fitness","A dedicated 700 lb hack squat on linear bearings, for quad work without buying a combo unit.","GymGear Compare",{"Movement":"Hack Squat","Carriage Capacity":"700 lb.","Footprint Dimensions":"46.75-in. x 60.5-in.","Overall Height":"45.5-in.","Product Weight":"190 lb.","Warranty":"1 Year"},["700 lb Capacity","Linear Bearings","Single Station"],{salePrice:599.97}),
+  p("titan-leg-press-hack-squat-machine","Leg Press Hack Squat Machine","Titan Fitness",2399.99,"titan.fitness","https://titan.fitness/products/leg-press-hack-squat-machine",7.9,null,null,"titan.fitness","Two leg movements in one 1,000 lb frame, for lifters who want machine work without commercial pricing.","GymGear Compare",{"Movement":"Leg Press","Weight Capacity":"1,000 lb.","Carriage Bar Weight":"80 lb.","Overall Dimensions":"84-in. L x 40-in. W x 53-in. H","Product Weight":"325 lb.","Warranty":"1 Year"},["1,000 lb Capacity","Two Movements","Plate-Loaded"],{salePrice:1499.97}),
 ],
 
 // Rubber flooring — the planner sizes an order to the room via coverageSqFt.
@@ -1317,7 +1317,9 @@ const CAT_TRAINS={
 // states rather than assuming the category means anything.
 function machineTrains(specs){
   const type=String((specs||{}).Type||''), move=String((specs||{}).Movement||'');
-  if(/Leg Press/i.test(move)) return {squat:2};
+  // A hack squat is the same knee-dominant job as a leg press: it loads the
+  // squat pattern and nothing else.
+  if(/Leg Press|Hack Squat/i.test(move)) return {squat:2};
   if(/Row/i.test(move)) return {'pull-h':2};
   if(/Posterior/i.test(move)||/GHD/i.test(type)) return {hinge:2,core:2};
   if(/All-In-One/i.test(type)) return {'push-h':2,'push-v':2,'pull-h':2,'pull-v':2,squat:2,hinge:1,core:2};
@@ -1330,10 +1332,50 @@ function machineTrains(specs){
 // but is a 47" accessory bar: it will not sit in a rack, will not bench and
 // will not squat. Treating it as the kit's barbell produced kits pairing a
 // squat stand and bumper plates with a curl bar.
-const PRODUCT_TRAINS={'rep-equalizer':{'pull-h':1}};
+const PRODUCT_TRAINS={
+  'rep-equalizer':{'pull-h':1},
+  'bells-ez-curl-bar':{'pull-h':1},
+  'bells-rackable-ez-curl-bar':{'pull-h':1},
+};
 // Bars that cannot anchor a barbell setup — excluded from the kit's barbell
 // slot entirely (they stay in the catalog as the accessory bars they are).
-const SPECIALTY_BARS=new Set(['rep-equalizer']);
+// The catalog carries three EZ curl bars and this set listed only one, so a
+// $2,167 "Best Match" strength kit shipped a squat stand with a 54.5" curl bar
+// as its barbell. Matched by id, never by category — all three sit in
+// `barbells`, which is exactly why the category cannot be trusted here.
+const SPECIALTY_BARS=new Set(['rep-equalizer','bells-ez-curl-bar','bells-rackable-ez-curl-bar']);
+
+// Dumbbell listings vary in what one purchase actually gets you: a twist-lock
+// adjustable, a boxed multi-weight set, or one pair at one fixed weight. The
+// category default treats all three as equally good "a dumbbell solution",
+// which is how a lose-weight kit ended up recommending a single 110-lb-per-
+// hand pair -- plenty heavy to anchor a strength kit, useless for the varied
+// high-rep work fat loss and general fitness need, and nothing a beginner
+// could press at all. Classified from what each listing itself states: an
+// adjustable mechanism or a named multi-pair set is a real range; anything
+// sold as one pair at one weight is not.
+// LOCKSTEP: mirrors the frontend's src/lib/coverage.ts.
+const FIXED_PAIR_DUMBBELLS=new Set([
+  'rogue-hex','rep-hex', // single-weight hex pair -- no adjuster, no pair count
+  'titan-90-lb-straight-stainless-steel-hex-dum',
+  'titan-80-lb-straight-stainless-steel-hex-dum',
+  'titan-115-lb-straight-stainless-steel-hex-du',
+  'titan-110-lb-straight-stainless-steel-hex-du',
+  'titan-25-lb-rubber-hex-pair',
+]);
+// Of those, the ones whose OWN listing states a per-dumbbell weight heavy
+// enough that nobody should get them as their only pair: a beginner cannot
+// press 90-115 lb, and lose-weight/get-fit work needs a load light enough to
+// do many reps at, not one heavy top-end number. The 25 lb pair is excluded
+// from this stricter set on purpose -- light enough to be a genuine starter
+// weight, it only lacks room to progress, which the softer penalty in
+// buildKit already prices in.
+const HEAVY_FIXED_PAIR_DUMBBELLS=new Set([
+  'titan-90-lb-straight-stainless-steel-hex-dum',
+  'titan-80-lb-straight-stainless-steel-hex-dum',
+  'titan-115-lb-straight-stainless-steel-hex-du',
+  'titan-110-lb-straight-stainless-steel-hex-du',
+]);
 
 function trainsOf(id,category,specs){
   return PRODUCT_TRAINS[id]||(category==='machines'?machineTrains(specs):(CAT_TRAINS[category]||{}));
@@ -1436,6 +1478,69 @@ function coverageSummary(products,ownedCats){
 // Categories that belong in a home-gym kit, in build-priority order.
 const KIT_CATEGORIES = ['racks','machines','barbells','plates','benches','dumbbells','kettlebells','cardio','bands','jumpropes','yogamats','foamrollers'];
 
+// ── The room as a budget ──────────────────────────────────────
+// Space used to be one boolean (`tight`), which made "garage" and "spare room"
+// the same query: the personalization probe found those kits identical in 100%
+// of cases, and apartment-corner and small-room likewise. A boolean can gate a
+// category; only a budget can grade one, so the room is now spent in square
+// feet the way money is spent in dollars.
+// LOCKSTEP: mirrors the frontend's src/lib/floor-plan.ts (footprints) and the
+// space budget in src/lib/kit-builder.ts.
+// Published footprints, W x D inches, rounded to the inch — layout planning,
+// not millimetre CAD. Anything unlisted falls back to its category default.
+const FOOTPRINTS={
+  'rogue-rm6':{w:76,d:53},'rogue-r3':{w:48,d:53},'rogue-rml390f':{w:49,d:53},
+  'rep-pr5000':{w:48,d:48},'rep-pr4000':{w:48,d:41},'titan-x3':{w:48,d:48},
+  'rep-hr100':{w:42,d:48},'bells-squat':{w:48,d:48},'rogue-squat':{w:48,d:48},
+  'titan-t2':{w:44,d:48},'rogue-sml2':{w:49,d:48},'prx-profile-pro':{w:47,d:50},
+  'rep-arcadia':{w:55,d:36},'force-usa-g3':{w:78,d:61},'force-usa-g6':{w:72,d:64},
+  'force-usa-g20':{w:80,d:65},'bells-ft':{w:48,d:36},'bells-cable-tower':{w:30,d:30},
+  'titan-ft':{w:61,d:53},'lifefitness-g7':{w:60,d:54},'bodysolid-exm2500':{w:83,d:51},
+  'bowflex-x2se':{w:53,d:49},'marcy-mwm990':{w:68,d:42},'tonal-2':{w:24,d:12},
+  'hs-iso-row':{w:60,d:48},'hs-leg-press':{w:95,d:65},'bodysolid-slp500':{w:89,d:68},
+  'rogue-ghd':{w:70,d:40},
+  'concept2-rower':{w:96,d:24},'assault-bike':{w:51,d:24},'concept2-ski':{w:50,d:32},
+  'rogue-echo-bike':{w:59,d:30},'nordictrack-1750':{w:80,d:38},'peloton-bike':{w:59,d:24},
+  'assault-runner':{w:70,d:33},'hydrow-wave':{w:80,d:25},'concept2-bikeerg':{w:48,d:24},
+  'schwinn-ic4':{w:48,d:22},'sunny-rower':{w:78,d:20},'lifefitness-t3':{w:79,d:37},
+  'lf-club-treadmill':{w:80,d:39},'lf-club-elliptical':{w:84,d:32},'waterrower-oak':{w:84,d:22},
+  // Dumbbells — the category default describes a full set on a rack, which is
+  // 4x the truth for the products that exist precisely to avoid one. Two
+  // archetypes, each read off what the listing itself states: a name that says
+  // "adjustable", or specs that say the quantity is a single pair. Anything
+  // ambiguous stays on the category default rather than being guessed at.
+  'nuobell-adj':{w:30,d:16},'bells-nuobell-s-adjustable-dumbbells':{w:30,d:16},
+  'bowflex-552':{w:30,d:16},'ironmaster-ql':{w:30,d:16},'powerblock-elite':{w:26,d:14},
+  'titan-25-lb-rubber-hex-pair':{w:24,d:14},
+  'titan-80-lb-straight-stainless-steel-hex-dum':{w:24,d:14},
+  'titan-90-lb-straight-stainless-steel-hex-dum':{w:24,d:14},
+  'titan-110-lb-straight-stainless-steel-hex-du':{w:24,d:14},
+  'titan-115-lb-straight-stainless-steel-hex-du':{w:24,d:14},
+};
+const CATEGORY_FOOTPRINT={
+  racks:{w:48,d:48}, machines:{w:60,d:48}, cardio:{w:72,d:30}, benches:{w:50,d:26},
+  dumbbells:{w:60,d:24}, barbells:{w:86,d:12}, plates:{w:26,d:26},
+  kettlebells:{w:40,d:14}, bands:{w:24,d:16}, yogamats:{w:68,d:24},
+  foamrollers:{w:36,d:8}, jumpropes:{w:14,d:14},
+};
+// Folding and stowable gear (the `compact` flag) only holds its deployed
+// footprint while you are training. Charging it full area would keep the
+// folding rack — the one honest way to run a barbell in an apartment — out of
+// apartments.
+const COMPACT_AREA_MULT=0.5;
+// Held back per still-unfilled slot: the square-foot twin of RESERVE_PER_SLOT.
+const AREA_RESERVE_PER_SLOT=2.5;
+// Equipment footprint budgets, NOT room sizes: a gym you can still move in
+// fills roughly half its floor, and the accepted working minimum around a rack
+// alone is an 8x8 ft platform. Raw footprints, no clearance halo — halos
+// overlap in any real layout, so summing them double-counts the same aisle.
+const SPACE_SQFT={'apartment-corner':24,'small-room':55,garage:150,outdoor:120};
+const SPACE_SQFT_DEFAULT=9999;   // an unanswered space must not shrink a kit
+const areaOf=(id,cat,compact)=>{
+  const f=FOOTPRINTS[id]||CATEGORY_FOOTPRINT[cat]||{w:48,d:36};
+  return ((f.w*f.d)/144)*(compact?COMPACT_AREA_MULT:1);
+};
+
 // Flat lookup of every kit-eligible product, trimmed to what selection needs.
 // gs = gymgearScore (computed above), compact = fits a tight space (machines).
 const KIT_CATALOG = KIT_CATEGORIES.flatMap(cat =>
@@ -1445,6 +1550,9 @@ const KIT_CATALOG = KIT_CATEGORIES.flatMap(cat =>
     // tell a real deal from a product that is merely cheap.
     price:p.salePrice||p.price, list:p.price, quality:p.quality, rating:p.rating,
     gs:p.gymgearScore||0, compact:!!p.compact,
+    // Square feet of floor this piece costs, spent against the room budget
+    // exactly as `price` is spent against the money budget.
+    area:areaOf(p.id,cat,!!p.compact),
     // What this piece lets you train, and whether it stands in for a rack.
     // See COVERAGE MODEL — the kit is judged on the union of these.
     trains:trainsOf(p.id,cat,p.specs), rackLike:replacesRack(cat,p.specs),
@@ -1463,37 +1571,60 @@ const OWNED_TO_CAT = {barbell:'barbells',dumbbells:'dumbbells',bench:'benches',r
 const TIER_CAP_MULT = {value:1, match:1.15, quality:1.8};
 const capFor = (type,cap) => Math.round(cap*(TIER_CAP_MULT[type]||1));
 
-// Bias the category order so the kit reflects goal + space + kit size.
-// Machines placement is the small-vs-big trade: a small setup leads with one
-// efficient all-in-one; a full home gym prefers the variety of separates and
-// only reaches a machine after the core iron is in.
+// Each answer states how much it WANTS a category, and the weights add up.
+// This used to be a sequence of prepends, which meant the last prepend won the
+// front of the order outright: the experience list landed on top of the goal
+// list and erased it, so every beginner got a machine-led kit and every
+// advanced lifter a barbell-led one no matter what goal they gave. The
+// personalization probe caught it as goal changes leaving 43% of kits
+// byte-identical. Weights compose — a beginner chasing strength gets a
+// beginner's slant ON a strength kit instead of one answer deleting the other.
+// Signs matter as much as sizes: a goal pushes gear DOWN as well as up, which
+// is what makes a fat-loss kit look different rather than merely re-sorted.
+const GOAL_WEIGHT={
+  // Conditioning leads, but strength gear stays — holding lean mass in a
+  // deficit is what stops fat loss becoming weight loss.
+  'lose-weight':{cardio:10,jumpropes:6,kettlebells:6,bands:4,dumbbells:3,yogamats:1,racks:-6,plates:-5,barbells:-4,machines:-2},
+  'get-fit':{cardio:7,kettlebells:5,dumbbells:4,bands:3,jumpropes:2,yogamats:1,racks:-2,plates:-2},
+  'build-strength':{racks:10,barbells:9,plates:8,benches:6,dumbbells:2,cardio:-6,jumpropes:-5,yogamats:-3,foamrollers:-1},
+  'home-gym-setup':{machines:8,racks:7,barbells:5,benches:5,plates:4,cardio:3,dumbbells:2},
+};
+// Deliberately smaller than the goal weights: experience should slant a kit,
+// never redefine it.
+const EXPERIENCE_WEIGHT={
+  beginner:{machines:4,dumbbells:3,kettlebells:2,bands:2,barbells:-3,plates:-3,racks:-2},
+  intermediate:{},
+  advanced:{racks:4,barbells:4,plates:3,benches:2,machines:-3,bands:-1},
+};
+// The room's taste, on top of the hard gates in eligible().
+const SPACE_WEIGHT={
+  'apartment-corner':{dumbbells:5,bands:4,kettlebells:4,jumpropes:3,yogamats:2,foamrollers:1,racks:-8,cardio:-3,machines:-1},
+  'small-room':{dumbbells:4,kettlebells:3,bands:2,jumpropes:1,racks:-3,cardio:-2},
+  garage:{racks:3,plates:2,barbells:2,cardio:1},
+  // Conditioning outdoors is a rope and a kettlebell, not a treadmill — the
+  // machines and cardio it would reach for are banned by SPACE_BANS.
+  outdoor:{kettlebells:4,jumpropes:3,racks:2,plates:1,barbells:1},
+};
 function categoryOrder(goal,space,pieces,experience){
-  let order=[...KIT_CATEGORIES];
-  const bump=(cats)=>{order=[...cats,...order.filter(c=>!cats.includes(c))]};
-  if(goal==='lose-weight'||goal==='get-fit') bump(['cardio','kettlebells','bands','dumbbells']);
-  if(goal==='build-strength') bump(['racks','barbells','plates','benches']);
-  if(goal==='home-gym-setup') bump(['machines','racks','barbells','benches']);
-  // Experience shapes the path: beginners get guided, adjustable, machine-led
-  // gear; advanced lifters get the barbell + rack path reinforced.
-  if(experience==='beginner') bump(['machines','dumbbells','kettlebells','bands']);
-  if(experience==='advanced'&&goal!=='lose-weight') bump(['racks','barbells','plates','benches']);
-  // Few pieces + strength-ish goal → the all-in-one anchors the whole kit.
-  if(pieces<=4 && (goal==='build-strength'||goal==='home-gym-setup')) bump(['machines']);
-  // Big builds: machine drops to the back — separates give the variety.
-  if(pieces>=6 && goal!=='home-gym-setup'){
-    order=order.filter(c=>c!=='machines'); order.push('machines');
-  }
-  // Tight spaces can't host a normal rack or a treadmill-class machine, but
-  // compact units (cable tower, rod gyms, wall-folding rack, folding rower)
-  // still qualify — buildKit gates non-compact ones at product level.
-  if(space==='apartment-corner'||space==='small-room'){
+  const goalW=GOAL_WEIGHT[goal]||{}, expW=EXPERIENCE_WEIGHT[experience]||{}, spaceW=SPACE_WEIGHT[space]||{};
+  const weight=c=>{
+    // Base priority is the hand-tuned build order, kept as a tiebreak so a
+    // category with no opinion attached lands where it always did.
+    let w=(KIT_CATEGORIES.length-KIT_CATEGORIES.indexOf(c))*0.5;
+    w+=goalW[c]||0; w+=expW[c]||0; w+=spaceW[c]||0;
+    // Few pieces + a strength-ish goal → one all-in-one has to carry the whole
+    // kit, so it earns the anchor slot. Many pieces → separates give more range
+    // for the money and the machine drops to the back.
     const strengthy=goal==='build-strength'||goal==='home-gym-setup';
-    const tight=strengthy
-      ? ['machines','racks','dumbbells','kettlebells','bands','benches','jumpropes','yogamats','foamrollers']
-      : ['dumbbells','kettlebells','cardio','bands','machines','racks','jumpropes','yogamats','foamrollers','benches'];
-    order=[...tight.filter(c=>order.includes(c)),...order.filter(c=>!tight.includes(c))];
-  }
-  return order;
+    if(c==='machines'){
+      if(pieces<=4&&strengthy) w+=9;
+      if(pieces>=6&&goal!=='home-gym-setup') w-=12;
+    }
+    return w;
+  };
+  // Stable sort: equal weights keep KIT_CATEGORIES order, so the result is
+  // deterministic and check:lockstep can compare it against the frontend.
+  return [...KIT_CATEGORIES].sort((a,b)=>weight(b)-weight(a));
 }
 
 // Ceiling gate (quiz: ceiling === 'under-8ft'). Full racks and most
@@ -1539,7 +1670,7 @@ const DEAL_SWAP_MAX_QUALITY_DROP=1;
 // match = personalised (GymGear Score + rating + budget fit), quality = best
 // built. `tight` gates non-compact machines out of small spaces at product
 // level (a cable tower fits an apartment corner; a G20 does not).
-function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
+function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowCeil,needs,goal,experience}){
   const perSlot=cap/Math.max(target,1);
   // 1.0 when the price sits at the category's ideal share of budget, falling
   // off above (over budget hurts fast) and below (a $10 item isn't an anchor).
@@ -1552,15 +1683,25 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
   // implicitly — its score IS the sale price — so only match and quality need
   // it made explicit.
   const dealBoost=p=>(p.list>0?Math.max(0,(p.list-p.price)/p.list):0);
+  // A single fixed-weight dumbbell pair is a real, buyable thing — just a
+  // worse "the kit's dumbbells" than an adjustable or a boxed multi-weight
+  // set, because it offers no range to progress through. Bounded like the
+  // deal weight: enough to decide between near-equal options, never enough to
+  // price an affordable fixed pair out of a kit that cannot afford a real
+  // range. Value stays untouched — "the cheapest thing that trains you" is
+  // its whole purpose, and a fixed pair is often exactly that.
+  const FIXED_PAIR_PENALTY=0.5;
+  const versatilityPenalty=p=>(p.cat==='dumbbells'&&FIXED_PAIR_DUMBBELLS.has(p.id))?FIXED_PAIR_PENALTY:0;
   const score={
     value:p=>-p.price,                            // cheapest first (sale price)
     // Unrated products fall back to our own score on the same 0-1 scale -
     // gs already absorbs rating and re-weights when it is absent. Using 0
     // would bury every unrated product out of the match tier permanently.
-    match:p=>(p.gs/100)*2+(p.rating!=null?p.rating/5:p.gs/100)+fit(p)*1.5+dealBoost(p)*DEAL_WEIGHT_MATCH,
-    quality:p=>p.quality+fit(p)*0.5+dealBoost(p)*DEAL_WEIGHT_QUALITY,
+    match:p=>(p.gs/100)*2+(p.rating!=null?p.rating/5:p.gs/100)+fit(p)*1.5+dealBoost(p)*DEAL_WEIGHT_MATCH-versatilityPenalty(p),
+    quality:p=>p.quality+fit(p)*0.5+dealBoost(p)*DEAL_WEIGHT_QUALITY-versatilityPenalty(p),
   }[strategy];
-  const picks=[]; let spent=0; const blocked=new Set();
+  // areaUsed is the room's running total, kept in step with spent by take()/drop().
+  const picks=[]; let spent=0, areaUsed=0; const blocked=new Set();
   // A rack and the machine that IS one (uprights + cables) are redundant
   // together — but only a genuine all-in-one replaces a rack. Deriving this per
   // product instead of per category is what stops a single-station leg press
@@ -1576,18 +1717,33 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
   // discounted commercial leg press that then failed the room filter, leaving
   // a two-item "kit").
   const eligible=p=>!ownedCats.has(p.cat)
+    // The room rules this category out outright. Gated here as well as in
+    // hydrateKits: letting the builder spend slots on gear hydration will strip
+    // is how a kit arrives two pieces short.
+    &&!banned.has(p.cat)
     // An EZ curl bar is not a barbell you can rack, bench or squat.
     &&!SPECIALTY_BARS.has(p.id)
+    // A 90-115 lb-per-hand fixed pair is not a beginner's dumbbells — they
+    // cannot press it — and it is not what lose-weight/get-fit training needs
+    // either, which wants a load light enough to do many reps at, not one
+    // heavy top-end number. Everyone else may still buy one; the softer
+    // versatility penalty above is what nudges them toward a real range when
+    // they can afford it.
+    &&!(HEAVY_FIXED_PAIR_DUMBBELLS.has(p.id)&&(experience==='beginner'||goal==='lose-weight'||goal==='get-fit'))
     &&!(tight&&(p.cat==='machines'||p.cat==='cardio'||p.cat==='racks')&&!p.compact)
     &&!(lowCeil&&p.cat==='racks'&&!LOW_CEIL_RACKS.has(p.id))
     &&!(lowCeil&&p.cat==='machines'&&!LOW_CEIL_MACHINES.has(p.id));
   // Everything except the budget test — reused by the usability passes below.
   const allowed=p=>!blocked.has(p.cat)&&!conflicted(p)&&eligible(p);
   const fitsIn=(p,budget)=>spent+p.price<=budget;
+  // The room's twin of fitsIn — same shape, same reserve discipline, so a piece
+  // has to clear BOTH budgets to be picked.
+  const areaFits=(p,budget)=>areaUsed+p.area<=budget;
   // Hold budget back for the slots still to fill: one greedy anchor must not be
   // able to eat the whole kit (a $295 dumbbell under a $300 cap left users
   // looking at a one-item "kit").
   const reserve=()=>Math.max(0,target-picks.length-1)*RESERVE_PER_SLOT;
+  const areaReserve=()=>Math.max(0,target-picks.length-1)*AREA_RESERVE_PER_SLOT;
   const cheapestIn=cat=>{
     const all=KIT_CATALOG.filter(q=>q.cat===cat);
     const good=all.filter(q=>q.quality>=7);
@@ -1608,16 +1764,18 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
   for(const need of new Set(Object.values(HARD_PAIRS).flat())) cheapestByCat[need]=cheapestIn(need);
   const pairHeld=p=>(HARD_PAIRS[p.cat]||[]).reduce((s,need)=>
     (picks.some(q=>q.cat===need)||ownedCats.has(need))?s:s+((cheapestByCat[need]||{}).price||0),0);
-  const pickable=p=>allowed(p)&&fitsIn(p,cap-reserve()-benchHeld(p)-pairHeld(p));
-  const take=p=>{picks.push(p);spent+=p.price;blocked.add(p.cat);};
-  const drop=i=>{spent-=picks[i].price;blocked.delete(picks[i].cat);picks.splice(i,1);};
+  const pickable=p=>allowed(p)&&fitsIn(p,cap-reserve()-benchHeld(p)-pairHeld(p))&&areaFits(p,areaCap-areaReserve());
+  const take=p=>{picks.push(p);spent+=p.price;areaUsed+=p.area;blocked.add(p.cat);};
+  const drop=i=>{spent-=picks[i].price;areaUsed-=picks[i].area;blocked.delete(picks[i].cat);picks.splice(i,1);};
   for(const cat of order){
     if(picks.length>=target) break;
     if(blocked.has(cat)||ownedCats.has(cat)) continue;
     let cands=KIT_CATALOG.filter(p=>p.cat===cat&&pickable(p));
     // Nothing clears the reserve? Fall back to the plain cap, so holding budget
     // back can never silently drop a category entirely.
-    if(!cands.length) cands=KIT_CATALOG.filter(p=>p.cat===cat&&allowed(p)&&fitsIn(p,cap-benchHeld(p)-pairHeld(p)));
+    // The room is a hard fact, so it keeps its full budget here even though the
+    // money reserve is being relaxed.
+    if(!cands.length) cands=KIT_CATALOG.filter(p=>p.cat===cat&&allowed(p)&&fitsIn(p,cap-benchHeld(p)-pairHeld(p))&&areaFits(p,areaCap));
     // Value still wants decent gear — gate to quality ≥7 unless nothing fits.
     if(strategy==='value'){ const decent=cands.filter(p=>p.quality>=7); if(decent.length) cands=decent; }
     const best=cands.sort((a,b)=>score(b)-score(a))[0];
@@ -1628,6 +1786,11 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
   // seatBench() can afford itself even though it runs last — and running last
   // is what lets it judge the FINAL composition.
   const stretch=cap*ESSENTIAL_OVERFLOW;
+  // The usability passes may overrun the room by the same margin they may
+  // overrun the budget: these footprints are documented approximations, and a
+  // kit a few square feet optimistic beats one with free weights and nothing to
+  // press them on.
+  const areaStretch=areaCap*ESSENTIAL_OVERFLOW;
   const seatBench=()=>{
     if(!picks.some(p=>NEEDS_BENCH.has(p.cat))||picks.some(p=>p.cat==='benches')||ownedCats.has('benches'))return;
     const benches=KIT_CATALOG.filter(p=>p.cat==='benches'&&allowed(p));
@@ -1637,8 +1800,10 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
     // Plan the trades, then apply them only if the bench actually lands.
     // Shedding as we went used to drop the very barbell that required the
     // bench, then decline the bench because nothing needed it any more.
-    const cut=new Set(); let sim=spent;
-    while(sim+bench.price>stretch){
+    // Both budgets, one plan: a bench can be unaffordable OR homeless, and
+    // trading only against the money would seat it in a room with no floor left.
+    const cut=new Set(); let sim=spent, simArea=areaUsed;
+    while(sim+bench.price>stretch||simArea+bench.area>areaStretch){
       let worst=-1;
       picks.forEach((p,i)=>{
         if(cut.has(i)||!DROP_FOR_BENCH.has(p.cat))return;
@@ -1646,26 +1811,38 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
         if(worst<0||p.price>picks[worst].price)worst=i;
       });
       if(worst<0)break;
-      cut.add(worst); sim-=picks[worst].price;
+      cut.add(worst); sim-=picks[worst].price; simArea-=picks[worst].area;
     }
-    if(sim+bench.price<=stretch){ [...cut].sort((a,b)=>b-a).forEach(drop); take(bench); }
+    if(sim+bench.price<=stretch&&simArea+bench.area<=areaStretch){ [...cut].sort((a,b)=>b-a).forEach(drop); take(bench); }
   };
 
   // Barbell gear is all-or-nothing. A rack with no bar, or plates with no bar
   // to load them on, is money spent on something you physically cannot use.
   for(let pass=0;pass<6;pass++){
     let changed=false;
-    for(const [cat,needs] of Object.entries(HARD_PAIRS)){
-      if(!picks.some(p=>p.cat===cat))continue;
-      for(const need of needs){
-        if(picks.some(p=>p.cat===need)||ownedCats.has(need))continue;
-        const cands=KIT_CATALOG.filter(p=>p.cat===need&&allowed(p)&&fitsIn(p,stretch));
+    for(const [cat,needCats] of Object.entries(HARD_PAIRS)){
+      const anchor=picks.findIndex(p=>p.cat===cat);
+      if(anchor<0)continue;
+      const missing=needCats.filter(n=>!picks.some(p=>p.cat===n)&&!ownedCats.has(n));
+      if(!missing.length)continue;
+      // Price the WHOLE set of missing partners before buying any of it. Buying
+      // them one at a time and dropping the last one bought when the next
+      // turned out unaffordable made this oscillate: it bought a bar to satisfy
+      // the rack, dropped the bar because it could not also afford plates, then
+      // bought the bar again next pass — six times over, ending with the rack
+      // still orphaned for hydrateKits to strip. The piece that has to go is the
+      // anchor that cannot afford its partners, not the partner that exposed it.
+      const chosen=[]; let ok=true, sim=spent, simArea=areaUsed;
+      for(const need of missing){
+        const cands=KIT_CATALOG.filter(p=>p.cat===need&&allowed(p)&&sim+p.price<=stretch&&simArea+p.area<=areaStretch);
         const decent=cands.filter(p=>p.quality>=7);
         const partner=(decent.length?decent:cands).sort((a,b)=>a.price-b.price)[0];
-        if(partner) take(partner);
-        else { const i=picks.findIndex(p=>p.cat===cat); if(i>=0) drop(i); }
-        changed=true; break;
+        if(!partner){ ok=false; break; }
+        chosen.push(partner); sim+=partner.price; simArea+=partner.area;
       }
+      if(ok) chosen.forEach(take);
+      else drop(anchor);
+      changed=true; break;
     }
     if(!changed)break;
   }
@@ -1690,7 +1867,7 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
   // adding cheap plates with no bar, which the orphan prune then stripped.
   while(picks.length<MIN_PIECES){
     const next=KIT_CATALOG
-      .filter(p=>p.cat!=='benches'&&!HARD_PAIRS[p.cat]&&allowed(p)&&fitsIn(p,stretch))
+      .filter(p=>p.cat!=='benches'&&!HARD_PAIRS[p.cat]&&allowed(p)&&fitsIn(p,stretch)&&areaFits(p,areaStretch))
       .sort((a,b)=>(b.quality/b.price)-(a.quality/a.price))[0];
     if(!next)break;
     take(next);
@@ -1710,6 +1887,13 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
   // would "fix" your missing pull-up bar with a resistance band.
   const owned=ownedTrains(ownedCats);
   const coverNow=()=>coverageFromTrains([...picks.map(p=>({category:p.cat,trains:p.trains})),...owned]);
+  // The repair runs AFTER the hard-pair pass, so anything it adds keeps
+  // whatever partners it arrives with. A rack bought here to restore pull-ups
+  // has no bar and no plates behind it, and hydrateKits' orphan prune strips it
+  // right back out — reopening the exact gap this pass just closed, which is how
+  // an outdoor "home gym" went out with no way to pull. A patch may only use
+  // gear that stands on its own.
+  const standsAlone=p=>(HARD_PAIRS[p.cat]||[]).every(n=>picks.some(q=>q.cat===n)||ownedCats.has(n));
   for(let pass=0;pass<PATTERNS.length;pass++){
     const cov=coverNow();
     // Deepest hole first: a pattern at 0 is a muscle group you cannot train at
@@ -1717,14 +1901,42 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
     const missing=Object.keys(needs||{}).filter(k=>cov[k]<needs[k]).sort((a,b)=>cov[a]-cov[b]);
     if(!missing.length)break;
     const pat=missing[0], want=needs[pat];
+    const fixesPattern=p=>coverageFromTrains([...[...picks,p].map(q=>({category:q.cat,trains:q.trains})),...owned])[pat]>=want;
     // Simulate: only take a piece that genuinely moves this pattern once the
     // kit's own enablers are applied — a bench "covers" chest press only
     // alongside something to press.
     const fixes=KIT_CATALOG
-      .filter(p=>allowed(p)&&!picks.some(q=>q.cat===p.cat)&&fitsIn(p,stretch))
-      .filter(p=>coverageFromTrains([...[...picks,p].map(q=>({category:q.cat,trains:q.trains})),...owned])[pat]>=want)
+      .filter(p=>allowed(p)&&!picks.some(q=>q.cat===p.cat)&&standsAlone(p)&&fitsIn(p,stretch)&&areaFits(p,areaStretch))
+      .filter(fixesPattern)
       .sort((a,b)=>a.price-b.price);
-    if(!fixes.length)break;
+    if(!fixes.length){
+      // Nothing AFFORDABLE closes the gap — which on a small budget can mean the
+      // kit spent its last $3 on a jump rope and cannot reach a $12 band.
+      // Coverage outranks an accessory, so trade the priciest piece the kit can
+      // lose for the piece that closes the hole. seatBench() trades the same way.
+      const cheapestFix=KIT_CATALOG
+        .filter(p=>allowed(p)&&!picks.some(q=>q.cat===p.cat)&&standsAlone(p)&&areaFits(p,areaStretch))
+        .filter(fixesPattern)
+        .sort((a,b)=>a.price-b.price)[0];
+      if(!cheapestFix)break;
+      const traded=picks
+        .map((p,i)=>({p,i}))
+        // Never trade away the bench, the free weights that justify it, or
+        // either half of a hard pair — those trades just move the breakage.
+        .filter(({p})=>p.cat!=='benches'&&!NEEDS_BENCH.has(p.cat)&&!HARD_PAIRS[p.cat])
+        // Only a trade that actually pays for the fix, so the kit never loses a
+        // piece for nothing.
+        .filter(({p})=>spent-p.price+cheapestFix.price<=stretch)
+        // And never one that surrenders a need the kit already meets.
+        .filter(({i})=>{
+          const after=coverageFromTrains([...picks.filter((_,j)=>j!==i).map(q=>({category:q.cat,trains:q.trains})),...owned]);
+          return Object.keys(needs||{}).every(k=>cov[k]<needs[k]||after[k]>=needs[k]);
+        })
+        .sort((a,b)=>b.p.price-a.p.price)[0];
+      if(!traded)break;
+      drop(traded.i); take(cheapestFix);
+      continue;
+    }
     take(fixes[0]);
   }
   // Repair can bring in the free weights that make a bench worth having.
@@ -1753,13 +1965,16 @@ function buildKit(strategy,{cap,target,ownedCats,order,tight,lowCeil,needs}){
           &&p.quality>=cur.quality-DEAL_SWAP_MAX_QUALITY_DROP
           &&p.price<=cur.price
           &&spent-cur.price+p.price<=stretch
+          // Same slot, but not necessarily the same size — a discounted piece
+          // that no longer fits the room is not a deal.
+          &&areaUsed-cur.area+p.area<=areaStretch
           &&eligible(p)
           // An all-in-one swapped in next to a rack is the redundancy the
           // rack-like rule exists to prevent.
           &&!(p.rackLike&&picks.some((q,j)=>j!==i&&q.cat==='racks'))
           &&keepsCoverage(i,p))
         .sort((a,b)=>(b.quality+dealBoost(b)*2)-(a.quality+dealBoost(a)*2))[0];
-      if(alt){ spent+=alt.price-cur.price; picks[i]=alt; break; }
+      if(alt){ spent+=alt.price-cur.price; areaUsed+=alt.area-cur.area; picks[i]=alt; break; }
     }
   }
   return picks.map(p=>p.id);
@@ -1779,19 +1994,32 @@ function fallbackKits(answers){
   const tight=answers.space==='apartment-corner'||answers.space==='small-room';
   const lowCeil=answers.ceiling==='under-8ft';
   const needs=needsFor(answers.goal);
+  const areaCap=SPACE_SQFT[answers.space]??SPACE_SQFT_DEFAULT;
+  const banned=forbiddenCats(answers.space);
   return KIT_TIERS.map(t=>({
     type:t.type, name:t.name,
-    productIds:buildKit(t.strategy,{cap:capFor(t.type,cap),target,ownedCats,order,tight,lowCeil,needs}),
+    productIds:buildKit(t.strategy,{cap:capFor(t.type,cap),areaCap,target,ownedCats,banned,order,tight,lowCeil,needs,goal:answers.goal,experience:answers.experience}),
   }));
 }
 
 const priceOf = p => p.salePrice||p.price;
 
-// Space fit is enforced per-product via the compact flag (see hydrateKits) —
-// a wall-folding rack IS apartment-friendly, so no category is banned
-// wholesale anymore. Kept as a hook for future hard category bans.
+// Most space fit is per-product via the compact flag (a wall-folding rack IS
+// apartment-friendly), but some gear is ruled out by the room itself rather
+// than by its size. A barbell needs seven feet of clear length, somewhere to
+// load and unload plates, and a floor you are allowed to drop weight on — none
+// of which exists in the corner of a flat you share a wall and a ceiling with.
+// "Outdoor" promised weather-proof picks and, until now, the word appeared
+// nowhere outside the quiz file: an outdoor answer built exactly the garage
+// kit. Weather is unkind to specific things, not to iron in general — cable
+// stacks, bearings and consoles corrode, foam soaks, a mat in UV goes brittle.
+// Powder-coated iron, bumper rubber and a bench you can cover are fine.
+const SPACE_BANS={
+  'apartment-corner':['racks','barbells','plates'],
+  outdoor:['machines','cardio','yogamats','foamrollers'],
+};
 function forbiddenCats(space){
-  return new Set();
+  return new Set(SPACE_BANS[space]||[]);
 }
 
 // Hydrate the model/fallback's chosen IDs into full product objects, then

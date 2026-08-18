@@ -13,7 +13,8 @@ The frontend is a **Next.js 16 app** in `C:\Users\nirka\Documents\gymgear-fronte
 3. **Smallest possible diff.** `server.js` is one large file (~1,300 lines, mostly hardcoded product data). Bad bulk edits have corrupted files in this project before. Never rewrite it wholesale.
 4. **Keep the security middleware intact:** CORS origin allowlist, 60 req/min rate limit, and `X-Site-Key` header validation. The frontend only calls through its `apiFetch()` wrapper which sends that header.
 5. **Git email must be `starcrock7@gmail.com`** (`git config user.email`) or Vercel-linked deploy tooling rejects the push.
-6. **The kit builder exists twice.** `COVERAGE MODEL` + `KIT BUILDER` here are a mirror of the frontend's `src/lib/coverage.ts` + `src/lib/kit-builder.ts`, which is what production actually serves. Change one, change both, then prove it: `npm run check:lockstep` and `npm run audit:kits` in the frontend repo. `node --check` cannot see divergence. See the `gymgear-kits` skill.
+6. **The kit builder exists twice.** `COVERAGE MODEL` + `KIT BUILDER` here are a mirror of the frontend's `src/lib/coverage.ts` + `src/lib/kit-builder.ts`, which is what production actually serves. Change one, change both, then prove it: `npm run check:lockstep`, `npm run audit:kits` and `npm run audit:personalization` in the frontend repo. `node --check` cannot see divergence. See the `gymgear-kits` skill.
+   - `audit:kits` is the **floor** (is every kit trainable?); `audit:personalization` is the **ceiling** (does changing an answer change the kit?). A builder that returned one competent kit to everybody passes the first and fails the second — which is exactly what it caught: goal changes once left 43% of kits byte-identical, and garage vs spare-room was identical 100% of the time.
 
 ## Keeping the catalog true (automated)
 
