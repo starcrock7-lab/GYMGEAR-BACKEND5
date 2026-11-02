@@ -1382,6 +1382,13 @@ function trainsOf(id,category,specs){
 }
 
 // A machine only makes a rack redundant when it IS one: uprights plus cables.
+// Two listings in `plates` sell one 10 lb pair, not a set: 20 lb in total. As
+// "the kit's plates" they let a barbell pass every check with nothing on it.
+const SMALL_PLATE_PAIRS=new Set(['bells-colour-bumper-plates','bells-crumb-bumper-plates']);
+// Plate-loaded gear ships without weight, so it trains nothing until the kit
+// has plates. Read from what the listing states.
+const isPlateLoaded=p=>p.category==='machines'&&/plate[- ]loaded/i.test(`${p.name||''} ${(p.specs&&p.specs.Type)||''}`);
+
 // A leg press, an iso-lateral row or a GHD is a single station — letting those
 // block the rack is what left $8k kits with nothing to squat in or pull from.
 function replacesRack(category,specs){
@@ -1556,6 +1563,7 @@ const KIT_CATALOG = KIT_CATEGORIES.flatMap(cat =>
     // What this piece lets you train, and whether it stands in for a rack.
     // See COVERAGE MODEL — the kit is judged on the union of these.
     trains:trainsOf(p.id,cat,p.specs), rackLike:replacesRack(cat,p.specs),
+    plateLoaded:isPlateLoaded({category:cat,name:p.name,specs:p.specs}),
   }))
 );
 const KIT_BY_ID = new Map(KIT_CATALOG.map(p=>[p.id,p]));
@@ -1565,11 +1573,6 @@ const BUDGET_CAP   = {'under-300':300,'300-800':800,'800-2000':2000,'2000-plus':
 // hold both an anchor and what makes it usable. (Lockstep: frontend route.ts.)
 const PIECE_TARGET = {'key-pieces':3,'small-setup':4,'full-home-gym':6};
 const OWNED_TO_CAT = {barbell:'barbells',dumbbells:'dumbbells',bench:'benches',rack:'racks',cardio:'cardio'};
-
-// Per-tier budget tolerance: Best Value stays at budget, Best Match flexes
-// slightly, Best Quality is the aspirational stretch shown side by side.
-const TIER_CAP_MULT = {value:1, match:1.15, quality:1.8};
-const capFor = (type,cap) => Math.round(cap*(TIER_CAP_MULT[type]||1));
 
 // Each answer states how much it WANTS a category, and the weights add up.
 // This used to be a sequence of prepends, which meant the last prepend won the
@@ -1641,11 +1644,12 @@ const CAT_SHARE={machines:2.6,racks:2.2,cardio:2.2,plates:1.6,barbells:1.4,dumbb
 
 // Usability floor. A kit has to be trainable, not merely affordable: free
 // weights with nowhere to press them, or a single $295 pile of dumbbells that
-// happened to fill the budget exactly, is not a gym. These rules may push a kit
-// modestly past its tier cap — a little over budget beats unusable.
-// (Lockstep: frontend src/app/api/kit/route.ts.)
+// happened to fill the budget exactly, is not a gym. The budget itself is never
+// stretched on any tier: the answer is what they can spend, and two tiers used
+// to overrun it by up to 2.4x. Footprints are documented approximations, so the
+// room alone keeps a margin. (Lockstep: frontend src/lib/kit-builder.ts.)
 const MIN_PIECES=3;
-const ESSENTIAL_OVERFLOW=1.35;
+const AREA_OVERFLOW=1.35;
 const RESERVE_PER_SLOT=45;            // held back per still-unfilled slot
 const NEEDS_BENCH=new Set(['dumbbells','barbells','plates','racks']);
 // Wider than NEEDS_BENCH: kettlebells don't oblige a bench but do use one.
@@ -1653,6 +1657,9 @@ const NEEDS_BENCH=new Set(['dumbbells','barbells','plates','racks']);
 const BENCH_USABLE_WITH=new Set([...NEEDS_BENCH,'kettlebells','machines']);
 // Useless without their partner — buy the partner or drop the orphan.
 const HARD_PAIRS={racks:['barbells','plates'],barbells:['plates'],plates:['barbells']};
+// Plate-loaded machines need plates, and give plates a job without a barbell.
+const PLATE_LOADED_PAIR=['machines',['plates']];
+const usesPlates=kit=>kit.some(p=>p.plateLoaded);
 const DROP_FOR_BENCH=new Set(['jumpropes','foamrollers','yogamats','bands','kettlebells','plates','barbells']);
 
 // Discount preference. The site's promise is the best price, so a genuine sale
@@ -1708,6 +1715,9 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
   // from blocking the rack and gutting the kit.
   const conflicted=p=>(p.cat==='racks'&&picks.some(q=>q.rackLike))
     ||(p.rackLike&&picks.some(q=>q.cat==='racks'));
+  // A leg press, row or GHD is an add-on to a gym, not the start of one: it once
+  // anchored kits as a $600 hack squat with no way to train anything else.
+  const hasBase=()=>ownedCats.has('racks')||picks.some(q=>q.cat==='racks'||q.rackLike);
   // The gates that come from the buyer's own answers: it doesn't fit the room,
   // it doesn't clear the ceiling, they already own it, or it isn't the kind of
   // bar a kit can be built on. These hold for ANY slot — separated from
@@ -1723,13 +1733,18 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
     &&!banned.has(p.cat)
     // An EZ curl bar is not a barbell you can rack, bench or squat.
     &&!SPECIALTY_BARS.has(p.id)
-    // A 90-115 lb-per-hand fixed pair is not a beginner's dumbbells — they
-    // cannot press it — and it is not what lose-weight/get-fit training needs
-    // either, which wants a load light enough to do many reps at, not one
-    // heavy top-end number. Everyone else may still buy one; the softer
-    // versatility penalty above is what nudges them toward a real range when
-    // they can afford it.
-    &&!(HEAVY_FIXED_PAIR_DUMBBELLS.has(p.id)&&(experience==='beginner'||goal==='lose-weight'||goal==='get-fit'))
+    // One 10 lb pair is not the kit's plates.
+    &&!SMALL_PLATE_PAIRS.has(p.id)
+    &&!(p.cat==='machines'&&!p.rackLike&&!hasBase())
+    // The room bans plates, so a plate-loaded machine could never be loaded.
+    &&!(p.plateLoaded&&banned.has('plates'))
+    // A 90-115 lb-per-hand fixed pair is only anyone's dumbbells if they said
+    // they are advanced: the quiz no longer asks everyone, and unstated must not
+    // read as strong. It is also not what lose-weight/get-fit training needs,
+    // which wants a load light enough to do many reps at, not one heavy top-end
+    // number. The softer versatility penalty above still nudges an advanced
+    // lifter toward a real range when they can afford it.
+    &&!(HEAVY_FIXED_PAIR_DUMBBELLS.has(p.id)&&(experience!=='advanced'||goal==='lose-weight'||goal==='get-fit'))
     &&!(tight&&(p.cat==='machines'||p.cat==='cardio'||p.cat==='racks')&&!p.compact)
     &&!(lowCeil&&p.cat==='racks'&&!LOW_CEIL_RACKS.has(p.id))
     &&!(lowCeil&&p.cat==='machines'&&!LOW_CEIL_MACHINES.has(p.id));
@@ -1745,7 +1760,9 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
   const reserve=()=>Math.max(0,target-picks.length-1)*RESERVE_PER_SLOT;
   const areaReserve=()=>Math.max(0,target-picks.length-1)*AREA_RESERVE_PER_SLOT;
   const cheapestIn=cat=>{
-    const all=KIT_CATALOG.filter(q=>q.cat===cat);
+    // Eligible only: reserving the price of a curl bar or a 10 lb pair left too
+    // little for the bar and plates the kit would really buy.
+    const all=KIT_CATALOG.filter(q=>q.cat===cat&&eligible(q));
     const good=all.filter(q=>q.quality>=7);
     return (good.length?good:all).reduce((m,q)=>(!m||q.price<m.price)?q:m,undefined);
   };
@@ -1762,7 +1779,8 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
   // plates for, or it just gets thrown away again later.
   const cheapestByCat={};
   for(const need of new Set(Object.values(HARD_PAIRS).flat())) cheapestByCat[need]=cheapestIn(need);
-  const pairHeld=p=>(HARD_PAIRS[p.cat]||[]).reduce((s,need)=>
+  const partnersOf=(p,kit)=>p.plateLoaded?PLATE_LOADED_PAIR[1]:(p.cat==='plates'&&usesPlates(kit))?[]:(HARD_PAIRS[p.cat]||[]);
+  const pairHeld=p=>partnersOf(p,picks).reduce((s,need)=>
     (picks.some(q=>q.cat===need)||ownedCats.has(need))?s:s+((cheapestByCat[need]||{}).price||0),0);
   const pickable=p=>allowed(p)&&fitsIn(p,cap-reserve()-benchHeld(p)-pairHeld(p))&&areaFits(p,areaCap-areaReserve());
   const take=p=>{picks.push(p);spent+=p.price;areaUsed+=p.area;blocked.add(p.cat);};
@@ -1785,12 +1803,11 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
   // Usability passes. benchHeld() reserved the money while picking, so
   // seatBench() can afford itself even though it runs last — and running last
   // is what lets it judge the FINAL composition.
-  const stretch=cap*ESSENTIAL_OVERFLOW;
-  // The usability passes may overrun the room by the same margin they may
-  // overrun the budget: these footprints are documented approximations, and a
-  // kit a few square feet optimistic beats one with free weights and nothing to
-  // press them on.
-  const areaStretch=areaCap*ESSENTIAL_OVERFLOW;
+  const stretch=cap;
+  // The usability passes may overrun the room, not the money: these footprints
+  // are documented approximations, and a kit a few square feet optimistic beats
+  // one with free weights and nothing to press them on.
+  const areaStretch=areaCap*AREA_OVERFLOW;
   const seatBench=()=>{
     if(!picks.some(p=>NEEDS_BENCH.has(p.cat))||picks.some(p=>p.cat==='benches')||ownedCats.has('benches'))return;
     const benches=KIT_CATALOG.filter(p=>p.cat==='benches'&&allowed(p));
@@ -1807,6 +1824,7 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
       let worst=-1;
       picks.forEach((p,i)=>{
         if(cut.has(i)||!DROP_FOR_BENCH.has(p.cat))return;
+        if(p.cat==='plates'&&usesPlates(picks))return;
         if(NEEDS_BENCH.has(p.cat)&&!picks.some((q,j)=>j!==i&&!cut.has(j)&&NEEDS_BENCH.has(q.cat)))return;
         if(worst<0||p.price>picks[worst].price)worst=i;
       });
@@ -1820,10 +1838,10 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
   // to load them on, is money spent on something you physically cannot use.
   for(let pass=0;pass<6;pass++){
     let changed=false;
-    for(const [cat,needCats] of Object.entries(HARD_PAIRS)){
-      const anchor=picks.findIndex(p=>p.cat===cat);
+    for(const [cat,needCats] of [...Object.entries(HARD_PAIRS),PLATE_LOADED_PAIR]){
+      const anchor=picks.findIndex(p=>p.cat===cat&&(cat!=='machines'||p.plateLoaded));
       if(anchor<0)continue;
-      const missing=needCats.filter(n=>!picks.some(p=>p.cat===n)&&!ownedCats.has(n));
+      const missing=((cat==='plates'&&usesPlates(picks))?[]:needCats).filter(n=>!picks.some(p=>p.cat===n)&&!ownedCats.has(n));
       if(!missing.length)continue;
       // Price the WHOLE set of missing partners before buying any of it. Buying
       // them one at a time and dropping the last one bought when the next
@@ -1859,6 +1877,9 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
     // expressing the tier.
     const extra=KIT_CATALOG
       .filter(pickable)
+      // The partner pass has already run, so nothing here could get its partners:
+      // hydrateKits would strip it and the kit would come up short.
+      .filter(p=>partnersOf(p,picks).every(n=>picks.some(q=>q.cat===n)||ownedCats.has(n)))
       .sort((a,b)=>score(b)-score(a));
     for(const p of extra){ if(picks.length>=target)break; if(!pickable(p))continue; take(p); }
   }
@@ -1867,7 +1888,7 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
   // adding cheap plates with no bar, which the orphan prune then stripped.
   while(picks.length<MIN_PIECES){
     const next=KIT_CATALOG
-      .filter(p=>p.cat!=='benches'&&!HARD_PAIRS[p.cat]&&allowed(p)&&fitsIn(p,stretch)&&areaFits(p,areaStretch))
+      .filter(p=>p.cat!=='benches'&&!HARD_PAIRS[p.cat]&&!p.plateLoaded&&allowed(p)&&fitsIn(p,stretch)&&areaFits(p,areaStretch))
       .sort((a,b)=>(b.quality/b.price)-(a.quality/a.price))[0];
     if(!next)break;
     take(next);
@@ -1893,7 +1914,7 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
   // right back out — reopening the exact gap this pass just closed, which is how
   // an outdoor "home gym" went out with no way to pull. A patch may only use
   // gear that stands on its own.
-  const standsAlone=p=>(HARD_PAIRS[p.cat]||[]).every(n=>picks.some(q=>q.cat===n)||ownedCats.has(n));
+  const standsAlone=p=>partnersOf(p,picks).every(n=>picks.some(q=>q.cat===n)||ownedCats.has(n));
   for(let pass=0;pass<PATTERNS.length;pass++){
     const cov=coverNow();
     // Deepest hole first: a pattern at 0 is a muscle group you cannot train at
@@ -1927,9 +1948,10 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
         // Only a trade that actually pays for the fix, so the kit never loses a
         // piece for nothing.
         .filter(({p})=>spent-p.price+cheapestFix.price<=stretch)
-        // And never one that surrenders a need the kit already meets.
+        // And never one that surrenders a need the kit already meets, judged with
+        // the fix in place: dumbbells can take over a kettlebell's job.
         .filter(({i})=>{
-          const after=coverageFromTrains([...picks.filter((_,j)=>j!==i).map(q=>({category:q.cat,trains:q.trains})),...owned]);
+          const after=coverageFromTrains([...[...picks.filter((_,j)=>j!==i),cheapestFix].map(q=>({category:q.cat,trains:q.trains})),...owned]);
           return Object.keys(needs||{}).every(k=>cov[k]<needs[k]||after[k]>=needs[k]);
         })
         .sort((a,b)=>b.p.price-a.p.price)[0];
@@ -1941,6 +1963,53 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
   }
   // Repair can bring in the free weights that make a bench worth having.
   seatBench();
+
+  // With the budget now a hard limit, a greedy kit can spend itself out of ever
+  // being a gym: a $295 bench and kettlebell, no way left to pull. When that
+  // happens, find the cheapest set that does work and spend what remains the way
+  // this tier spends everything. Only the cheapest usable piece of each category
+  // is tried, which keeps the search small (at most 4,096 sets).
+  const meetsNeeds=kit=>{
+    const cov=coverageFromTrains([...kit.map(q=>({category:q.cat,trains:q.trains})),...owned]);
+    return Object.keys(needs||{}).every(k=>cov[k]>=needs[k]);
+  };
+  const unseated=()=>picks.some(p=>NEEDS_BENCH.has(p.cat))&&!ownedCats.has('benches')&&!picks.some(p=>p.cat==='benches');
+  // seatBench can trade away a bar, leaving a rack hydrateKits would then strip.
+  const orphaned=()=>picks.some(p=>partnersOf(p,picks).some(n=>!ownedCats.has(n)&&!picks.some(q=>q.cat===n)));
+  if(picks.length<MIN_PIECES||!meetsNeeds(picks)||unseated()||orphaned()){
+    while(picks.length)drop(0);
+    const pool=KIT_CATEGORIES.map(cheapestIn).filter(Boolean);
+    let plan=null, planCost=Infinity;
+    for(let mask=1;mask<(1<<pool.length);mask++){
+      const kit=pool.filter((_,i)=>mask&(1<<i));
+      const cost=kit.reduce((t,p)=>t+p.price,0);
+      if(cost>cap||cost>=planCost||kit.length<MIN_PIECES)continue;
+      if(kit.reduce((t,p)=>t+p.area,0)>areaStretch)continue;
+      if(kit.some(p=>p.cat==='racks')&&kit.some(p=>p.rackLike))continue;
+      if(kit.some(p=>NEEDS_BENCH.has(p.cat))&&!ownedCats.has('benches')&&!kit.some(p=>p.cat==='benches'))continue;
+      if(kit.some(p=>partnersOf(p,kit).some(n=>!ownedCats.has(n)&&!kit.some(q=>q.cat===n))))continue;
+      if(!meetsNeeds(kit))continue;
+      plan=kit; planCost=cost;
+    }
+    (plan||[]).forEach(take);
+    if(strategy!=='value'){
+      for(let i=0;i<picks.length;i++){
+        const cur=picks[i];
+        const up=KIT_CATALOG
+          .filter(p=>p.cat===cur.cat&&p.id!==cur.id&&score(p)>score(cur)&&eligible(p)
+            &&p.plateLoaded===cur.plateLoaded&&p.rackLike===cur.rackLike
+            &&spent-cur.price+p.price<=cap&&areaUsed-cur.area+p.area<=areaStretch
+            &&meetsNeeds(picks.map((q,j)=>j===i?p:q)))
+          .sort((a,b)=>score(b)-score(a))[0];
+        if(up){ spent+=up.price-cur.price; areaUsed+=up.area-cur.area; picks[i]=up; }
+      }
+    }
+    const seated=ownedCats.has('benches')||picks.some(p=>p.cat==='benches');
+    for(const p of KIT_CATALOG.filter(q=>!HARD_PAIRS[q.cat]&&!q.plateLoaded&&q.cat!=='benches'&&(seated||!NEEDS_BENCH.has(q.cat))).sort((a,b)=>score(b)-score(a))){
+      if(picks.length>=target)break;
+      if(allowed(p)&&fitsIn(p,cap)&&areaFits(p,areaStretch))take(p);
+    }
+  }
 
   // Last look: a kit with no deal in it, when a comparable discounted product
   // was sitting right there, is a missed claim on a site that promises the best
@@ -1972,6 +2041,8 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
           // An all-in-one swapped in next to a rack is the redundancy the
           // rack-like rule exists to prevent.
           &&!(p.rackLike&&picks.some((q,j)=>j!==i&&q.cat==='racks'))
+          // Nor may a swap bring in a machine the kit has no plates for.
+          &&(!p.plateLoaded||cur.plateLoaded||picks.some(q=>q.cat==='plates'))
           &&keepsCoverage(i,p))
         .sort((a,b)=>(b.quality+dealBoost(b)*2)-(a.quality+dealBoost(a)*2))[0];
       if(alt){ spent+=alt.price-cur.price; areaUsed+=alt.area-cur.area; picks[i]=alt; break; }
@@ -1998,7 +2069,7 @@ function fallbackKits(answers){
   const banned=forbiddenCats(answers.space);
   return KIT_TIERS.map(t=>({
     type:t.type, name:t.name,
-    productIds:buildKit(t.strategy,{cap:capFor(t.type,cap),areaCap,target,ownedCats,banned,order,tight,lowCeil,needs,goal:answers.goal,experience:answers.experience}),
+    productIds:buildKit(t.strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowCeil,needs,goal:answers.goal,experience:answers.experience}),
   }));
 }
 
@@ -2052,12 +2123,10 @@ function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight,lowCeil,goal){
       if(isRackLike)allInOneSeen=true;
       seen.add(p.category); return true;
     });
-    // Trim against the same budget buildKit composed to. Trimming to the bare
-    // tier cap dismantled coherent kits from the outside: it dropped the
-    // barbell (dearest, and the bench is protected) and left a bench with
-    // nothing to lift. Never trim below a usable kit either — this loop used
-    // to happily strip a kit down to a single item.
-    const cap=capFor(k.type,budgetCap)*ESSENTIAL_OVERFLOW;
+    // buildKit already holds itself to this budget, so anything caught here is a
+    // genuine overrun from the filtering above. Never trim below a usable kit
+    // either — this loop used to happily strip a kit down to a single item.
+    const cap=budgetCap;
     let total=products.reduce((s,p)=>s+priceOf(p),0);
     const needsBench=products.some(p=>NEEDS_BENCH.has(p.category));
     for(;;){
@@ -2076,12 +2145,17 @@ function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight,lowCeil,goal){
     // suddenly unusable. Prune whatever is left without its partner.
     for(let pass=0;pass<3;pass++){
       const cats=new Set(products.map(p=>p.category));
-      const orphan=products.findIndex(p=>(HARD_PAIRS[p.category]||[]).some(n=>!cats.has(n)&&!ownedCats.has(n)));
+      const loaded=products.some(isPlateLoaded);
+      const base=cats.has('racks')||ownedCats.has('racks')||products.some(p=>replacesRack(p.category,p.specs));
+      const orphan=products.findIndex(p=>(isPlateLoaded(p)?PLATE_LOADED_PAIR[1]:(p.category==='plates'&&loaded)?[]:(HARD_PAIRS[p.category]||[]))
+        .some(n=>!cats.has(n)&&!ownedCats.has(n))
+        ||(p.category==='machines'&&!replacesRack(p.category,p.specs)&&!base));
       if(orphan<0)break;
       total-=priceOf(products[orphan]); products.splice(orphan,1);
     }
     // A bench with no weight of any kind beside it is the same dead weight.
-    if(products.some(p=>p.category==='benches')&&!products.some(p=>BENCH_USABLE_WITH.has(p.category))){
+    // Their own barbell or dumbbells count: that is what the bench is for.
+    if(products.some(p=>p.category==='benches')&&!products.some(p=>BENCH_USABLE_WITH.has(p.category))&&![...ownedCats].some(c=>BENCH_USABLE_WITH.has(c))){
       const i=products.findIndex(p=>p.category==='benches');
       total-=priceOf(products[i]); products.splice(i,1);
     }
@@ -2171,7 +2245,7 @@ function accessoryPool(kits, ownedCats = new Set(), max = 8) {
 // (always present, no dash punctuation) that Groq enhances when a key is set.
 // Each names the gap the item fills in a strength setup and the payoff.
 const WHY_FALLBACK = {
-  yogamats: "Your setup is built for standing lifts with nothing for floor core, mobility, or stretching. The mat fills that gap, it is the cheapest piece here, and you will use it every session.",
+  yogamats: "Your setup is built for standing lifts with nothing for floor core, mobility, or stretching. The mat fills that gap, and you will use it every session.",
   chalk: "Heavy pulls and presses slip at the grip long before the muscle gives out. A little chalk keeps the bar locked in and adds clean reps to every working set.",
   belts: "As your squat and deadlift climb, your lower back becomes the limit. A belt braces your core so you can load heavier with confidence and keep progressing.",
   sleeves: "Heavy squats and leg work wear on the knees over time. Sleeves add warmth, support, and rebound out of the bottom so you train harder and recover faster.",
@@ -2200,7 +2274,7 @@ async function accessoryWhy(answers, kits, accessories) {
   const matchKit = kits.find(k => k.type === 'match') || kits[0];
   const setup = matchKit.products.map(p => p.name).join(', ');
   const items = accessories.map(a => `${a.id} = ${a.name}`).join('\n');
-  const sys = `You are a confident strength coach writing one punchy reason to add each accessory to a buyer's home gym order. Return strict JSON {"why":[{"id":string,"text":string}]} with an entry for every id provided. Each text is exactly one or two full sentences, 25 to 38 words, and follows this shape: first name the specific gap in THEIR listed setup that this item fills, then give the payoff such as it is the cheapest piece, you will use it every session, or it lets you lift heavier and safer. Be concrete and specific to the equipment they listed. Professional but plain everyday words, no fancy vocabulary. Never use a dash or hyphen character. Match the depth and style of this yoga mat example exactly: "Your setup is all standing barbell work with nothing for floor core, stretching, or mobility. The mat fixes that, it is the cheapest piece here, and you will use it every session." Only selling information, no filler.`;
+  const sys = `You are a confident strength coach writing one punchy reason to add each accessory to a buyer's home gym order. Return strict JSON {"why":[{"id":string,"text":string}]} with an entry for every id provided. Each text is exactly one or two full sentences, 25 to 38 words, and follows this shape: first name the specific gap in THEIR listed setup that this item fills, then give the payoff such as you will use it every session, or it lets you lift heavier and safer. Never claim a price or that it is the cheapest. Be concrete and specific to the equipment they listed. Professional but plain everyday words, no fancy vocabulary. Never use a dash or hyphen character. Match the depth and style of this yoga mat example exactly: "Your setup is all standing barbell work with nothing for floor core, stretching, or mobility. The mat fixes that, and you will use it every session." Only selling information, no filler.`;
   const user = `Buyer goal: ${answers.goal}. Space: ${answers.space}. Their kit already includes: ${setup}.\n\nWrite a reason for each accessory id:\n${items}`;
   const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST', signal: AbortSignal.timeout(12000),
