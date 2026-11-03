@@ -1336,6 +1336,13 @@ const PRODUCT_TRAINS={
   'rep-equalizer':{'pull-h':1},
   'bells-ez-curl-bar':{'pull-h':1},
   'bells-rackable-ez-curl-bar':{'pull-h':1},
+  // One light kettlebell (6 or 10 kg, per its listing) is limited work, not a
+  // full squat or hinge. Its swings still count as conditioning.
+  'titan-6-kg-cast-iron-kettlebell':{'push-v':1,'pull-h':1,squat:1,hinge:1,core:1,conditioning:2},
+  'titan-10-kg-cast-iron-kettlebell':{'push-v':1,'pull-h':1,squat:1,hinge:1,core:1,conditioning:2},
+  // A single 5-15 lb band can't assist a pull-up.
+  'rep-pull-up-band':{'push-h':1,'push-v':1,'pull-h':1,squat:1,hinge:1,core:1},
+  'rep-short-resistance-bands':{'push-h':1,'push-v':1,'pull-h':1,squat:1,hinge:1,core:1},
 };
 // Bars that cannot anchor a barbell setup — excluded from the kit's barbell
 // slot entirely (they stay in the catalog as the accessory bars they are).
@@ -1344,6 +1351,10 @@ const PRODUCT_TRAINS={
 // as its barbell. Matched by id, never by category — all three sit in
 // `barbells`, which is exactly why the category cannot be trusted here.
 const SPECIALTY_BARS=new Set(['rep-equalizer','bells-ez-curl-bar','bells-rackable-ez-curl-bar']);
+// The light pieces above. Cheap, but never the piece a working kit is costed
+// on: the builder's cheapest-working-kit search looks at one piece per category
+// and would otherwise never see the slightly dearer one that does the job.
+const LIGHT_PIECES=new Set(['titan-6-kg-cast-iron-kettlebell','titan-10-kg-cast-iron-kettlebell','rep-pull-up-band','rep-short-resistance-bands']);
 
 // Dumbbell listings vary in what one purchase actually gets you: a twist-lock
 // adjustable, a boxed multi-weight set, or one pair at one fixed weight. The
@@ -1762,7 +1773,9 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
   const cheapestIn=cat=>{
     // Eligible only: reserving the price of a curl bar or a 10 lb pair left too
     // little for the bar and plates the kit would really buy.
-    const all=KIT_CATALOG.filter(q=>q.cat===cat&&eligible(q));
+    const eligibleHere=KIT_CATALOG.filter(q=>q.cat===cat&&eligible(q));
+    const full=eligibleHere.filter(q=>!LIGHT_PIECES.has(q.id));
+    const all=full.length?full:eligibleHere;
     const good=all.filter(q=>q.quality>=7);
     return (good.length?good:all).reduce((m,q)=>(!m||q.price<m.price)?q:m,undefined);
   };
@@ -2098,7 +2111,7 @@ function forbiddenCats(space){
 // IDs (no hallucinated pick reaches the client), drop space-forbidden and
 // owned categories, dedupe by category, and trim to the tier budget.
 function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight,lowCeil,goal){
-  return rawKits.map(k=>{
+  return labelByPrice(rawKits.map(k=>{
     let products=(k.productIds||[])
       .map(id=>{const lite=KIT_BY_ID.get(id);if(!lite)return null;
         const full=(PRODUCTS[lite.cat]||[]).find(p=>p.id===id);return full?{...full,category:lite.cat}:null;})
@@ -2164,7 +2177,14 @@ function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight,lowCeil,goal){
       description:typeof k.description==='string'?k.description.trim().slice(0,300):'',
       products, totalPrice:total,
     };
-  }).filter(k=>k.products.length>0);
+  }).filter(k=>k.products.length>0));
+}
+// The labels go by final price: each tier is its own search, so "Best Value"
+// came out dearer than "Best Match" in 1 of 12 answer sets, once $796 against
+// $259. A buyer reads the label as a price promise. (Lockstep: kit-builder.ts.)
+function labelByPrice(kits){
+  const slots=kits.map(({type,name})=>({type,name}));
+  return [...kits].sort((a,b)=>a.totalPrice-b.totalPrice).map((k,i)=>({...k,...slots[i]}));
 }
 
 // Default copy when Groq is absent or fails — never blank.
