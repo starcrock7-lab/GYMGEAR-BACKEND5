@@ -1415,7 +1415,7 @@ const COMPARE_CLASSES={
   'adjustable-bench':['rep-ab5200','rep-ab3000','rogue-adj-bench','rep-rep-nighthawk-adjustable-bench','rep-blackwing-adjustable-bench'],
   'functional-trainer':['rep-arcadia','bells-ft','bells-functional-trainer-cable-tower'],
   rower:['concept2-rower','sunny-rower','waterrower-oak'],
-  'yoga-mat':['manduka-pro','jade-harmony','gaiam-premium','alo-warrior','jadeyoga-jade-extra-yoga-mat','jadeyoga-jade-cork-yoga-mat','jadeyoga-fusion-mat','jadeyoga-xw-fusion'],
+  'yoga-mat':['manduka-pro','jade-harmony','alo-warrior','jadeyoga-jade-extra-yoga-mat','jadeyoga-jade-cork-yoga-mat'],
 };
 const CLASS_OF=new Map(Object.entries(COMPARE_CLASSES).flatMap(([k,ids])=>ids.map(id=>[id,k])));
 const beats=(alt,cur)=>{

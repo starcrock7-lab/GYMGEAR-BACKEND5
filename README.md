@@ -4,6 +4,7 @@ Express API serving the product catalog, kit builder and gym planner. See CLAUDE
 
 ## Session log
 
+- 2026-11-08 · kit builder lockstep port: yoga mat compare class limited to mats stating 4 to 6 mm · this commit
 - 2026-11-07 · kit builder lockstep port: COMPARE_CLASSES + beats(); last pass replaces any piece a same-class product beats on price and GymGear Score · this commit
 - 2026-11-07 · kit builder lockstep port: range-priced listings and foam rollers out of kits, upgrade and coverage-adding passes for spare budget, small-gear footprints · this commit
 - 2026-11-02 · kit builder lockstep port: tier labels go by final price; 6 and 10 kg kettlebells and 5-15 lb bands count as limited training and are never the piece a working kit is costed on · this commit
