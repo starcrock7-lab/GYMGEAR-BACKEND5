@@ -1396,6 +1396,11 @@ function trainsOf(id,category,specs){
 // Two listings in `plates` sell one 10 lb pair, not a set: 20 lb in total. As
 // "the kit's plates" they let a barbell pass every check with nothing on it.
 const SMALL_PLATE_PAIRS=new Set(['bells-colour-bumper-plates','bells-crumb-bumper-plates']);
+// Listings sold across a weight range at one shown price: the price is for
+// whichever size the store lists first, often the lightest ($54 buys a 9 lb
+// kettlebell). A kit total built on one is lower than what a usable weight
+// costs, so kits leave them out. (Lockstep: coverage.ts PRICED_BY_SIZE.)
+const PRICED_BY_SIZE=new Set(['rogue-kb','rep-kb','rogue-hex','rep-hex']);
 // Plate-loaded gear ships without weight, so it trains nothing until the kit
 // has plates. Read from what the listing states.
 const isPlateLoaded=p=>p.category==='machines'&&/plate[- ]loaded/i.test(`${p.name||''} ${(p.specs&&p.specs.Type)||''}`);
@@ -1534,12 +1539,17 @@ const FOOTPRINTS={
   'titan-90-lb-straight-stainless-steel-hex-dum':{w:24,d:14},
   'titan-110-lb-straight-stainless-steel-hex-du':{w:24,d:14},
   'titan-115-lb-straight-stainless-steel-hex-du':{w:24,d:14},
+  // One kettlebell, not a graduated row; bands hang on a hook or door.
+  'titan-6-kg-cast-iron-kettlebell':{w:12,d:12},'titan-10-kg-cast-iron-kettlebell':{w:12,d:12},
+  'titan-22-kg-competition-kettlebell':{w:12,d:12},'titan-90-lb-cast-iron-kettlebell':{w:14,d:14},
+  'rogue-bands':{w:12,d:8},'fit-simplify-bands':{w:12,d:8},'rep-pull-up-band':{w:12,d:8},
+  'rep-short-resistance-bands':{w:12,d:8},'trx-pro4':{w:12,d:8},
 };
 const CATEGORY_FOOTPRINT={
   racks:{w:48,d:48}, machines:{w:60,d:48}, cardio:{w:72,d:30}, benches:{w:50,d:26},
   dumbbells:{w:60,d:24}, barbells:{w:86,d:12}, plates:{w:26,d:26},
   kettlebells:{w:40,d:14}, bands:{w:24,d:16}, yogamats:{w:68,d:24},
-  foamrollers:{w:36,d:8}, jumpropes:{w:14,d:14},
+  foamrollers:{w:36,d:8}, jumpropes:{w:8,d:8},
 };
 // Folding and stowable gear (the `compact` flag) only holds its deployed
 // footprint while you are training. Charging it full area would keep the
@@ -1746,6 +1756,11 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
     &&!SPECIALTY_BARS.has(p.id)
     // One 10 lb pair is not the kit's plates.
     &&!SMALL_PLATE_PAIRS.has(p.id)
+    // A kit total has to be what the buyer pays for what we list.
+    &&!PRICED_BY_SIZE.has(p.id)
+    // A foam roller or massage ball trains nothing, so it never takes one of
+    // the kit's slots: a $99 "strength kit" once spent $20 of it on a ball.
+    &&p.cat!=='foamrollers'
     &&!(p.cat==='machines'&&!p.rackLike&&!hasBase())
     // The room bans plates, so a plate-loaded machine could never be loaded.
     &&!(p.plateLoaded&&banned.has('plates'))
@@ -2005,22 +2020,52 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
       plan=kit; planCost=cost;
     }
     (plan||[]).forEach(take);
-    if(strategy!=='value'){
-      for(let i=0;i<picks.length;i++){
-        const cur=picks[i];
-        const up=KIT_CATALOG
-          .filter(p=>p.cat===cur.cat&&p.id!==cur.id&&score(p)>score(cur)&&eligible(p)
-            &&p.plateLoaded===cur.plateLoaded&&p.rackLike===cur.rackLike
-            &&spent-cur.price+p.price<=cap&&areaUsed-cur.area+p.area<=areaStretch
-            &&meetsNeeds(picks.map((q,j)=>j===i?p:q)))
-          .sort((a,b)=>score(b)-score(a))[0];
-        if(up){ spent+=up.price-cur.price; areaUsed+=up.area-cur.area; picks[i]=up; }
-      }
-    }
     const seated=ownedCats.has('benches')||picks.some(p=>p.cat==='benches');
     for(const p of KIT_CATALOG.filter(q=>!HARD_PAIRS[q.cat]&&!q.plateLoaded&&q.cat!=='benches'&&(seated||!NEEDS_BENCH.has(q.cat))).sort((a,b)=>score(b)-score(a))){
       if(picks.length>=target)break;
       if(allowed(p)&&fitsIn(p,cap)&&areaFits(p,areaStretch))take(p);
+    }
+  }
+
+  // Money left after the planned number of pieces may buy up to two more, but
+  // only pieces that let the buyer train something they couldn't before. A
+  // $300 fat-loss plan once stopped at $107 because three pieces was the count.
+  // Not in an apartment corner or small room: there the floor runs out first,
+  // so spare money goes to better pieces below instead.
+  const levels=c=>PATTERNS.reduce((s,k)=>s+c[k],0);
+  if(strategy!=='value'&&!tight){
+    while(picks.length<target+2){
+      const before=levels(coverNow());
+      const seatedNow=ownedCats.has('benches')||picks.some(q=>q.cat==='benches');
+      const gainOf=p=>levels(coverageFromTrains([...[...picks,p].map(q=>({category:q.cat,trains:q.trains})),...owned]))-before;
+      const add=KIT_CATALOG
+        .filter(p=>allowed(p)&&standsAlone(p)&&(seatedNow||!NEEDS_BENCH.has(p.cat))&&fitsIn(p,cap)&&areaFits(p,areaCap)&&gainOf(p)>0)
+        .sort((a,b)=>gainOf(b)-gainOf(a)||score(b)-score(a))[0];
+      if(!add)break;
+      take(add);
+    }
+  }
+
+  // Spend what's left on better pieces, not more of them. The recommended plan
+  // once used $99 of a $300 budget and padded it with a massage ball. Each piece
+  // may move to a better one of the same kind, as this tier judges better, if
+  // the kit stays in budget, in the room, and able to train everything it could
+  // before. Value is left alone: cheapest is its job. (Lockstep: kit-builder.ts.)
+  if(strategy!=='value'){
+    for(let i=0;i<picks.length;i++){
+      const cur=picks[i];
+      const before=coverNow();
+      const up=KIT_CATALOG
+        .filter(p=>{
+          if(p.cat!==cur.cat||p.id===cur.id||score(p)<=score(cur)||!eligible(p))return false;
+          if(p.plateLoaded!==cur.plateLoaded||p.rackLike!==cur.rackLike)return false;
+          if(spent-cur.price+p.price>cap)return false;
+          if(areaUsed-cur.area+p.area>Math.max(areaCap,areaUsed))return false;
+          const after=coverageFromTrains([...picks.map((q,j)=>j===i?p:q).map(q=>({category:q.cat,trains:q.trains})),...owned]);
+          return PATTERNS.every(k=>after[k]>=before[k]);
+        })
+        .sort((a,b)=>score(b)-score(a))[0];
+      if(up){ spent+=up.price-cur.price; areaUsed+=up.area-cur.area; picks[i]=up; }
     }
   }
 
