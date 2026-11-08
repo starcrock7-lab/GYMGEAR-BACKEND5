@@ -4,6 +4,7 @@ Express API serving the product catalog, kit builder and gym planner. See CLAUDE
 
 ## Session log
 
+- 2026-11-08 · 32 products added to the thinnest categories from store feeds, each confirmed by the two-source watcher; 249 published · this commit
 - 2026-11-08 · live prices: deal-watch reads the stores and publishes a feed the server overlays without a redeploy; each change confirmed by a second read; a sale not confirmed in 12 hours is hidden · this commit
 - 2026-11-08 · kit builder lockstep port: yoga mat compare class limited to mats stating 4 to 6 mm · this commit
 - 2026-11-07 · kit builder lockstep port: COMPARE_CLASSES + beats(); last pass replaces any piece a same-class product beats on price and GymGear Score · this commit
