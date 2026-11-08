@@ -1,0 +1,62 @@
+# Live prices and sales.
+#
+# Reads the stores and publishes the result to the live-deals branch, which the
+# backend polls, so a sale appears or disappears without a merge or a redeploy.
+# The daily price-check waited for a human to merge it, and 89 updates piled up
+# unmerged from August to November while the site showed months-old sales.
+#
+# In place of that review: every change is confirmed by a second read, a run
+# that reads far fewer products than the last one publishes nothing, and the
+# site drops any sale not confirmed in the last 12 hours.
+name: deal-watch
+
+on:
+  schedule:
+    - cron: '41 */3 * * *'
+    # Hourly through Black Friday and Cyber Monday.
+    - cron: '11 * 20-30 11 *'
+    - cron: '11 * 1-2 12 *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deal-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check the rules
+        run: node scripts/check-live-deals.mjs
+
+      - name: Get the last published feed
+        run: |
+          git fetch --depth=1 origin live-deals && git show origin/live-deals:live-deals.json > prev.json || echo 'first run'
+
+      - name: Read the stores
+        run: |
+          set -o pipefail
+          node scripts/watch-deals.js --prev prev.json --out live-deals.json | tee watch-log.txt
+          { echo '## Deal watch'; echo '```'; cat watch-log.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir publish && cp live-deals.json publish/ && cd publish
+          git init -q -b live-deals
+          git config user.name "gymgear price bot"
+          git config user.email "starcrock7@gmail.com"
+          git add live-deals.json
+          git commit -q -m "Live deals $(date -u +%FT%TZ)"
+          git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" live-deals

@@ -2,6 +2,7 @@
 // All 20 categories. Discount fields. bestChoice flags. No API calls.
 
 import express from 'express';
+import { applyFeed } from './live-deals.js';
 const app = express();
 // Render sits behind a proxy: without this, req.ip is the LB address and every
 // visitor shares ONE rate-limit bucket (2026-07-09 security review).
@@ -493,7 +494,7 @@ dumbbells:[
   p('fringe-urethane','Urethane Dumbbells','Fringe Sport',380,'Fringe Sport','https://www.fringesport.com/products/urethane-round-dumbbells',8.9,4.8,180,'Fringe Sport','Best urethane dumbbell  --  odorless and floor-safe.','Garage Gym Lab',{'Handle':'Chrome','Head':'Urethane Round','Floor Safe':'Yes','Odor':'None','Grade':'Commercial'},['Urethane','Odorless','Commercial Grade']),
   p('titan-adj','Adjustable Dumbbell Set','Titan Fitness',349,'Titan Fitness','https://www.titanfitness.com/products/adjustable-dumbbell-set',7.6,4.4,265,'Titan Fitness','Best budget adjustable dumbbell set.','Garage Gym Reviews',{'Range':'5–50 lbs','System':'Pin Select','Material':'Steel + Rubber','Increments':'5 lbs','Warranty':'1 Year'},['Budget Pick','Pin System','Good Value']),
   p('cap-hex','Rubber Coated Hex DB','CAP Barbell',89,'Amazon','https://www.amazon.com/dp/B07D4DJ6M8?tag=gymgearcompar-20',6.0,4.3,14200,'Amazon','Cheapest entry-level option  --  fine for casual use.','Barbend',{'Handle':'Knurled Steel','Head':'Rubber Hex','Range':'3–50 lbs','Ships':'Prime','Smell':'Initially'},['Lowest Price','Amazon Prime','Entry Level']),
-  p('powerblock-elite','Elite USA 50 Adjustable Dumbbells','PowerBlock',469,'PowerBlock','https://powerblock.com/products/elite-usa-90-adjustable-dumbbells',8.8,4.7,10200,'Amazon','The iconic adjustable dumbbell  --  expandable to 90 lb per hand as you grow.','Garage Gym Reviews',{'Range':'5–50 lbs','Increments':'2.5/5 lbs','Expandable':'To 90 lbs','Replaces':'28 dumbbells','Warranty':'5 Years'},['Expandable','Iconic Design','Made In USA']),
+  p('powerblock-elite','Elite USA 50 Adjustable Dumbbells','PowerBlock',469,'PowerBlock','https://powerblock.com/products/elite-usa-90-adjustable-dumbbells?variant=43064462147775',8.8,4.7,10200,'Amazon','The iconic adjustable dumbbell  --  expandable to 90 lb per hand as you grow.','Garage Gym Reviews',{'Range':'5–50 lbs','Increments':'2.5/5 lbs','Expandable':'To 90 lbs','Replaces':'28 dumbbells','Warranty':'5 Years'},['Expandable','Iconic Design','Made In USA']),
   p('rep-hex-set','Rubber Hex Dumbbell Set 5-50 lb','REP Fitness',1100,'REP Fitness','https://repfitness.com/products/rubber-hex-dumbbell-sets',8.9,4.9,135,'REP Fitness','A full 5-50 dumbbell run in one order  --  commercial-quality hex at home-gym price.','Garage Gym Reviews',{'Range':'5–50 lbs (10 Pairs)','Head':'Rubber Hex','Handle':'Knurled','Grade':'Light Commercial','Warranty':'Lifetime (Home)'},['Full Run','10 Pairs','Gym Staple'],{pro:true}),
   p("bells-nuobell-s-adjustable-dumbbells","NÜOBELL-S Adjustable Dumbbells — 5-60 LB (Pair) / Silver","Bells of Steel",1364.99,"Bells of Steel","https://bellsofsteel.us/products/nuobell-s-adjustable-dumbbells?variant=44827891957957",8.9,null,null,"Bells of Steel","Twist-to-select dumbbells that swap 5 to 60 pounds in seconds and feel like fixed dumbbells.","GymGear Compare",{"Weight range":"5–60 lb per dumbbell (pair)","Handle diameter":"1.26\" / 32mm","Knurling":"Medium","Adjustment":"Twist-and-click selector","Warranty":"2 years (void if dropped)"},["Fast Adjustment","Compact Footprint","2-Year Warranty"],{salePrice:998.96}),
   p("titan-90-lb-straight-stainless-steel-hex-dum","90 LB Straight Stainless Steel Hex Dumbbells","Titan Fitness",504.99,"titan.fitness","https://titan.fitness/products/90-lb-straight-stainless-steel-hex-dumbbells",7.8,null,null,"titan.fitness","A 90 lb pair with stainless handles and rubber hex heads, for pressing and rowing heavy.","GymGear Compare",{"Product Weight":"90 lb. Each","Quantity":"2 (Sold as a Pair)","Handle Diameter":"32 mm","Handle Material":"Stainless Steel","Warranty":"1 Year"},["Stainless Handle","Sold In Pairs","Rubber Hex Head"],{salePrice:349.97}),
@@ -552,7 +553,7 @@ cardio:[
   p('concept2-bikeerg','BikeErg','Concept2',990,'Concept2','https://www.concept2.com/ergs/bikeerg',9.3,4.8,760,'Concept2','Air-resistance bike from the makers of the best rower.','Garage Gym Reviews',{'Resistance':'Air','Monitor':'PM5','Seat':'Adjustable','Weight':'68 lbs','Warranty':'5 Year'},['PM5 Monitor','Air Resistance','Concept2 Quality'],{compact:true}),
   p('schwinn-ic4','IC4 Indoor Cycling Bike','Schwinn',999,'Schwinn','https://www.schwinnfitness.com/products/schwinn-ic4-indoor-cycling-bike',8.4,4.7,5100,'Amazon','The Peloton-app bike without the Peloton price  --  100 magnetic levels.','Wirecutter',{'Resistance':'Magnetic','Display':'Backlit LCD','Pedals':'Dual SPD + Cage','Weight':'106 lbs','Warranty':'10 Year Frame'},['App Compatible','Quiet Magnetic','Value Pick'],{compact:true}),
   p('sunny-rower','SF-RW5515 Magnetic Rower','Sunny Health & Fitness',399.99,"Sunny Health & Fitness",'https://sunnyhealthfitness.com/products/sunny-health-and-fitness-sf-rw5515-magnetic-rowing-machine-rower-w-lcd-monitor?variant=39913314517082',6.8,4.5,287,"Sunny Health & Fitness","Budget-friendly foldable magnetic rower with 8 resistance levels, a padded seat, and a basic LCD tracking console.","GymGear Compare",["8-level adjustable magnetic resistance","Foldable steel rail, space-saving design","Padded ergonomic seat, non-slip foot pedals with straps","LCD monitor: time, count, calorie, total count","Anti-slip padded handlebars"],["8-level resistance","Foldable design","LCD monitor"],{compact:true}),
-  p('lifefitness-t3','T3 Treadmill','Life Fitness',3499,'Life Fitness','https://shop.lifefitness.com/products/t3-treadmill',9.1,4.8,64,'Life Fitness','Health-club belt feel at home  --  the treadmill brand gyms actually buy.','Life Fitness',{'Speed':'0.5–12 mph','Incline':'0–15%','Motor':'3.0 CHP','Weight':'254 lbs','Warranty':'Lifetime Frame'},['Club Quality','FlexDeck Shock','Commercial Brand']),
+  p('lifefitness-t3','T3 Treadmill','Life Fitness',3499,'Life Fitness','https://shop.lifefitness.com/products/t3-treadmill?variant=39476963180741',9.1,4.8,64,'Life Fitness','Health-club belt feel at home  --  the treadmill brand gyms actually buy.','Life Fitness',{'Speed':'0.5–12 mph','Incline':'0–15%','Motor':'3.0 CHP','Weight':'254 lbs','Warranty':'Lifetime Frame'},['Club Quality','FlexDeck Shock','Commercial Brand']),
   p('waterrower-oak','Original Oak Rowing Machine','WaterRower',1199,'WaterRower','https://www.waterrower.com/us/products/waterrower-oak-rowing-machine-with-s4-monitor',9.0,4.8,640,'WaterRower','Furniture-grade oak and real water resistance  --  stores upright against the wall.','Garage Gym Reviews',{'Resistance':'Water','Monitor':'S4','Stores':'Upright','Material':'Solid Oak','Made In':'USA'},['Real Water Feel','Stores Upright','Furniture Grade'],{compact:true}),
   p('lf-club-treadmill','Club Series+ Treadmill','Life Fitness',10999,'Life Fitness','https://shop.lifefitness.com/products/club-series-plus-treadmill',9.5,3.8,33,'Life Fitness','The exact treadmill on big-box gym floors  --  4 HP AC motor, lifetime frame.','Garage Gym Reviews',{'Motor':'4.0 HP AC','Deck':'60×22"','Incline':'0–15%','Grade':'Full Commercial','Warranty':'Lifetime Frame'},['Club Standard','AC Motor','Full Commercial'],{pro:true}),
   p('lf-club-elliptical','Club Series+ Elliptical','Life Fitness',6499,"Life Fitness",'https://shop.lifefitness.com/products/club-series-elliptical-cross-trainer?variant=40471839080645',7.2,null,null,null,"Home version of Life Fitness's commercial elliptical with oversized FlexForm pedals, a 20-inch stride, and a straightforward SL LED console.","GymGear Compare",["Step-up height: 9.5in, stride length: 20in","Resistance levels: 25","SL LED console (also offered with 24in SE4 touchscreen console at higher price)","Oversized FlexForm pedals, multi-grip moving handles with integrated resistance control","Made in USA using global materials"],["SL LED console","20in stride","Made in USA"],{pro:true}),
@@ -1194,7 +1195,7 @@ for (const [cat, list] of Object.entries(PRODUCTS)) {
 }
 
 // ── ROUTES ────────────────────────────────────────────────────
-app.get('/health',(req,res)=>res.json({status:'ok',mode:'sample-data',categories:Object.keys(PRODUCTS).length}));
+app.get('/health',(req,res)=>res.json({status:'ok',mode:'sample-data',categories:Object.keys(PRODUCTS).length,liveDeals:{generatedAt:liveFeed.generatedAt||null,loadedAt:liveLoadedAt,stats:liveFeed.stats||null}}));
 
 app.get('/api/products/:cat',(req,res)=>{
   const cat=req.params.cat;
@@ -1592,7 +1593,7 @@ const areaOf=(id,cat,compact)=>{
 
 // Flat lookup of every kit-eligible product, trimmed to what selection needs.
 // gs = gymgearScore (computed above), compact = fits a tight space (machines).
-const KIT_CATALOG = KIT_CATEGORIES.flatMap(cat =>
+const buildKitCatalog = () => KIT_CATEGORIES.flatMap(cat =>
   (PRODUCTS[cat]||[]).map(p => ({
     id:p.id, name:p.name, brand:p.brand, cat,
     // price = what the kit is charged; list = undiscounted, so the builder can
@@ -1608,7 +1609,32 @@ const KIT_CATALOG = KIT_CATEGORIES.flatMap(cat =>
     plateLoaded:isPlateLoaded({category:cat,name:p.name,specs:p.specs}),
   }))
 );
+const KIT_CATALOG = buildKitCatalog();
 const KIT_BY_ID = new Map(KIT_CATALOG.map(p=>[p.id,p]));
+
+// LIVE PRICES. scripts/watch-deals.js publishes what the stores say right now;
+// this overlays it without a redeploy. Rules in live-deals.js: a sale shows
+// only while recently confirmed, so a dead job hides sales instead of lying.
+const LIVE_DEALS_URL=process.env.LIVE_DEALS_URL||'https://raw.githubusercontent.com/starcrock7-lab/GYMGEAR-BACKEND5/live-deals/live-deals.json';
+const PUBLISHED_BY_CAT=Object.fromEntries(Object.entries(PRODUCTS).map(([c,l])=>[c,[...l]]));
+let liveFeed={items:{}},liveLoadedAt=null;
+function useLiveFeed(){
+  const soldOut=applyFeed(PUBLISHED_BY_CAT,liveFeed);
+  for(const [c,l] of Object.entries(PUBLISHED_BY_CAT))PRODUCTS[c]=l.filter(p=>!soldOut.has(p.id));
+  KIT_CATALOG.length=0;
+  KIT_CATALOG.push(...buildKitCatalog());
+  KIT_BY_ID.clear();
+  for(const k of KIT_CATALOG)KIT_BY_ID.set(k.id,k);
+}
+async function refreshLiveFeed(){
+  try{
+    const r=await fetch(LIVE_DEALS_URL,{signal:AbortSignal.timeout(4000)});
+    if(r.ok){const f=await r.json();if(f&&f.items){liveFeed=f;liveLoadedAt=new Date().toISOString();}}
+  }catch(e){console.warn('live deals: fetch failed',e.message);}
+  useLiveFeed(); // also ages out anything no longer recently confirmed
+}
+useLiveFeed();
+setInterval(refreshLiveFeed,10*60000).unref();
 
 const BUDGET_CAP   = {'under-300':300,'300-800':800,'800-2000':2000,'2000-plus':8000};
 // 'key-pieces' still means a bench and something to lift — two slots could not
@@ -2036,6 +2062,7 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
       if(kit.reduce((t,p)=>t+p.area,0)>areaStretch)continue;
       if(kit.some(p=>p.cat==='racks')&&kit.some(p=>p.rackLike))continue;
       if(kit.some(p=>NEEDS_BENCH.has(p.cat))&&!ownedCats.has('benches')&&!kit.some(p=>p.cat==='benches'))continue;
+      if(kit.some(p=>p.cat==='benches')&&!kit.some(p=>BENCH_USABLE_WITH.has(p.cat))&&![...ownedCats].some(c=>BENCH_USABLE_WITH.has(c)))continue; // hydrateKits strips a bench with no weight
       if(kit.some(p=>partnersOf(p,kit).some(n=>!ownedCats.has(n)&&!kit.some(q=>q.cat===n))))continue;
       if(!meetsNeeds(kit))continue;
       plan=kit; planCost=cost;
@@ -2766,9 +2793,9 @@ app.use((err,req,res,next)=>{
   res.status(status).json({error:status<500?'Bad request.':'Server error.'});
 });
 
-app.listen(PORT,()=>{
+refreshLiveFeed().finally(()=>app.listen(PORT,()=>{
   const total=Object.values(PRODUCTS).reduce((s,p)=>s+p.length,0);
   console.log(`✅ GymGear backend on port ${PORT}`);
   console.log(`📦 ${Object.keys(PRODUCTS).length} categories, ${total} products`);
   console.log(`🔒 Allowed: ${ALLOWED_ORIGINS.join(', ')}`);
-});
+}));

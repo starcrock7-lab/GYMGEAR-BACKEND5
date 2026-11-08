@@ -12,9 +12,9 @@
 # every price in the catalog.
 name: price-check
 
+# Manual only since deal-watch took over the daily job: its PRs were never
+# merged. Run it to fold live prices back into server.js when you want to.
 on:
-  schedule:
-    - cron: '17 6 * * *' # every day 06:17 UTC
   workflow_dispatch:
 
 permissions:
