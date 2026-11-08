@@ -1401,6 +1401,27 @@ const SMALL_PLATE_PAIRS=new Set(['bells-colour-bumper-plates','bells-crumb-bumpe
 // kettlebell). A kit total built on one is lower than what a usable weight
 // costs, so kits leave them out. (Lockstep: coverage.ts PRICED_BY_SIZE.)
 const PRICED_BY_SIZE=new Set(['rogue-kb','rep-kb','rogue-hex','rep-hex']);
+// Products that do the same job at a like grade, by what each listing states.
+// A kit never keeps a piece another member of its class beats on both price
+// and GymGear Score. (Lockstep: frontend lib/price-check.ts COMPARE_CLASSES,
+// beats(); the frontend also uses the classes for its price comparison.)
+const COMPARE_CLASSES={
+  'power-rack':['rogue-r3','rep-pr4000','rep-pr5000','titan-x3','bells-manticore-collegiate-power-rack-prebui','bells-hydra-collegiate-power-rack-prebuilt','bells-manticore-four-post-power-rack-prebuil'],
+  'squat-stand':['bells-squat','rogue-squat','rogue-sml2'],
+  'folding-half-rack':['bells-roc-foldable-two-post-cage-prebuilt','bells-manticore-folding-half-rack-prebuilt','prx-profile-pro'],
+  'olympic-bar':['rogue-ohio','texas-power-bar','rep-alpine-bar','bells-power-bar','rogue-opb'],
+  'bumper-set-160':['rogue-hg2','rogue-echo','rep-color'],
+  'flat-bench':['rogue-mb2','rogue-flat2','rep-fb5000','bells-bench'],
+  'adjustable-bench':['rep-ab5200','rep-ab3000','rogue-adj-bench','rep-rep-nighthawk-adjustable-bench','rep-blackwing-adjustable-bench'],
+  'functional-trainer':['rep-arcadia','bells-ft','bells-functional-trainer-cable-tower'],
+  rower:['concept2-rower','sunny-rower','waterrower-oak'],
+  'yoga-mat':['manduka-pro','jade-harmony','gaiam-premium','alo-warrior','jadeyoga-jade-extra-yoga-mat','jadeyoga-jade-cork-yoga-mat','jadeyoga-fusion-mat','jadeyoga-xw-fusion'],
+};
+const CLASS_OF=new Map(Object.entries(COMPARE_CLASSES).flatMap(([k,ids])=>ids.map(id=>[id,k])));
+const beats=(alt,cur)=>{
+  const cls=CLASS_OF.get(cur.id);
+  return !!cls&&CLASS_OF.get(alt.id)===cls&&alt.price<cur.price&&alt.gs>cur.gs;
+};
 // Plate-loaded gear ships without weight, so it trains nothing until the kit
 // has plates. Read from what the listing states.
 const isPlateLoaded=p=>p.category==='machines'&&/plate[- ]loaded/i.test(`${p.name||''} ${(p.specs&&p.specs.Type)||''}`);
@@ -2105,6 +2126,26 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
         .sort((a,b)=>(b.quality+dealBoost(b)*2)-(a.quality+dealBoost(a)*2))[0];
       if(alt){ spent+=alt.price-cur.price; areaUsed+=alt.area-cur.area; picks[i]=alt; break; }
     }
+  }
+
+  // Never keep a piece a like-for-like product beats on price and score
+  // (beats()). The match tier's budget-fit term used to prefer the dearer one:
+  // a $335 bench scoring 78 over a $195 bench scoring 86. Runs last so no later
+  // pass can bring a beaten piece back; the best-scoring beater is taken, so
+  // nothing can beat it in turn. (Lockstep: kit-builder.ts.)
+  for(let i=0;i<picks.length;i++){
+    const cur=picks[i];
+    const before=coverNow();
+    const alt=KIT_CATALOG
+      .filter(p=>{
+        if(!beats(p,cur)||!eligible(p))return false;
+        if(p.plateLoaded!==cur.plateLoaded||p.rackLike!==cur.rackLike)return false;
+        if(areaUsed-cur.area+p.area>Math.max(areaCap,areaUsed))return false;
+        const after=coverageFromTrains([...picks.map((q,j)=>j===i?p:q).map(q=>({category:q.cat,trains:q.trains})),...owned]);
+        return PATTERNS.every(k=>after[k]>=before[k]);
+      })
+      .sort((a,b)=>b.gs-a.gs||a.price-b.price)[0];
+    if(alt){ spent+=alt.price-cur.price; areaUsed+=alt.area-cur.area; picks[i]=alt; }
   }
   return picks.map(p=>p.id);
 }
