@@ -82,7 +82,7 @@ for (const file of files) {
       expertSource: p.expertSource ?? VERDICT_SOURCE,
       specs: p.specs,
       aspects: p.aspects,
-      opts: onSale ? { salePrice: Number(p.salePrice) } : {},
+      opts: { ...(onSale ? { salePrice: Number(p.salePrice) } : {}), compact: p.compact === true },
     });
   }
 }

@@ -456,6 +456,13 @@ const IMGS = {
   "crossrope-get-strong-jump-rope-set-2023": "https://cdn.shopify.com/s/files/1/0316/7810/3691/files/ProdGalleryTiles_ClassicGS_62582358-c01d-434c-8e2d-87fc54ac0acb.jpg?v=1781290113",
   "crossrope-get-lean-jump-rope-set-2023": "https://cdn.shopify.com/s/files/1/0316/7810/3691/files/ProdGalleryTiles_ClassicGL_6e7a7ead-9069-4f72-a6b7-70e37e72bc9f.jpg?v=1781290097",
   "crossrope-starter-jump-rope-set": "https://cdn.shopify.com/s/files/1/0316/7810/3691/files/starter-set-solid-820px-3.jpg?v=1793712372",
+  "titan-cable-crossover-machine": "https://cdn.shopify.com/s/files/1/0802/1508/1237/files/400717_01.jpg?v=1706820708",
+  "titan-vertical-leg-press": "https://cdn.shopify.com/s/files/1/0802/1508/1237/files/400573_01.jpg?v=1780514003",
+  "titan-chest-supported-t-bar-row": "https://cdn.shopify.com/s/files/1/0802/1508/1237/files/401007_01.jpg?v=1753199100",
+  "bells-blitz-spin-bike": "https://cdn.shopify.com/s/files/1/0654/3346/9125/files/SPIN-BTZ-01.jpg?v=1777979136",
+  "echelon-stair-climber-sport": "https://cdn.shopify.com/s/files/1/2422/9487/files/echelon-stair-climber-sport-ech-ec-spt-4757506.png?v=1786399527",
+  "echelon-duopad": "https://cdn.shopify.com/s/files/1/2422/9487/files/shops_echelon-store.myshopify.com_sessions_moby_ne5jn5k7rmap_images_duopad-bright-centered-cutout.png?v=1789667903",
+  "echelon-duotread": "https://cdn.shopify.com/s/files/1/2422/9487/files/shops_echelon-store.myshopify.com_sessions_moby_vy76ynthgtb3_images_duotread-athletic-runner.png?v=1792523406",
 };
 
 function p(id,name,brand,price,retailer,url,quality,rating,reviewCount,reviewSource,expertVerdict,expertSource,specs,aspects,opts={}){
@@ -596,6 +603,10 @@ cardio:[
   p("bells-blitz-ski-trainer","Blitz Ski Trainer","Bells of Steel",1292.99,"Bells of Steel","https://bellsofsteel.us/products/blitz-ski-trainer",7.6,null,null,"Bells of Steel","An air-flywheel ski trainer with adjustable damper and included floor stand, a cheaper alternative to commercial ergs.","GymGear Compare",{"Resistance":"Air flywheel with adjustable damper","Footprint":"49.75\" L × 24\" W × 85\" H","Machine weight":"105.7 lb","User capacity":"330 lb / 150 kg","Warranty":"5 years frame / 2 years parts"},["Full-Body Cardio","Adjustable Damper","Stand Included"],{salePrice:870.99}),
   p("bells-blitz-mountain-climber-treadmill","Blitz Mountain Climber Treadmill","Bells of Steel",3407.99,"Bells of Steel","https://bellsofsteel.us/products/blitz-mountain-climber-treadmill",7.3,4.8,6,"Bells of Steel","Walking-only incline trainer reaching a 50% grade, with 24-inch touchscreen and Bluetooth app connectivity.","GymGear Compare",{"Incline Range":"+50% to -5%","Speed Range":"0.5–8 km/h","Motor":"2.5 CHP","Running Deck":"43.31\" × 20.08\"","Warranty":"5 Yr Frame / 1 Yr Motor & Parts"},["50% Incline","24\" Touchscreen","Bluetooth FTMS"],{salePrice:2726.97}),
   p("bells-sisyphean-stepper","Sisyphean Stepper - Manual Stair Climber","Bells of Steel",3149.99,"Bells of Steel","https://bellsofsteel.us/products/sisyphean-stepper",7.4,null,null,"Bells of Steel","Manual magnetic stair climber needing no outlet; eight resistance levels and 8.5-foot minimum ceiling.","GymGear Compare",{"Resistance":"Magnetic","Resistance Levels":"8","Max User Weight":"308 lbs / 140 kg","Footprint":"45.3\" × 30.7\"","Warranty":"5 Yr Frame / 1 Yr Moving Parts"},["No Power Needed","Magnetic Resistance","8 Levels"],{salePrice:2519.96}),
+  p("bells-blitz-spin-bike","Blitz Indoor Cycling Bike","Bells of Steel",499.99,"Bells of Steel","https://bellsofsteel.us/products/blitz-spin-bike",7.8,null,null,"Bells of Steel","A steel-framed quiet bike with no subscription or app needed.","GymGear Compare",{"Capacity":"297 lb","Frame":"Steel","Adjustment":"6 seat and 6 handlebar heights","Subscription":"None"},["No Subscription","Quiet Resistance","Steel Frame"],{salePrice:449.99}),
+  p("echelon-stair-climber-sport","Stair Climber Sport","Echelon",799.99,"Echelon","https://echelonfit.com/products/bf-early-access-stair-climber-sport",7.6,null,null,"Echelon","A compact climber with adjustable resistance and incline for low-impact cardio.","GymGear Compare",{"Dimensions":"55 x 22 x 38.4 in","Adjustments":"Resistance and incline","Tracking":"Bluetooth","Power":"4 AA batteries"},["Stair Climbing","Low Impact","Compact Design"],{salePrice:449.99,compact:true}),
+  p("echelon-duopad","Stride DuoPad Recovery Treadmill","Echelon",599.99,"Echelon","https://echelonfit.com/products/echelon-duopad™-recovery-treadmill",7.2,null,null,"Echelon","A low-impact walking pad for steady daily steps, and it slides under furniture.","GymGear Compare",{"Dimensions":"50 x 22 x 5 in","Running Surface":"39 in","Max User":"265 lb","Weight":"46 lb"},["Walking Pad","Low Impact","Slim Storage"],{salePrice:399.99,compact:true}),
+  p("echelon-duotread","Stride DuoTread 2-in-1 Treadmill","Echelon",799.99,"Echelon","https://echelonfit.com/products/bf-doorbuster-duotread",7.6,null,null,"Echelon","A slim treadmill that walks and runs, and stores under a bed or in a closet.","GymGear Compare",{"Top Speed":"12.5 MPH","Incline":"Manual, up to 4.1%","Height":"Under 5 in","Storage":"Transport wheels"},["Runs And Walks","Under 5 in Tall","Rolls Away"],{salePrice:399.99,compact:true}),
 ],
 
 // All-in-one trainers, functional trainers and cable machines. The efficient
@@ -625,6 +636,9 @@ machines:[
   p("rep-ghd-glute-ham-developer","Glute Ham Developer (GHD)","REP Fitness",479.99,"REP Fitness","https://repfitness.com/products/ghd-glute-ham-developer",7.8,4.9,147,"REP Fitness","A 150lb glute-ham developer with 13 adjustment points and wheels, priced far below commercial GHDs.","GymGear Compare",{"Type":"GHD","Movement":"Posterior Chain","Weight":"150 lbs","Footprint":"70\" L x 36\" W x 42\" H (top of leg pads)","Frame Material":"Mostly 16-gauge steel","Adjustment Points":"13"},["13 Adjustment Points","Wheeled Frame","Band Pegs"]),
   p("titan-plate-loaded-linear-hack-squat-machine","Plate-Loaded Linear Hack Squat Machine","Titan Fitness",939.99,"titan.fitness","https://titan.fitness/products/plate-loaded-linear-hack-squat-machine",7.4,null,null,"titan.fitness","A dedicated 700 lb hack squat on linear bearings, for quad work without buying a combo unit.","GymGear Compare",{"Movement":"Hack Squat","Carriage Capacity":"700 lb.","Footprint Dimensions":"46.75-in. x 60.5-in.","Overall Height":"45.5-in.","Product Weight":"190 lb.","Warranty":"1 Year"},["700 lb Capacity","Linear Bearings","Single Station"],{salePrice:599.97}),
   p("titan-leg-press-hack-squat-machine","Leg Press Hack Squat Machine","Titan Fitness",2399.99,"titan.fitness","https://titan.fitness/products/leg-press-hack-squat-machine",7.9,null,null,"titan.fitness","Two leg movements in one 1,000 lb frame, for lifters who want machine work without commercial pricing.","GymGear Compare",{"Movement":"Leg Press","Weight Capacity":"1,000 lb.","Carriage Bar Weight":"80 lb.","Overall Dimensions":"84-in. L x 40-in. W x 53-in. H","Product Weight":"325 lb.","Warranty":"1 Year"},["1,000 lb Capacity","Two Movements","Plate-Loaded"],{salePrice:1499.97}),
+  p("titan-cable-crossover-machine","Cable Crossover Machine","Titan Fitness",749.99,"Titan Fitness","https://titan.fitness/products/cable-crossover-machine",7.7,null,null,"Titan Fitness","A plate-loaded cable station with a 2:1 ratio that fits under an 8 foot ceiling.","GymGear Compare",{"Type":"Plate-Loaded Cable Tower","Ratio":"2:1","Capacity":"220 LB per side","Ceiling":"Under 8 FT"},["Plate Loaded","2:1 Cable Ratio","Low Ceiling Fit"],{salePrice:599.97}),
+  p("titan-vertical-leg-press","Inverted Vertical Leg Press","Titan Fitness",534.99,"Titan Fitness","https://titan.fitness/products/vertical-leg-press",8,null,null,"Titan Fitness","A compact plate-loaded leg press built from 11-gauge steel for heavy leg work.","GymGear Compare",{"Type":"Plate-Loaded","Movement":"Leg Press","Capacity":"400 LB","Frame":"11-gauge steel","Start Positions":"4"},["Plate Loaded","11-Gauge Steel","Compact Press"],{salePrice:373.97}),
+  p("titan-chest-supported-t-bar-row","Chest-Supported T-Bar Row","Titan Fitness",499.99,"Titan Fitness","https://titan.fitness/products/chest-supported-t-bar-row-machine-adjustable",7.9,null,null,"Titan Fitness","A plate-loaded row that supports the chest, keeping heavy back work off the lower back.","GymGear Compare",{"Type":"Plate-Loaded","Movement":"Row","Capacity":"400 LB","Sleeve":"13.5 in"},["Plate Loaded","Chest Supported","400 LB Capacity"],{salePrice:399.97}),
 ],
 
 // Rubber flooring — the planner sizes an order to the room via coverageSqFt.
@@ -1611,7 +1625,7 @@ const FOOTPRINTS={
   'concept2-rower':{w:96,d:24},'assault-bike':{w:51,d:24},'concept2-ski':{w:50,d:32},
   'rogue-echo-bike':{w:59,d:30},'nordictrack-1750':{w:80,d:38},'peloton-bike':{w:59,d:24},
   'assault-runner':{w:70,d:33},'hydrow-wave':{w:80,d:25},'concept2-bikeerg':{w:48,d:24},
-  'schwinn-ic4':{w:48,d:22},'sunny-rower':{w:78,d:20},'lifefitness-t3':{w:79,d:37},
+  'schwinn-ic4':{w:48,d:22},'sunny-rower':{w:78,d:20},'echelon-duopad':{w:50,d:22},'echelon-stair-climber-sport':{w:55,d:22},'lifefitness-t3':{w:79,d:37},
   'lf-club-treadmill':{w:80,d:39},'lf-club-elliptical':{w:84,d:32},'waterrower-oak':{w:84,d:22},
   // Dumbbells — the category default describes a full set on a rack, which is
   // 4x the truth for the products that exist precisely to avoid one. Two
@@ -1719,7 +1733,7 @@ const OWNED_TO_CAT = {barbell:'barbells',dumbbells:'dumbbells',bench:'benches',r
 const GOAL_WEIGHT={
   // Conditioning leads, but strength gear stays — holding lean mass in a
   // deficit is what stops fat loss becoming weight loss.
-  'lose-weight':{cardio:10,jumpropes:6,kettlebells:6,bands:4,dumbbells:3,yogamats:1,racks:-6,plates:-5,barbells:-4,machines:-2},
+  'lose-weight':{cardio:14,jumpropes:12,kettlebells:6,bands:4,dumbbells:3,yogamats:1,racks:-6,plates:-5,barbells:-4,machines:-2},
   'get-fit':{cardio:7,kettlebells:5,dumbbells:4,bands:3,jumpropes:2,yogamats:1,racks:-2,plates:-2},
   'build-strength':{racks:10,barbells:9,plates:8,benches:6,dumbbells:2,cardio:-6,jumpropes:-5,yogamats:-3,foamrollers:-1},
   'home-gym-setup':{machines:8,racks:7,barbells:5,benches:5,plates:4,cardio:3,dumbbells:2},
@@ -1783,10 +1797,11 @@ const CAT_SHARE={machines:2.6,racks:2.2,cardio:2.2,plates:1.6,barbells:1.4,dumbb
 const MIN_PIECES=3;
 const AREA_OVERFLOW=1.35;
 const RESERVE_PER_SLOT=45;            // held back per still-unfilled slot
-const NEEDS_BENCH=new Set(['dumbbells','barbells','plates','racks']);
+const BENCH_NEEDERS=new Set(['dumbbells','barbells','plates','racks']);
+const WALKING_PADS=new Set(['echelon-duotread','echelon-duopad']);
 // Wider than NEEDS_BENCH: kettlebells don't oblige a bench but do use one.
 // Only a bench with no weight at all beside it is dead weight.
-const BENCH_USABLE_WITH=new Set([...NEEDS_BENCH,'kettlebells','machines']);
+const BENCH_USABLE_WITH=new Set([...BENCH_NEEDERS,'kettlebells','machines']);
 // Useless without their partner — buy the partner or drop the orphan.
 const HARD_PAIRS={racks:['barbells','plates'],barbells:['plates'],plates:['barbells']};
 // Plate-loaded machines need plates, and give plates a job without a barbell.
@@ -1810,6 +1825,8 @@ const DEAL_SWAP_MAX_QUALITY_DROP=1;
 // built. `tight` gates non-compact machines out of small spaces at product
 // level (a cable tower fits an apartment corner; a G20 does not).
 function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowCeil,needs,goal,experience}){
+  // Where the goal bans benches, dumbbells are used without one.
+  const NEEDS_BENCH=banned.has('benches')?new Set():BENCH_NEEDERS;
   const perSlot=cap/Math.max(target,1);
   // 1.0 when the price sits at the category's ideal share of budget, falling
   // off above (over budget hurts fast) and below (a $10 item isn't an anchor).
@@ -1882,6 +1899,7 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
     // number. The softer versatility penalty above still nudges an advanced
     // lifter toward a real range when they can afford it.
     &&!(HEAVY_FIXED_PAIR_DUMBBELLS.has(p.id)&&(experience!=='advanced'||goal==='lose-weight'||goal==='get-fit'))
+    &&!(!tight&&WALKING_PADS.has(p.id))
     &&!(tight&&(p.cat==='machines'||p.cat==='cardio'||p.cat==='racks')&&!p.compact)
     &&!(lowCeil&&p.cat==='racks'&&!LOW_CEIL_RACKS.has(p.id))
     &&!(lowCeil&&p.cat==='machines'&&!LOW_CEIL_MACHINES.has(p.id));
@@ -2069,6 +2087,24 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
       .filter(p=>allowed(p)&&!picks.some(q=>q.cat===p.cat)&&standsAlone(p)&&fitsIn(p,stretch)&&areaFits(p,areaStretch))
       .filter(fixesPattern)
       .sort((a,b)=>a.price-b.price);
+    // The slot may hold the wrong version of the right thing: a short band
+    // where the kit needs one long enough for pull-ups.
+    const swaps=fixes.length?[]:picks.flatMap((cur,i)=>KIT_CATALOG
+      .filter(p=>p.cat===cur.cat&&p.id!==cur.id&&eligible(p)&&p.plateLoaded===cur.plateLoaded&&p.rackLike===cur.rackLike&&
+        spent-cur.price+p.price<=stretch&&areaUsed-cur.area+p.area<=areaStretch)
+      .filter(p=>{
+        const after=coverageFromTrains([...picks.map((q,j)=>j===i?p:q).map(q=>({category:q.cat,trains:q.trains})),...owned]);
+        return after[pat]>=want&&Object.entries(needs).every(([k,v])=>cov[k]<v||after[k]>=v);
+      })
+      .map(p=>({i,p})))
+      .sort((a,b)=>a.p.price-b.p.price);
+    if(swaps.length){
+      const {i,p}=swaps[0];
+      spent+=p.price-picks[i].price;
+      areaUsed+=p.area-picks[i].area;
+      picks[i]=p;
+      continue;
+    }
     if(!fixes.length){
       // Nothing AFFORDABLE closes the gap — which on a small budget can mean the
       // kit spent its last $3 on a jump rope and cannot reach a $12 band.
@@ -2114,15 +2150,15 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
   };
   const unseated=()=>picks.some(p=>NEEDS_BENCH.has(p.cat))&&!ownedCats.has('benches')&&!picks.some(p=>p.cat==='benches');
   // seatBench can trade away a bar, leaving a rack hydrateKits would then strip.
-  const orphaned=()=>picks.some(p=>partnersOf(p,picks).some(n=>!ownedCats.has(n)&&!picks.some(q=>q.cat===n)));
-  if(picks.length<MIN_PIECES||!meetsNeeds(picks)||unseated()||orphaned()){
+  const orphaned=()=>picks.some(p=>partnersOf(p,picks).some(n=>!ownedCats.has(n)&&!picks.some(q=>q.cat===n)))||picks.some(p=>p.cat==='machines'&&!p.rackLike&&!hasBase())||(picks.some(p=>p.cat==='benches')&&!picks.some(p=>BENCH_USABLE_WITH.has(p.cat))&&![...ownedCats].some(c=>BENCH_USABLE_WITH.has(c)));
+  if(picks.length+ownedCats.size<MIN_PIECES||!meetsNeeds(picks)||unseated()||orphaned()){
     while(picks.length)drop(0);
     const pool=KIT_CATEGORIES.map(cheapestIn).filter(Boolean);
     let plan=null, planCost=Infinity;
     for(let mask=1;mask<(1<<pool.length);mask++){
       const kit=pool.filter((_,i)=>mask&(1<<i));
       const cost=kit.reduce((t,p)=>t+p.price,0);
-      if(cost>cap||cost>=planCost||kit.length<MIN_PIECES)continue;
+      if(cost>cap||cost>=planCost||kit.length+ownedCats.size<MIN_PIECES)continue;
       if(kit.reduce((t,p)=>t+p.area,0)>areaStretch)continue;
       if(kit.some(p=>p.cat==='racks')&&kit.some(p=>p.rackLike))continue;
       if(kit.some(p=>NEEDS_BENCH.has(p.cat))&&!ownedCats.has('benches')&&!kit.some(p=>p.cat==='benches'))continue;
@@ -2199,6 +2235,8 @@ function buildKit(strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowC
   if(!picks.some(p=>dealBoost(p)>0)){
     for(let i=0;i<picks.length;i++){
       const cur=picks[i];
+      // Cardio is what a fat-loss kit is for: a sale must not downgrade it.
+      if(goal==='lose-weight'&&cur.cat==='cardio')continue;
       const alt=KIT_CATALOG
         .filter(p=>p.cat===cur.cat&&p.id!==cur.id&&dealBoost(p)>0
           &&p.quality>=cur.quality-DEAL_SWAP_MAX_QUALITY_DROP
@@ -2256,7 +2294,7 @@ function fallbackKits(answers){
   const lowCeil=answers.ceiling==='under-8ft';
   const needs=needsFor(answers.goal);
   const areaCap=SPACE_SQFT[answers.space]??SPACE_SQFT_DEFAULT;
-  const banned=forbiddenCats(answers.space);
+  const banned=forbiddenCats(answers.space,answers.goal);
   return KIT_TIERS.map(t=>({
     type:t.type, name:t.name,
     productIds:buildKit(t.strategy,{cap,areaCap,target,ownedCats,banned,order,tight,lowCeil,needs,goal:answers.goal,experience:answers.experience}),
@@ -2279,8 +2317,14 @@ const SPACE_BANS={
   'apartment-corner':['racks','barbells','plates'],
   outdoor:['machines','cardio','yogamats','foamrollers'],
 };
-function forbiddenCats(space){
-  return new Set(SPACE_BANS[space]||[]);
+// A goal rules gear out too: fat loss is cardio first with light weights on the
+// floor, and a strength kit has no slot to spare for cardio or a mat.
+const GOAL_BANS={
+  'lose-weight':['racks','barbells','plates','machines','benches'],
+  'build-strength':['cardio','jumpropes','yogamats'],
+};
+function forbiddenCats(space,goal){
+  return new Set([...(SPACE_BANS[space]||[]),...(GOAL_BANS[goal]||[])]);
 }
 
 // Hydrate the model/fallback's chosen IDs into full product objects, then
@@ -2318,7 +2362,7 @@ function hydrateKits(rawKits,budgetCap,forbidden,ownedCats,tight,lowCeil,goal){
     // either — this loop used to happily strip a kit down to a single item.
     const cap=budgetCap;
     let total=products.reduce((s,p)=>s+priceOf(p),0);
-    const needsBench=products.some(p=>NEEDS_BENCH.has(p.category));
+    const needsBench=products.some(p=>BENCH_NEEDERS.has(p.category));
     for(;;){
       if(total<=cap||products.length<=MIN_PIECES)break;
       // Trimming for budget must never re-open a coverage gap: a cheaper kit
@@ -2490,7 +2534,7 @@ app.post('/api/kit',async(req,res)=>{
   const a=req.body||{};
   if(!a.goal||!a.budget) return res.status(400).json({error:'Send at least goal and budget.'});
   const cap=BUDGET_CAP[a.budget]||2000;
-  const forbidden=forbiddenCats(a.space);
+  const forbidden=forbiddenCats(a.space,a.goal);
   const ownedCats=new Set((a.owned||[]).map(id=>OWNED_TO_CAT[id]).filter(Boolean));
 
   // Deterministic selection owns the cart — always budget-, space-, and
