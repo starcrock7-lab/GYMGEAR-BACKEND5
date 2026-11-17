@@ -8,14 +8,19 @@
 # In place of that review: every change is confirmed by a second read, a run
 # that reads far fewer products than the last one publishes nothing, and the
 # site drops any sale not confirmed in the last 12 hours.
+#
+# GitHub drops scheduled runs under load: from Nov 9 to 16 2026 only 23 of
+# about 60 three-hourly runs started, and gaps of 9 to 12.6 hours were daily,
+# right at the 12-hour limit. So the job is scheduled twice an hour and each
+# run quits before reading any store if the last feed is under 50 minutes old.
+# Stores are still read about once an hour; a 12-hour gap would now need about
+# 24 dropped runs in a row.
 name: deal-watch
 
 on:
   schedule:
-    - cron: '41 */3 * * *'
-    # Hourly through Black Friday and Cyber Monday.
-    - cron: '11 * 20-30 11 *'
-    - cron: '11 * 1-2 12 *'
+    - cron: '11 * * * *'
+    - cron: '41 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -43,13 +48,30 @@ jobs:
         run: |
           git fetch --depth=1 origin live-deals && git show origin/live-deals:live-deals.json > prev.json || echo 'first run'
 
+      # A scheduled run right after another one has nothing new to read.
+      # Manual runs always go ahead.
+      - name: Skip if the feed is fresh
+        id: age
+        if: github.event_name == 'schedule'
+        run: |
+          node -e "
+            const fs = require('fs');
+            let at = 0;
+            try { at = Date.parse(JSON.parse(fs.readFileSync('prev.json', 'utf8')).generatedAt) || 0; } catch {}
+            const min = (Date.now() - at) / 60000;
+            console.log('last feed', Math.round(min), 'minutes old');
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, 'skip=' + (min < 50) + '\\n');
+          "
+
       - name: Read the stores
+        if: steps.age.outputs.skip != 'true'
         run: |
           set -o pipefail
           node scripts/watch-deals.js --prev prev.json --out live-deals.json | tee watch-log.txt
           { echo '## Deal watch'; echo '```'; cat watch-log.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Publish
+        if: steps.age.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

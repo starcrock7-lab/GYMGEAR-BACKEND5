@@ -4,6 +4,7 @@ Express API serving the product catalog, kit builder and gym planner. See CLAUDE
 
 ## Session log
 
+- 2026-11-16 · deal-watch scheduled twice an hour all year (GitHub dropped ~60% of scheduled runs, gaps hit 12.6h against the 12h sale limit); a scheduled run skips if the feed is under 50 min old, so stores are still read about hourly · this commit
 - 2026-11-08 · weight-loss and strength kits now differ by rule: fat loss is cardio, rope and light weights with no bench or barbell gear, strength has no cardio or mat; audit enforces it; 7 budget cardio and strength machines added, 256 published · this commit
 - 2026-11-08 · 32 products added to the thinnest categories from store feeds, each confirmed by the two-source watcher; 249 published · this commit
 - 2026-11-08 · live prices: deal-watch reads the stores and publishes a feed the server overlays without a redeploy; each change confirmed by a second read; a sale not confirmed in 12 hours is hidden · this commit
