@@ -21,7 +21,14 @@ on:
   schedule:
     - cron: '11 * * * *'
     - cron: '41 * * * *'
+  # Also started hourly from outside GitHub (cron-job.org, source=timer),
+  # because on Nov 17 2026 the schedule above went 8.7 hours without a run.
   workflow_dispatch:
+    inputs:
+      source:
+        description: Leave empty for a manual run
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -48,11 +55,11 @@ jobs:
         run: |
           git fetch --depth=1 origin live-deals && git show origin/live-deals:live-deals.json > prev.json || echo 'first run'
 
-      # A scheduled run right after another one has nothing new to read.
+      # A timed run right after another one has nothing new to read.
       # Manual runs always go ahead.
       - name: Skip if the feed is fresh
         id: age
-        if: github.event_name == 'schedule'
+        if: github.event_name == 'schedule' || inputs.source == 'timer'
         run: |
           node -e "
             const fs = require('fs');
